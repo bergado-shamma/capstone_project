@@ -1,0 +1,116 @@
+/* General Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+/* Split Screen Layout */
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Left Section (Image) */
+.left-section {
+  width: 50%;
+  overflow: hidden;
+}
+
+.left-section img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Right Section (Form) */
+.right-section {
+  width: 50%;
+  background: #600000;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+/* Logo */
+.logo img {
+  width: 80px;
+  margin-bottom: 10px;
+}
+
+/* Title */
+h2 {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.subtext {
+  font-size: 14px;
+  color: lightgray;
+  margin-bottom: 20px;
+}
+
+/* Form */
+form {
+  width: 100%;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid lightgray;
+}
+
+/* Name and Dropdown Fields */
+.name-fields,
+.dropdown-fields {
+  display: flex;
+  gap: 10px;
+}
+
+.name-fields input,
+.dropdown-fields select {
+  flex: 1;
+}
+
+/* Create Account Button */
+.create-btn {
+  background: #00c853;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.create-btn:hover {
+  background: #009624;
+}
+
+/* Login Text */
+.login-text {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.signin-link {
+  color: #00ff00;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.signin-link:hover {
+  text-decoration: underline;
+}

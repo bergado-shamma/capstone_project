@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register | PRFS</title>
+    <link rel="stylesheet" href="Register.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Left side: Background Image -->
+      <div class="left-section">
+        <img src="prfs-campus.jpg" alt="Campus Image" />
+      </div>
+
+      <!-- Right side: Registration Form -->
+      <div class="right-section">
+        <div class="logo">
+          <img src="logo.png" alt="PRFS Logo" />
+        </div>
+        <h2>Get Started With PRFS</h2>
+        <p class="subtext">Getting started is easy</p>
+
+        <form action="register.php" method="POST">
+          <input
+            type="text"
+            placeholder="Student Number"
+            name="student_number"
+            required
+          />
+
+          <div class="name-fields">
+            <input
+              type="text"
+              placeholder="Last Name"
+              name="last_name"
+              required
+            />
+            <input
+              type="text"
+              placeholder="First Name"
+              name="first_name"
+              required
+            />
+            <input type="text" placeholder="Middle Name" name="middle_name" />
+          </div>
+
+          <div class="dropdown-fields">
+            <select name="organization">
+              <option selected disabled>Organization</option>
+              <option value="org1">Organization 1</option>
+              <option value="org2">Organization 2</option>
+            </select>
+
+            <select name="course">
+              <option selected disabled>Course</option>
+              <option value="course1">Course 1</option>
+              <option value="course2">Course 2</option>
+            </select>
+          </div>
+
+          <input type="email" placeholder="Email" name="email" required />
+          <input
+            type="password"
+            placeholder="Password"
+            name="password"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            name="confirm_password"
+            required
+          />
+
+          <button type="submit" class="create-btn">Create Account</button>
+        </form>
+
+        <p class="login-text">
+          Have an account? <a href="login.html" class="signin-link">Sign in!</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
