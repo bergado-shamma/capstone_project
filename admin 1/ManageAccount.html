@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Account</title>
+    <link rel="stylesheet" href="ManageAccount.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo">PFRS</div>
+      <nav>
+        <button class="nav-btn" onclick="document.location = 'AdminHome.html'">
+          🏠 Home
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'PropertyInventory.html'"
+        >
+          🛠 Property Inventory
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'AdminReservationHistory.html'"
+        >
+          📋 Reservation Event/Record
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'ManageAccount.html'"
+        >
+          👤 Manage Account
+        </button>
+        <button class="nav-btn" onclick="document.location = 'Dashboard.html'">
+          📊 Dashboard
+        </button>
+        <button
+          class="nav-btn active"
+          onclick="document.location = 'Announcement.html'"
+        >
+          📢 Announcement
+        </button>
+      </nav>
+    </div>
+
+    <div class="main-content">
+      <h1>Manage Account</h1>
+      <button class="create-account-btn">Create Account</button>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Student Number</th>
+              <th>Last Name</th>
+              <th>First Name</th>
+              <th>Email</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2022-19536-TG-0</td>
+              <td>Reyes</td>
+              <td>Paul</td>
+              <td>paulreyes@gmail.com</td>
+              <td>
+                <button class="btn btn-remove">Remove</button>
+                <button class="btn btn-edit">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>2022-19454-TG-0</td>
+              <td>Bergado</td>
+              <td>Shamma</td>
+              <td>shamma@gmail.com</td>
+              <td>
+                <button class="btn btn-remove">Remove</button>
+                <button class="btn btn-edit">Edit</button>
+              </td>
+            </tr>
+            <tr>
+              <td>2022-19384-TG-0</td>
+              <td>Barrantes</td>
+              <td>Sofia</td>
+              <td>sofiasofia@gmail.com</td>
+              <td>
+                <button class="btn btn-remove">Remove</button>
+                <button class="btn btn-edit">Edit</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

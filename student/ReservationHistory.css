@@ -1,0 +1,67 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  background-color: #f4f4f4;
+  height: 100vh;
+}
+.sidebar {
+  width: 250px;
+  background-color: #700a0a;
+  color: white;
+  padding: 20px;
+  height: 115vh;
+}
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.nav-btn {
+  display: block;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  margin: 10px 0;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  padding: 10px;
+}
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background-color: white;
+}
+.reservation-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+th,
+td {
+  border: 1px solid black;
+  padding: 8px;
+  text-align: center;
+}
+th {
+  background-color: #c44e4e;
+  color: white;
+}
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.filter-buttons button {
+  padding: 8px 15px;
+  border: none;
+  cursor: pointer;
+  background-color: #ddd;
+}
+.filter-buttons button.active {
+  background-color: #c44e4e;
+  color: white;
+}

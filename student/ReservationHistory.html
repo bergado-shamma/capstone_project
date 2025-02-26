@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reservation History</title>
+    <link rel="stylesheet" href="ReservationHistory.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo">PFRS</div>
+      <nav>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'student_home.html'"
+        >
+          🏠 Home
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'ReservationHistory.html'"
+        >
+          📋 Reservation Record
+        </button>
+      </nav>
+    </div>
+
+    <div class="main-content">
+      <h1>Reservation History</h1>
+      <div class="filter-buttons">
+        <button class="active">All</button>
+        <button>Pending</button>
+        <button>Approved</button>
+        <button>Rejected</button>
+      </div>
+      <table class="reservation-table">
+        <tr>
+          <th>#</th>
+          <th>Reservation Code</th>
+          <th>Event Name</th>
+          <th>Reservation Facility</th>
+          <th>Reservation Date</th>
+          <th>Status</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>RS-44278-TG-0</td>
+          <td>General Assembly</td>
+          <td>DOST LAB</td>
+          <td>2022-07-27</td>
+          <td>Pending</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>RS-19454-TG-0</td>
+          <td>DIT SEMINAR</td>
+          <td>BAYER</td>
+          <td>2022-07-26</td>
+          <td>Reject</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>RS-19384-TG-0</td>
+          <td>BSIT/DIT final rehearsal</td>
+          <td>Engr quadrangle</td>
+          <td>2022-08-15</td>
+          <td>Completed</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>RS-19389-TG-0</td>
+          <td>BSIT/DIT final rehearsal</td>
+          <td>Engr quadrangle</td>
+          <td>2022-09-15</td>
+          <td>Approved</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

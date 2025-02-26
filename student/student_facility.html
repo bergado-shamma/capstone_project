@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facility Reservation</title>
+    <link rel="stylesheet" href="student_facility.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo">PFRS</div>
+      <nav>
+        <button class="nav-btn" onclick="document.location = 'AdminHome.html'">
+          🏠 Home
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'ReservationHistory.html'"
+        >
+          📋 Reservation Record
+        </button>
+      </nav>
+    </div>
+
+    <div class="main-content">
+      <h1>PUP TAGUIG PROPERTY & FACILITY RESERVATION</h1>
+
+      <div class="progress-bar">
+        <div class="step active">1<br />Choose Facility</div>
+        <div class="arrow">→</div>
+        <div class="step">2<br />Choose Equipment (Optional)</div>
+        <div class="arrow">→</div>
+        <div class="step">3<br />Reservation Details</div>
+        <div class="arrow">→</div>
+        <div class="step">4<br />Done</div>
+      </div>
+
+      <h2 class="facility-title">CHOOSE FACILITY</h2>
+
+      <div class="facility-container">
+        <div class="facility">
+          <img src="gymnasium.jpg" alt="Gymnasium" />
+          <p>Gymnasium</p>
+        </div>
+        <div class="facility">
+          <img src="conference.jpg" alt="Conference Room" />
+          <p>Conference Room</p>
+        </div>
+        <div class="facility">
+          <img src="dostlab.jpg" alt="DOST Lab" />
+          <p>DOST Lab</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

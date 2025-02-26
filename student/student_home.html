@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calendar Dashboard</title>
+    <link rel="stylesheet" href="student_home.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo">PFRS</div>
+      <nav>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'student_home.html'"
+        >
+          🏠 Home
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'ReservationHistory.html'"
+        >
+          📋 Reservation Record
+        </button>
+      </nav>
+    </div>
+    <div class="main-content">
+      <header>
+        <h1>Overview of Calendar Activities</h1>
+        <button class="logout-btn">LOGOUT</button>
+      </header>
+
+      <div class="status-bar">
+        <span class="pending">Pending Reservation</span>
+        <span class="ongoing">On-going Reservation</span>
+        <span class="scheduled">Scheduled</span>
+      </div>
+
+      <div class="calendar-header">
+        <h2>July 02, 2024</h2>
+        <a href="student_facility.html">➕ ADD EVENT</a>
+        <input type="date" class="date-picker" />
+      </div>
+
+      <div class="calendar">
+        <div class="day empty"></div>
+        <div class="day">01</div>
+        <div class="day">02</div>
+        <div class="day empty"></div>
+        <div class="day event ongoing">08<br />(DIT3-1)<br />NCRPO</div>
+        <div class="day event pending">09<br />(BSIT 4-1)<br />ENGR AVR</div>
+        <div class="day event scheduled">18<br />(BSIT 1-1)<br />BAYERS</div>
+        <div class="day event pending">22<br />(BS-HRM)<br />DOST LAB</div>
+      </div>
+    </div>
+  </body>
+</html>

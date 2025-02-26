@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>List of Reservation</title>
+    <link rel="stylesheet" href="AdminReservationHistory.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo">PFRS</div>
+      <nav>
+        <button class="nav-btn" onclick="document.location = 'AdminHome.html'">
+          🏠 Home
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'PropertyInventory.html'"
+        >
+          🛠 Property Inventory
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'AdminReservationHistory.html'"
+        >
+          📋 Reservation Event/Record
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'ManageAccount.html'"
+        >
+          👤 Manage Account
+        </button>
+        <button class="nav-btn" onclick="document.location = 'Dashboard.html'">
+          📊 Dashboard
+        </button>
+        <button
+          class="nav-btn active"
+          onclick="document.location = 'Announcement.html'"
+        >
+          📢 Announcement
+        </button>
+      </nav>
+    </div>
+
+    <div class="main-content">
+      <h1>List of Reservation</h1>
+      <button>View Reservation</button>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Reservation Code</th>
+              <th>Event Name</th>
+              <th>Reservation Facility</th>
+              <th>Reservation Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>RS-19536-tg-0</td>
+              <td>General Assembly</td>
+              <td>DOST LAB</td>
+              <td>2022-07-27</td>
+              <td class="status-pending">Pending</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>RS-19454-tg-0</td>
+              <td>General Assembly</td>
+              <td>BAYER</td>
+              <td>2022-07-26</td>
+              <td class="status-reject">Rejected</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>RS-19384-tg-0</td>
+              <td>BSIT/DIT final rehearsal</td>
+              <td>Engr quadrangle</td>
+              <td>2022-08-15</td>
+              <td class="status-approved">Approved</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>RS-19384-tg-0</td>
+              <td>BSIT/DIT final rehearsal</td>
+              <td>Engr quadrangle</td>
+              <td>2022-10-15</td>
+              <td class="status-completed">Completed</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

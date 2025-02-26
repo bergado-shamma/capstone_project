@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Property Inventory</title>
+    <link rel="stylesheet" href="PropertyInventory.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo">PFRS</div>
+      <nav>
+        <button class="nav-btn" onclick="document.location = 'AdminHome.html'">
+          🏠 Home
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'PropertyInventory.html'"
+        >
+          🛠 Property Inventory
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'AdminReservationHistory.html'"
+        >
+          📋 Reservation Event/Record
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'ManageAccount.html'"
+        >
+          👤 Manage Account
+        </button>
+        <button class="nav-btn" onclick="document.location = 'Dashboard.html'">
+          📊 Dashboard
+        </button>
+        <button
+          class="nav-btn active"
+          onclick="document.location = 'Announcement.html'"
+        >
+          📢 Announcement
+        </button>
+      </nav>
+    </div>
+
+    <div class="main-content">
+      <h1>Inventory</h1>
+      <button class="add-property">+ Add Property</button>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Quantity</th>
+            <th>Property</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>3</td>
+            <td>Speaker</td>
+            <td>
+              <button class="btn btn-remove">Remove</button>
+              <button class="btn btn-edit">✏ Edit</button>
+            </td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>50</td>
+            <td>Chair</td>
+            <td>
+              <button class="btn btn-remove">Remove</button>
+              <button class="btn btn-edit">✏ Edit</button>
+            </td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>5</td>
+            <td>Tables</td>
+            <td>
+              <button class="btn btn-remove">Remove</button>
+              <button class="btn btn-edit">✏ Edit</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

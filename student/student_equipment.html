@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Equipment Reservation</title>
+    <link rel="stylesheet" href="student_equipment.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo">PFRS</div>
+      <nav>
+        <button class="nav-btn" onclick="document.location = 'AdminHome.html'">
+          🏠 Home
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'ReservationHistory.html'"
+        >
+          📋 Reservation Record
+        </button>
+      </nav>
+    </div>
+
+    <div class="main-content">
+      <h1>PUP TAGUIG PROPERTY & FACILITY RESERVATION</h1>
+
+      <div class="progress-bar">
+        <div class="step active">1<br />Choose Facility</div>
+        <div class="arrow">→</div>
+        <div class="step">2<br />Choose Equipment (Optional)</div>
+        <div class="arrow">→</div>
+        <div class="step">3<br />Reservation Details</div>
+        <div class="arrow">→</div>
+        <div class="step">4<br />Done</div>
+      </div>
+
+      <div class="reservation-table">
+        <h2><em>Available Property</em></h2>
+        <table>
+          <tr>
+            <th>#</th>
+            <th>Quantity</th>
+            <th>Asset</th>
+            <th>Add</th>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>6</td>
+            <td>Speaker</td>
+            <td><button class="add-btn">+</button></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>3</td>
+            <td>Table</td>
+            <td><button class="add-btn">+</button></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>2</td>
+            <td>Mic</td>
+            <td><button class="add-btn">+</button></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>50</td>
+            <td>Chair</td>
+            <td><button class="add-btn">+</button></td>
+          </tr>
+        </table>
+
+        <h2>Added Asset</h2>
+        <table>
+          <tr>
+            <th>#</th>
+            <th>Asset</th>
+            <th>Item Inserted</th>
+            <th>Remove</th>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Speaker</td>
+            <td>2</td>
+            <td><button class="remove-btn">Remove</button></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Mic</td>
+            <td>2</td>
+            <td><button class="remove-btn">Remove</button></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Chair</td>
+            <td>20</td>
+            <td><button class="remove-btn">Remove</button></td>
+          </tr>
+        </table>
+        <a href="Reservation_Details.html">
+          <button class="confirm-btn">CONFIRMED</button>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

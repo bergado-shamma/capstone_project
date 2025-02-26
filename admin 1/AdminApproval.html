@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Approve Reservation</title>
+    <link rel="stylesheet" href="AdminApproval.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo">PFRS</div>
+      <nav>
+        <button class="nav-btn" onclick="document.location = 'AdminHome.html'">
+          🏠 Home
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'PropertyInventory.html'"
+        >
+          🛠 Property Inventory
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'AdminReservationHistory.html'"
+        >
+          📋 Reservation Event/Record
+        </button>
+        <button
+          class="nav-btn"
+          onclick="document.location = 'ManageAccount.html'"
+        >
+          👤 Manage Account
+        </button>
+        <button class="nav-btn" onclick="document.location = 'Dashboard.html'">
+          📊 Dashboard
+        </button>
+        <button
+          class="nav-btn active"
+          onclick="document.location = 'Announcement.html'"
+        >
+          📢 Announcement
+        </button>
+      </nav>
+    </div>
+
+    <div class="main-content">
+      <h1>Reservation Event</h1>
+      <button>View Reservation</button>
+
+      <div class="reservation-container">
+        <div class="facility-info">
+          <img src="facility.jpg" alt="Facility Image" />
+          <div class="facility-details">
+            <p><strong>Name:</strong> DOST LAB</p>
+            <p><strong>Capacity:</strong> 200</p>
+            <a href="#">View Documents</a>
+          </div>
+        </div>
+
+        <div class="approve-panel">
+          <h2>Approve Property Reservation</h2>
+          <p><strong>Person In-charge:</strong> Tricia Castenada</p>
+          <p><strong>Reservation Code:</strong> RS-44278-TG-0</p>
+          <p><strong>Event Name:</strong> General Assembly</p>
+          <p><strong>Event Type:</strong> Organizational</p>
+          <p><strong>Organization:</strong> Computer Society</p>
+          <p><strong>Time:</strong> 8:30 to 4:30</p>
+          <p><strong>Properties:</strong> 2 Speakers, 3 Tables</p>
+
+          <div class="buttons">
+            <button class="approve-btn">✔ APPROVED</button>
+            <button class="reject-btn">✖ REJECT</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
