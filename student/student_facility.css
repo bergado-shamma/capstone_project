@@ -3,8 +3,10 @@ body {
   font-family: Arial, sans-serif;
   display: flex;
   background-color: #f4f4f4;
-  height: 100vh;
+  min-height: 100vh; /* Ensures full-page coverage */
+  height: 100%;
 }
+
 .sidebar {
   width: 250px;
   background-color: #700a0a;
@@ -94,4 +96,12 @@ body {
 .facility p {
   font-weight: bold;
   margin-top: 10px;
+}
+
+.facility-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Ensures 4 items per row */
+  gap: 20px; /* Adds space between items */
+  justify-items: center; /* Centers items horizontally */
+  align-items: center; /* Centers items vertically */
 }
