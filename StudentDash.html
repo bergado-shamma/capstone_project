@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Activities</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
+    <link rel="stylesheet" href="StudentDash.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <!-- Burger Menu Button -->
+    <div class="burger-menu" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="sidebar">
+        <div class="logo">
+            <img src="./assets/puplogo.png" alt="Logo Image" class="logo-img">
+            <span class="logo-text">PRFS</span>
+        </div>
+        <nav>
+            <ul>
+                <li><i class="fas fa-home"></i> <span class="menu-text">Home</span></li>
+        <li><i class="fas fa-calendar-check"></i> <span class="menu-text">Calendar</span></li>
+        <li><i class="fas fa-user-cog"></i> <span class="menu-text">Settings</span></li>
+            </ul>
+        </nav>
+        <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+
+    <main class="content">
+        <h1>Overview of Calendar Activities</h1>
+        <div class="status-container">
+            <div class="status-box pending">Pending Reservation</div>
+            <div class="status-box ongoing">On-going Reservation</div>
+            <div class="status-box scheduled">Scheduled</div>
+        </div>
+
+        <div class="calendar-header">
+            <button id="addEventBtn">+ ADD EVENT</button>
+            <div class="dropdown">
+                <button id="dropdownBtn"><i class="fas fa-calendar-alt"></i></button>
+                <ul id="dropdownMenu" class="dropdown-menu">
+                    <li data-view="dayGridMonth">Month</li>
+                    <li data-view="timeGridWeek">Week</li>
+                    <li data-view="timeGridDay">Day</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <div id="currentMonth"></div>
+            <div id="calendar"></div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
