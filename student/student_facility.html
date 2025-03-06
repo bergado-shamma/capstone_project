@@ -5,78 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Facility Reservation</title>
     <link rel="stylesheet" href="student_facility.css" />
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css"
+    />
+    <link rel="stylesheet" href="student_facility.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"
+      crossorigin="anonymous"
+    ></script>
   </head>
   <body>
+    <div class="burger-menu" onclick="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </div>
+
     <div class="sidebar">
-      <div class="logo">PFRS</div>
+      <div class="logo">
+        <img src="./assets/puplogo.png" alt="Logo Image" class="logo-img" />
+        <span class="logo-text">PRFS</span>
+      </div>
       <nav>
-        <button
-          class="nav-btn"
-          onclick="document.location = 'student_home.html'"
-        >
-          🏠 Home
-        </button>
-        <button
-          class="nav-btn"
-          onclick="document.location = 'ReservationHistory.html'"
-        >
-          📋 Reservation Record
-        </button>
+        <ul>
+          <li>
+            <i class="fas fa-home"></i> <span class="menu-text">Home</span>
+          </li>
+          <li>
+            <i class="fas fa-calendar-check"></i>
+            <span class="menu-text">Calendar</span>
+          </li>
+          <li>
+            <i class="fas fa-user-cog"></i>
+            <span class="menu-text">Settings</span>
+          </li>
+        </ul>
       </nav>
+      <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
 
     <div class="main-content">
       <h1>PUP TAGUIG PROPERTY & FACILITY RESERVATION</h1>
 
       <div class="progress-bar">
-        <div class="step active">1<br />Choose Facility</div>
-        <div class="arrow">→</div>
-        <div class="step">2<br />Choose Equipment (Optional)</div>
-        <div class="arrow">→</div>
-        <div class="step">3<br />Reservation Details</div>
-        <div class="arrow">→</div>
-        <div class="step">4<br />Done</div>
-      </div>
+        <div class="steps">
+          <span class="circle active">1</span>
+          <span class="circle">2</span>
+          <span class="circle">3</span>
+          <span class="circle">4</span>
+          <div class="progress-bar">
+            <span class="indicator"></span>
+          </div>
+        </div>
+        <div class="buttons">
+          <button id="prev" disabled>Prev</button>
+          <a href="./student_equipment.html">
+            <button id="next">Next</button>
+          </a>
+          <h2 class="facility-title">CHOOSE FACILITY</h2>
 
-      <h2 class="facility-title">CHOOSE FACILITY</h2>
-
-      <div class="facility-container">
-        <div class="facility">
-          <img src="../assets/PUP Facilities/Gymnasium.jpg" alt="Gymnasium" />
-          <p>Gymnasium</p>
-        </div>
-        <div class="facility">
-          <img src="../assets/PUP Facilities/ConferenceRoom.jpg" alt="Conference Room" />
-          <p>Conference Room</p>
-        </div>
-        <div class="facility">
-          <img src="../assets/PUP Facilities/DOSTLab.jpg" alt="DOST Lab" />
-          <p>DOST Lab</p>
-        </div>
-        <div class="facility">
-          <img src="../assets/PUP Facilities/NCRPO.jpeg" alt="NCRPO Room" />
-          <p>NCRPO Room</p>
-        </div>
-        <div class="facility">
-          <img src="../assets/PUP Facilities/Aquarium.JPG" alt="Aquarium" />
-          <p>Aquarium</p>
-        </div>
-        <div class="facility">
-          <img src="../assets/PUP Facilities/Quadrangle.jpg" alt="Quadrangle" />
-          <p>Quadrangle</p>
-        </div>
-        <div class="facility">
-          <img src="../assets/PUP Facilities/AVR.jpg" alt="AVR" />
-          <p>AVR</p>
-        </div>
-        <div class="facility">
-          <img src="../assets/PUP Facilities/EngineeringGrounds.jpg" alt="Engineering Grounds" />
-          <p>Engineering Grounds</p>
-        </div>
-      </div>
-      
+          <div class="facility-container">
+            <div class="facility">
+              <img
+                src="../assets/PUP Facilities/Gymnasium.jpg"
+                alt="Gymnasium"
+              />
+              <p>Gymnasium</p>
+            </div>
+            <div class="facility">
+              <img
+                src="../assets/PUP Facilities/ConferenceRoom.jpg"
+                alt="Conference Room"
+              />
+              <p>Conference Room</p>
+            </div>
+            <div class="facility">
+              <img src="../assets/PUP Facilities/DOSTLab.jpg" alt="DOST Lab" />
+              <p>DOST Lab</p>
+            </div>
+            <div class="facility">
+              <img src="../assets/PUP Facilities/NCRPO.jpeg" alt="NCRPO Room" />
+              <p>NCRPO Room</p>
+            </div>
+            <div class="facility">
+              <img src="../assets/PUP Facilities/Aquarium.JPG" alt="Aquarium" />
+              <p>Aquarium</p>
+            </div>
+            <div class="facility">
+              <img
+                src="../assets/PUP Facilities/Quadrangle.jpg"
+                alt="Quadrangle"
+              />
+              <p>Quadrangle</p>
+            </div>
+            <div class="facility">
+              <img src="../assets/PUP Facilities/AVR.jpg" alt="AVR" />
+              <p>AVR</p>
+            </div>
+            <div class="facility">
+              <img
+                src="../assets/PUP Facilities/EngineeringGrounds.jpg"
+                alt="Engineering Grounds"
+              />
+              <p>Engineering Grounds</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+    <script src="student_facility.js"></script>
   </body>
 </html>
