@@ -1,74 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Reservation</title>
-    <link rel="stylesheet" href="ReservationDetails.css" />
-  </head>
-  <body>
-    <div class="sidebar">
-      <div class="logo">PFRS</div>
-      <nav>
-        <button class="nav-btn" onclick="document.location = 'AdminHome.html'">
-          🏠 Home
-        </button>
-        <button
-          class="nav-btn"
-          onclick="document.location = 'ReservationHistory.html'"
-        >
-          📋 Reservation Record
-        </button>
-      </nav>
+    <link rel="stylesheet" href="ReservationDetails.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Burger Menu Button -->
+    <div class="burger-menu" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
     </div>
 
-    <div class="main-content">
-      <h1>Event Reservation</h1>
-      <button class="confirm-btn">View Reservation</button>
-      <div class="reservation-container">
-        <div class="reservation-details">
-          <div class="facility-info">
-            <img src="facility.jpg" alt="Facility Image" />
-            <div class="facility">
-              <h3>Facility Information</h3>
-              <p><strong>Name:</strong> DOST LAB</p>
-              <p><strong>Capacity:</strong> 200</p>
-              <a href="ReservationHistory.html">
-                <button class="confirm-btn">CONFIRMED</button>
-              </a>
-            </div>
-          </div>
-          <div class="details">
-            <h3>Reservation Details</h3>
-            <p><strong>Person In-charge:</strong> Paul Angelo Reyes</p>
-            <p><strong>Event Name:</strong> General Assembly</p>
-            <p>
-              <strong>Time Start:</strong> 7 AM <strong>Time End:</strong> 3 AM
-            </p>
-            <p><strong>Event Type:</strong> Organizational</p>
-            <p><strong>Organization:</strong> Computer Society</p>
-          </div>
+    <div class="sidebar">
+        <div class="logo">
+            <img src="/assets/puplogo.png" alt="Logo Image" class="logo-img">
+            <span class="logo-text">PFRS</span>
         </div>
-        <h3>Property Reservation</h3>
-        <table>
-          <tr>
-            <th>Quantity</th>
-            <th>Property</th>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Speaker</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Mic</td>
-          </tr>
-          <tr>
-            <td>20</td>
-            <td>Chair</td>
-          </tr>
-        </table>
-      </div>
+        <nav>
+            <ul>
+                <li><i class="fas fa-home"></i> <span class="menu-text">Home</span></li>
+                <li><i class="fas fa-calendar-check"></i> <span class="menu-text">Reservation Record</span></li>
+                <li><i class="fas fa-user-cog"></i> <span class="menu-text">Manage Account</span></li>
+            </ul>
+        </nav>
+        <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
-  </body>
+
+    <div class="content">
+        <h1>Event Reservation</h1>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="step active">1 <br> Choose Facility</div>
+            <div class="step">2 <br> Choose Equipment</div>
+            <div class="step">3 <br> Reservation Details</div>
+            <div class="step">4 <br> Done</div>
+        </div>  
+
+        <div class="reservation-container">
+            <div class="facility-info">
+                <img src="/assets/PUP Facilities/ConferenceRoom.jpg" alt="Facility Image">
+                <h3>Facility Information</h3>
+                <p><strong>Name:</strong> DOST LAB</p>
+                <p><strong>Capacity:</strong> 200</p>
+                <button class="upload-btn">+ Upload File</button>
+                <span class="status-confirmed">CONFIRMED</span>
+            </div>
+        
+            <div class="reservation-details">
+                <h3>Reservation Details</h3>
+                <p><strong>Person In-charge:</strong> Paul Angelo Reyes</p>
+                <p><strong>Event Name:</strong> General Assembly</p>
+                <div class="time-details">
+                    <p><strong>Time Start:</strong> 7 AM</p>
+                    <p><strong>Time End:</strong> 3 AM</p>
+                </div>
+                <p><strong>Event Type:</strong> Organizational</p>
+                <p><strong>Organization:</strong> Computer Society</p>
+        
+                <h3>Property Reservation</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Quantity</th>
+                            <th>Property</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2</td>
+                            <td>Speaker</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Mic</td>
+                        </tr>
+                        <tr>
+                            <td>20</td>
+                            <td>Chair</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    <script src="ReservationDetails.js"></script>
+</body>
 </html>
