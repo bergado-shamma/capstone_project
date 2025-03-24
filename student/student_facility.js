@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
     facilities.forEach(img => {
         img.addEventListener('click', function () {
             const facilityName = this.alt; // Get facility name from alt attribute
-            window.location.href = `test3.html?facility=${encodeURIComponent(facilityName)}`;
+            window.location.href = `student_equipment.html?facility=${encodeURIComponent(facilityName)}`;
         });
     });
 });
