@@ -5,19 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reservation History</title>
     <link rel="stylesheet" href="./ReservationHistory.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   </head>
   <body>
-    <div class="sidebar">
-      <div class="logo">PFRS</div>
-      <nav>
-        <button class="nav-btn" onclick="document.location = 'student_home.html'">
-          🏠 Home
-        </button>
-        <button class="nav-btn" onclick="document.location = 'ReservationHistory.html'">
-          📋 Reservation Record
-        </button>
-      </nav>
-    </div>
+        <!-- Burger Menu Button -->
+        <div class="burger-menu" onclick="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+      </div>
+  
+      <div class="sidebar">
+          <div class="logo">
+              <img src="/assets/puplogo.png" alt="Logo Image" class="logo-img">
+              <span class="logo-text">PRFS</span>
+          </div>
+          <nav>
+              <ul>
+                  <li><i class="fas fa-home"></i> <span class="menu-text">Home</span></li>
+          <li><i class="fas fa-calendar-check"></i> <span class="menu-text">Calendar</span></li>
+          <li><i class="fas fa-user-cog"></i> <span class="menu-text">Settings</span></li>
+              </ul>
+          </nav>
+          <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </div>
 
     <div class="main-content">
       <h1>Reservation History</h1>

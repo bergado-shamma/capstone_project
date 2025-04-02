@@ -65,3 +65,102 @@ th {
   background-color: #c44e4e;
   color: white;
 }
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: #781c1c;
+  color: white;
+  height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+  align-items: center;
+  transition: left 0.3s ease-in-out;
+}
+
+/* Collapsed Sidebar */
+.sidebar.collapsed {
+  width: 60px;
+}
+
+/* Logo */
+.sidebar .logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.sidebar .logo-img {
+  width: 50px;
+  height: auto;
+}
+
+.sidebar .logo-text {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+/* Navigation */
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar nav ul li {
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar nav ul li i {
+  min-width: 30px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.sidebar nav ul li .menu-text {
+  margin-left: 10px;
+}
+
+/* Hide text when sidebar is collapsed */
+.sidebar.collapsed .menu-text {
+  display: none;
+}
+
+/* Logout Button */
+.logout {
+  margin-top: auto;
+  padding: 10px;
+  background-color: #d9534f;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  width: 100%;
+  transition: background-color 0.3s;
+}
+
+.logout:hover {
+  background-color: #c9302c;
+}
+
+.burger-menu {
+  position: fixed;
+  top: 10px;
+  left: 15px;
+  font-size: 24px;
+  color: white;
+  cursor: pointer;
+  z-index: 1000;
+}

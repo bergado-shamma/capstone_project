@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('click', function (event) {
         if (!dropdownBtn.contains(event.target) && !dropdownMenu.contains(event.target)) {
             dropdownMenu.style.display = 'none';
+            const facilityName = this.alt;
+            window.location.href = `student_facility.html?student_home  =${encodeURIComponent(facilityName)}`;
         }
     });
 
