@@ -60,3 +60,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// Function to track the clicked photo and store it in session storage
+function trackFacilityClick(facilityName) {
+  // Save the clicked facility name in session storage
+  sessionStorage.setItem("selectedFacility", facilityName);
+}
+
+// Add event listeners to each facility link
+document.querySelectorAll(".facility a").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    // Extract the facility name from the URL query parameter
+    const facility = new URL(link.href).searchParams.get("facility");
+    trackFacilityClick(facility); // Store the facility in session storage
+  });
+});
