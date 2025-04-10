@@ -10,22 +10,6 @@ body {
   width: 100%;
 }
 
-.sidebar {
-  width: 250px;
-  background-color: #781c1c;
-  color: white;
-  height: 100vh;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0;
-  left: 0;
-  overflow-y: auto;
-  align-items: center;
-  transition: left 0.3s ease-in-out;
-}
-
 .sidebar.open {
   left: 0;
 }
@@ -79,7 +63,6 @@ body {
 }
 
 .logout {
-  margin-top: auto;
   padding: 10px;
   background-color: #d9534f;
   border: none;
@@ -88,8 +71,10 @@ body {
   font-size: 16px;
   border-radius: 5px;
   width: 100%;
+  margin-top: 20px;
   transition: background-color 0.3s;
 }
+
 
 .logout:hover {
   background-color: #c9302c;
@@ -220,16 +205,21 @@ body {
 }
 
 .sidebar {
-  width: 200px;
+  width: 200px; /* or 250px, your call */
   height: 100vh;
-  background: #6E131D;
+  background-color: #6E131D; /* use this or #781c1c */
   color: white;
   position: fixed;
   left: 0;
   top: 0;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   transition: width 0.3s ease-in-out;
-  overflow: hidden;
 }
+
 
 .sidebar.collapsed {
   width: 60px; 

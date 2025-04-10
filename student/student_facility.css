@@ -1,26 +1,32 @@
-/* Sidebar */
 .sidebar {
-  width: 250px;
-  background-color: #781c1c;
-  color: white;
+  width: 200px; /* or 250px */
   height: 100vh;
+  background-color: #6E131D; /* or #781c1c */
+  color: white;
+  position: fixed;
+  left: 0;
+  top: 0;
   padding: 20px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  position: fixed;
-  top: 0;
-  left: 0;
-  overflow-y: auto;
   align-items: center;
-  transition: left 0.3s ease-in-out;
+  transition: width 0.3s ease-in-out;
+
+  /* Add these to match font settings */
+  font-family: Arial, sans-serif;
+  font-size: 16px;
 }
 
-/* Collapsed Sidebar */
+
+.sidebar.open {
+  left: 0;
+}
+
 .sidebar.collapsed {
   width: 60px;
 }
 
-/* Logo */
 .sidebar .logo {
   display: flex;
   align-items: center;
@@ -41,38 +47,56 @@
   color: white;
 }
 
-/* Navigation */
-.sidebar nav ul {
+.sidebar nav ul,
+.sidebar ul {
   list-style: none;
   padding: 0;
   width: 100%;
   text-align: left;
 }
 
-.sidebar nav ul li {
+.sidebar nav ul li,
+.sidebar ul li {
   margin: 20px 0;
   display: flex;
   align-items: center;
+  padding: 15px;
 }
 
-.sidebar nav ul li i {
+.sidebar nav ul li a,
+.sidebar ul li a {
+  text-decoration: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  gap: 20px;
+  padding: 10px;
+  margin-right: 15px;
+}
+
+.sidebar nav ul li a i,
+.sidebar ul li a i {
   min-width: 30px;
   text-align: center;
   font-size: 18px;
 }
 
-.sidebar nav ul li .menu-text {
+.sidebar ul li a span {
   margin-left: 10px;
+  white-space: nowrap;
+  transition: opacity 0.3s ease-in-out;
 }
 
-/* Hide text when sidebar is collapsed */
+.sidebar.collapsed ul li a span {
+  display: none;
+}
+
 .sidebar.collapsed .menu-text {
   display: none;
 }
 
-/* Logout Button */
 .logout {
-  margin-top: auto;
   padding: 10px;
   background-color: #d9534f;
   border: none;
@@ -81,6 +105,7 @@
   font-size: 16px;
   border-radius: 5px;
   width: 100%;
+  margin-top: 20px;
   transition: background-color 0.3s;
 }
 
@@ -88,7 +113,6 @@
   background-color: #c9302c;
 }
 
-/* Burger Menu */
 .burger-menu {
   position: fixed;
   top: 10px;
@@ -98,8 +122,6 @@
   cursor: pointer;
   z-index: 1000;
 }
-
-/* Content shifting when sidebar expands/collapses */
 .content {
   margin-left: 250px;
   padding: 20px;
