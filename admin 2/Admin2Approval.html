@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Approval</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <link rel="stylesheet" href="./Admin2Approval.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
+</head>
+
+<body>
+
+    <div class="burger-menu"><i class="fas fa-bars"></i></div>
+
+    <div class="sidebar">
+        <div class="logo">
+            <img src="/assets/puplogo.png" alt="Logo Image" class="logo-img" />
+            <span class="logo-text">PRFS</span>
+        </div>
+        <nav>
+            <ul>
+                <li><i class="fas fa-home"></i> <span class="menu-text">Home</span></li>
+                <li><i class="fas fa-calendar-check"></i> <span class="menu-text">Reservation Event/Record</span></li>
+                <li><i class="fas fa-user-cog"></i> <span class="menu-text">Manage Account</span></li>
+                <li><i class="fas fa-Dashboard"></i> <span class="menu-text">📊 Dashboard</span></li>
+
+                
+            </ul>
+        </nav>
+        <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+    <div class="main-content">
+        <h1 class="section-title">Reservation Event</h1>
+        <button class="view-btn">View Reservation</button>
+      
+        <div class="reservation-container">
+          <div class="facility-info">
+            <img src="../assets/PUP Facilities/DOSTLab.jpg" alt="Facility Image" />
+            <div class="facility-details">
+              <p><strong>Name:</strong> DOST LAB</p>
+              <p><strong>Capacity:</strong> 200</p>
+              <a href="#" class="doc-link">View Documents</a>
+            </div>
+          </div>
+      
+          <div class="approve-panel">
+            <div class="approve-header">
+              <h2>Approve Facility Reservation</h2>
+              <span class="date">2024-07-27</span>
+            </div>
+            <p><strong>Person In-charge:</strong> Tricia Castenada</p>
+            <p><strong>Reservation Code:</strong> RS-44278-TG-0</p>
+            <p><strong>Event Name:</strong> General Assembly</p>
+            <p><strong>Event Type:</strong> Organizational</p>
+            <p><strong>Organization:</strong> Computer Society</p>
+            <p><strong>Time:</strong> 8:30 to 4:30</p>
+            <p><strong>Properties:</strong> 2 Speaker, 3 Tables</p>
+      
+            <div class="buttons">
+              <button class="approve-btn">✔ APPROVED</button>
+              <button class="reject-btn">✖ REJECT</button>
+            </div>
+          </div>
+        </div>
+      </div>
+        
+    <script src="./Admin2Approval.js"></script>
+</body>
+
+</html>
