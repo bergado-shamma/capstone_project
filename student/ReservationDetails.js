@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
         steps.forEach(step => step.classList.remove('active'));
 
         // Highlight based on the current page
-        if (currentPage.includes("test4.html")) {
+        if (currentPage.includes("ReservationDetails.html")) {
             steps[2].classList.add('active'); // Highlight "Choose Equipment"
         } else if (currentPage.includes("test2.html") || currentPage.endsWith("index.html") || currentPage === "/") {
             steps[0].classList.add('active'); // Highlight "Choose Facility"
