@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentStep = 1;
   let selectedFacility = null;
 
-  // Toggle Sidebar
   burgerMenu?.addEventListener("click", () => {
     sidebar?.classList.toggle("collapsed");
   });
