@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Property Inventory</title>
+    <link rel="icon" href="data:," />
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container my-5">
+      <h1 class="text-center mb-4">Property Inventory</h1>
+
+      <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+          <tr>
+            <th>Property ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Condition</th>
+          </tr>
+        </thead>
+        <tbody id="property-table-body">
+          <!-- Data will be added dynamically -->
+        </tbody>
+      </table>
+
+      <div class="text-center mt-4">
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-toggle="modal"
+          data-target="#exampleModalCenter"
+        >
+          Launch demo modal
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="exampleModalCenter"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalCenterTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">Modal content goes here...</div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PocketBase -->
+    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+
+    <!-- Bootstrap JS, jQuery, and Popper.js -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+      const pb = new PocketBase("http://127.0.0.1:8090");
+
+      async function loadProperties() {
+        const tbody = document.getElementById("property-table-body");
+        try {
+          const records = await pb.collection("property_tbl").getFullList({
+            sort: "-created",
+          });
+
+          tbody.innerHTML = "";
+
+          if (records.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="5" class="text-center">No records found.</td></tr>';
+            return;
+          }
+
+          records.forEach((property) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${property.property_id || "N/A"}</td>
+              <td>${property.name || "N/A"}</td>
+              <td>${property.description || "N/A"}</td>
+              <td>${property.quantity || "N/A"}</td>
+              <td>${property.property_condition || "N/A"}</td>
+            `;
+            tbody.appendChild(row);
+          });
+        } catch (err) {
+          console.error("Error loading properties:", err);
+          tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center">Error: ${err.message}</td></tr>`;
+        }
+      }
+
+      loadProperties();
+    </script>
+  </body>
+</html>

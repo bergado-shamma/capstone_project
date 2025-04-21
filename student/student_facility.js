@@ -1,76 +1,160 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.getElementById("eventType").addEventListener("change", function () {
+  const eventType = this.value;
+  const academicFields = document.getElementById("academicFields");
+  const organizationFields = document.getElementById("organizationFields");
+
+  if (eventType === "Academic") {
+    academicFields.style.display = "block";
+    organizationFields.style.display = "none";
+  } else if (eventType === "Organization") {
+    academicFields.style.display = "none";
+    organizationFields.style.display = "block";
+  } else {
+    academicFields.style.display = "none";
+    organizationFields.style.display = "none";
+  }
+});
+document.addEventListener("DOMContentLoaded", function () {
   const sidebar = document.querySelector(".sidebar");
   const burgerMenu = document.querySelector(".burger-menu");
   const facilities = document.querySelectorAll(".facility img");
-  const steps = document.querySelectorAll(".progress-step");
-  const progressBar = document.querySelector(".progress");
-  const nextBtn = document.getElementById("nextBtn");
 
-  let currentStep = 1;
-  let selectedFacility = null;
-
-  burgerMenu?.addEventListener("click", () => {
-    sidebar?.classList.toggle("collapsed");
-  });
-
-  // Facility Selection & Navigation
-  facilities.forEach((img) => {
-    img.addEventListener("click", () => {
-      const facilityName = img.alt;
-      const targetUrl = `/student/student_equipment.html?facility=${encodeURIComponent(
-        facilityName
-      )}`;
-
-      console.log("Redirecting to:", targetUrl); // ✅ Debugging step
-
-      window.location.href = targetUrl;
-    });
-  });
-
-  // Step Progression
-  function nextStep() {
-    if (!selectedFacility) {
-      alert("Please select a facility before proceeding.");
-      return;
-    }
-
-    if (currentStep < steps.length) {
-      steps[currentStep - 1].classList.add("completed");
-      steps[currentStep - 1].classList.remove("active");
-      steps[currentStep].classList.add("active");
-
-      progressBar.style.width = `${(currentStep / (steps.length - 1)) * 100}%`;
-      currentStep++;
-    } else {
-      alert("You've reached the last step!");
-    }
+  function toggleSidebar() {
+    sidebar.classList.toggle("collapsed");
   }
 
-  nextBtn?.addEventListener("click", nextStep);
+  if (burgerMenu) {
+    burgerMenu.addEventListener("click", toggleSidebar);
+  } else {
+    console.error("Burger menu button not found!");
+  }
+});
 
-  // Facility Selection
-  document.querySelectorAll(".facility").forEach((facility) => {
-    facility.addEventListener("click", () => {
-      document
-        .querySelectorAll(".facility")
-        .forEach((f) => f.classList.remove("selected"));
-      facility.classList.add("selected");
-      selectedFacility = facility.querySelector("p").textContent;
+document.addEventListener("DOMContentLoaded", function (event) {
+  const showNavbar = (toggleId, navId, bodyId, headerId) => {
+    const toggle = document.getElementById(toggleId),
+      nav = document.getElementById(navId),
+      bodypd = document.getElementById(bodyId),
+      headerpd = document.getElementById(headerId);
+
+    if (toggle && nav && bodypd && headerpd) {
+      toggle.addEventListener("click", () => {
+        nav.classList.toggle("show");
+        toggle.classList.toggle("bx-x");
+        bodypd.classList.toggle("body-pd");
+        headerpd.classList.toggle("body-pd");
+      });
+    }
+  };
+
+  showNavbar("header-toggle", "nav-bar", "body-pd", "header");
+  const linkColor = document.querySelectorAll(".nav_link");
+
+  function colorLink() {
+    if (linkColor) {
+      linkColor.forEach((l) => l.classList.remove("active"));
+      this.classList.add("active");
+    }
+  }
+  linkColor.forEach((l) => l.addEventListener("click", colorLink));
+});
+
+const pb = new PocketBase("http://127.0.0.1:8090");
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const facilityList = document.getElementById("facilityList");
+  const facilityModal = new bootstrap.Modal(
+    document.getElementById("facilityModal"),
+    {}
+  );
+  const facilityName = document.getElementById("facilityName");
+  const facilityDescription = document.getElementById("facilityDescription");
+  const facilityCapacity = document.getElementById("facilityCapacity");
+  const facilityImage = document.getElementById("facilityImage");
+  const chooseFacilityButton = document.getElementById("chooseFacilityButton");
+
+  let selectedFacility = null;
+
+  try {
+    const records = await pb.collection("facility_tbl").getFullList();
+
+    records.forEach((facility) => {
+      const facilityDiv = document.createElement("div");
+      facilityDiv.classList.add("facility");
+      const imageUrl = `http://127.0.0.1:8090/api/files/facility_tbl/${facility.id}/${facility.facility_photo}`;
+
+      facilityDiv.innerHTML = `
+        <img
+          src="${imageUrl}"
+          alt="${facility.name}"
+          class="facility-img"
+        />
+        <p>${facility.name}</p>
+      `;
+
+      facilityDiv.addEventListener("click", () => {
+        selectedFacility = facility;
+
+        console.log("Selected Facility:", facility);
+
+        facilityName.textContent = facility.name || "N/A";
+        facilityDescription.textContent =
+          facility.description || "No description available.";
+        facilityCapacity.textContent = facility.max_capacity || "N/A";
+        facilityImage.src = imageUrl;
+        facilityImage.alt = facility.name;
+
+        facilityModal.show();
+      });
+
+      facilityList.appendChild(facilityDiv);
     });
+  } catch (err) {
+    console.error("Error loading facilities:", err.message);
+  }
+
+  chooseFacilityButton.addEventListener("click", () => {
+    if (selectedFacility) {
+      sessionStorage.setItem(
+        "selectedFacility",
+        JSON.stringify(selectedFacility)
+      );
+      window.location.href = "student_equipment.html";
+    }
   });
 });
 
-// Function to track the clicked photo and store it in session storage
-function trackFacilityClick(facilityName) {
-  // Save the clicked facility name in session storage
-  sessionStorage.setItem("selectedFacility", facilityName);
-}
+const stepper = new mdb.Stepper(
+  document.getElementById("stepper-form-example")
+);
 
-// Add event listeners to each facility link
-document.querySelectorAll(".facility a").forEach((link) => {
-  link.addEventListener("click", (event) => {
-    // Extract the facility name from the URL query parameter
-    const facility = new URL(link.href).searchParams.get("facility");
-    trackFacilityClick(facility); // Store the facility in session storage
+document
+  .getElementById("form-example-next-step")
+  .addEventListener("click", () => {
+    stepper.nextStep();
+  });
+
+document
+  .getElementById("form-example-prev-step")
+  .addEventListener("click", () => {
+    stepper.previousStep();
+  });
+document.addEventListener("DOMContentLoaded", function () {
+  const eventType = document.getElementById("eventType");
+  const academicFields = document.getElementById("academicFields");
+  const organizationFields = document.getElementById("organizationFields");
+
+  eventType.addEventListener("change", function () {
+    // Toggle event fields based on selected event type
+    if (eventType.value === "Academic") {
+      academicFields.style.display = "block";
+      organizationFields.style.display = "none";
+    } else if (eventType.value === "Organization") {
+      academicFields.style.display = "none";
+      organizationFields.style.display = "block";
+    } else {
+      academicFields.style.display = "none";
+      organizationFields.style.display = "none";
+    }
   });
 });
