@@ -163,3 +163,30 @@ prevBtns.forEach((btn) => {
   });
 });
 updateSteps();
+
+function saveFormToSession() {
+  const eventType = document.getElementById("eventType").value;
+
+  const formData = {
+    name: document.getElementById("eventName").value,
+    person_in_charge: document.getElementById("personInCharge").value,
+    contact_number: document.getElementById("contactNumber").value,
+    target_capacity: document.getElementById("targetCapacity").value,
+    preparation_time: document.getElementById("prepTime").value,
+    start_time: document.getElementById("timeStart").value,
+    end_time: document.getElementById("timeEnd").value,
+    event_type: eventType,
+    faculty_in_charge:
+      eventType === "Academic"
+        ? document.getElementById("facultyInCharge").value
+        : "",
+    subject:
+      eventType === "Academic"
+        ? document.getElementById("subjectDescription").value
+        : "",
+    title_of_seminar: document.getElementById("eventName").value, // or separate field if needed
+  };
+
+  // Save to sessionStorage
+  sessionStorage.setItem("eventFormData", JSON.stringify(formData));
+}
