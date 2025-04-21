@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PUP Facility Reservation</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="student_reservation_details.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body id="body-pd">
+    <header class="header" id="header">
+      <div class="header_toggle">
+        <i class="bx bx-menu" id="header-toggle"></i>
+      </div>
+    </header>
+
+    <div class="l-navbar" id="nav-bar">
+      <nav class="nav">
+        <div>
+          <a href="#" class="nav_logo">
+            <img
+              src="/assets/puplogo.png"
+              alt="PFRS Logo"
+              class="nav_logo-icon"
+            />
+            <span class="nav_logo-name">PFRS</span>
+          </a>
+
+          <div class="nav_list">
+            <a href="#" class="nav_link active">
+              <i class="bx bx-home nav_icon"></i>
+              <span class="nav_name">Home</span>
+            </a>
+            <a href="#" class="nav_link">
+              <i class="bx bx-calendar-event nav_icon"></i>
+              <span class="nav_name">Reservation Record</span>
+            </a>
+            <a href="#" class="nav_link">
+              <i class="bx bx-user nav_icon"></i>
+              <span class="nav_name">Users</span>
+            </a>
+
+        
+        <div class="logout">
+        <a href="#" class="nav_link">
+          <i class="bx bx-log-out nav_icon"></i>
+          <span class="nav_name">Sign Out</span>
+        </a>
+      </div>
+      </nav>
+    </div>
+
+    <div class="card-container">
+      <div class="progress-bar-container">
+        <div class="progress-step active" data-step="1">
+          <div class="step-circle">1</div>
+          <span>Event Details</span>
+        </div>
+        <div class="progress-step" data-step="2">
+          <div class="step-circle">2</div>
+          <span>Choose Facility</span>
+        </div>
+        <div class="progress-step" data-step="3">
+          <div class="step-circle">3</div>
+          <span>Choose Equipment</span>
+        </div>
+        <div class="progress-step" data-step="4">
+          <div class="step-circle">4</div>
+          <span>Review & Submit</span>
+        </div>
+      </div>
+      <form>
+        <div class="step-content active" data-step="1">
+          <div class="form-group">
+            <label for="eventName" class="form-label">Event Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="eventName"
+              placeholder="Enter Event Name"
+            />
+          </div>
+          </div>
+          <div class="form-section">
+            <label for="personInCharge" class="form-label"
+              >Person In Charge</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="personInCharge"
+              placeholder="Enter Name"
+            />
+          </div>
+          <div class="form-section">
+            <label for="eventName" class="form-label">Event Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="eventName"
+              placeholder="Enter Event Name"
+            />
+          </div>
+          <div class="form-section">
+            <label for="targetCapacity" class="form-label"
+              >Target Capacity</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="targetCapacity"
+              placeholder="Enter Target Capacity"
+            />
+          </div>
+          <div class="form-section">
+            <label for="contactNumber" class="form-label">Contact Number</label>
+            <input
+              type="tel"
+              class="form-control"
+              id="contactNumber"
+              placeholder="Enter Contact Number"
+            />
+          </div>
+          <div class="form-section">
+            <label for="prepTime" class="form-label">Preparation Time</label>
+            <input type="time" class="form-control" id="prepTime" required />
+          </div>
+          <div class="row form-section">
+            <div class="col-md-6">
+              <label for="timeStart" class="form-label">Time Start</label>
+              <input type="time" class="form-control" id="timeStart" required />
+            </div>
+            <div class="col-md-6">
+              <label for="timeEnd" class="form-label">Time End</label>
+              <input type="time" class="form-control" id="timeEnd" required />
+            </div>
+          </div>
+          <div class="form-section">
+            <label for="eventType" class="form-label">Event Type</label>
+            <select class="form-control" id="eventType" required>
+              <option value="">Select Event Type</option>
+              <option value="Academic">Academic</option>
+              <option value="Organization">Organization</option>
+            </select>
+          </div>
+          
+          <div id="academicFields" class="form-section" style="display: none;">
+            <div class="form-section">
+              <label for="facultyInCharge" class="form-label">Faculty In Charge</label>
+              <input type="text" class="form-control" id="facultyInCharge" placeholder="Enter Faculty Name" />
+            </div>
+            <div class="form-section">
+              <label for="subjectDescription" class="form-label">Subject Description</label>
+              <input type="text" class="form-control" id="subjectDescription" placeholder="Enter Subject Description" />
+            </div>
+          </div>
+          
+          <a href="student_facility.html" class="btn btn-primary">Next</a>
+        </div>
+
+        <div class="step-content active" data-step="2">
+          <div class="form-group">
+            <label for="facilityName" class="form-label">Facility Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="facilityName"
+              placeholder="Select Facility"
+            />
+          </div>
+          <a href="student_facilty.html" class="btn btn-secondary">Previous</a>
+          <a href="student_equipment.html" class="btn btn-primary">Next</a>
+        </div>
+
+        <div class="step-content" data-step="3">
+          <div class="form-group">
+            <label for="equipmentName" class="form-label">Equipment Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="equipmentName"
+              placeholder="Enter Equipment Name"
+            />
+          </div>
+          <button type="button" class="btn btn-secondary prev-step">
+            Previous
+          </button>
+          <button type="button" class="btn btn-primary next-step">Next</button>
+        </div>
+
+        <div class="step-content" data-step="4">
+          <p>Review all the information and click submit.</p>
+          <button type="button" class="btn btn-secondary prev-step">
+            Previous
+          </button>
+          <button type="submit" class="btn btn-success">Submit</button>
+        </div>
+      </form>
+    </div>
+    <script type="module" src="student_reservation_details.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
