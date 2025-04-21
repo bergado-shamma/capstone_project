@@ -1,160 +1,124 @@
-document.getElementById("eventType").addEventListener("change", function () {
-  const eventType = this.value;
-  const academicFields = document.getElementById("academicFields");
-  const organizationFields = document.getElementById("organizationFields");
-
-  if (eventType === "Academic") {
-    academicFields.style.display = "block";
-    organizationFields.style.display = "none";
-  } else if (eventType === "Organization") {
-    academicFields.style.display = "none";
-    organizationFields.style.display = "block";
-  } else {
-    academicFields.style.display = "none";
-    organizationFields.style.display = "none";
-  }
-});
-document.addEventListener("DOMContentLoaded", function () {
-  const sidebar = document.querySelector(".sidebar");
-  const burgerMenu = document.querySelector(".burger-menu");
-  const facilities = document.querySelectorAll(".facility img");
-
-  function toggleSidebar() {
-    sidebar.classList.toggle("collapsed");
-  }
-
-  if (burgerMenu) {
-    burgerMenu.addEventListener("click", toggleSidebar);
-  } else {
-    console.error("Burger menu button not found!");
-  }
-});
-
-document.addEventListener("DOMContentLoaded", function (event) {
-  const showNavbar = (toggleId, navId, bodyId, headerId) => {
-    const toggle = document.getElementById(toggleId),
-      nav = document.getElementById(navId),
-      bodypd = document.getElementById(bodyId),
-      headerpd = document.getElementById(headerId);
-
-    if (toggle && nav && bodypd && headerpd) {
-      toggle.addEventListener("click", () => {
-        nav.classList.toggle("show");
-        toggle.classList.toggle("bx-x");
-        bodypd.classList.toggle("body-pd");
-        headerpd.classList.toggle("body-pd");
-      });
-    }
-  };
-
-  showNavbar("header-toggle", "nav-bar", "body-pd", "header");
-  const linkColor = document.querySelectorAll(".nav_link");
-
-  function colorLink() {
-    if (linkColor) {
-      linkColor.forEach((l) => l.classList.remove("active"));
-      this.classList.add("active");
-    }
-  }
-  linkColor.forEach((l) => l.addEventListener("click", colorLink));
-});
+import PocketBase from "https://esm.sh/pocketbase";
 
 const pb = new PocketBase("http://127.0.0.1:8090");
+const facilityContainer = document.querySelector(".facilities");
+const modal = document.getElementById("facilityModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalBody = document.getElementById("modalBody");
+const reserveBtn = document.getElementById("reserveBtn");
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const facilityList = document.getElementById("facilityList");
-  const facilityModal = new bootstrap.Modal(
-    document.getElementById("facilityModal"),
-    {}
-  );
-  const facilityName = document.getElementById("facilityName");
-  const facilityDescription = document.getElementById("facilityDescription");
-  const facilityCapacity = document.getElementById("facilityCapacity");
-  const facilityImage = document.getElementById("facilityImage");
-  const chooseFacilityButton = document.getElementById("chooseFacilityButton");
+document.addEventListener("DOMContentLoaded", loadFacilities);
 
-  let selectedFacility = null;
-
+async function loadFacilities() {
   try {
-    const records = await pb.collection("facility_tbl").getFullList();
+    const records = await pb
+      .collection("facility_tbl")
+      .getFullList({ sort: "-created" });
+
+    // get target capacity from session event_record_id
+    const eventId = sessionStorage.getItem("event_record_id");
+    let targetCapacity = 0;
+    if (eventId) {
+      const event = await pb
+        .collection("event_tbl")
+        .getFirstListItem(`id="${eventId}"`);
+      targetCapacity = parseInt(event.target_capacity) || 0;
+    }
+
+    facilityContainer.innerHTML = "";
 
     records.forEach((facility) => {
-      const facilityDiv = document.createElement("div");
-      facilityDiv.classList.add("facility");
-      const imageUrl = `http://127.0.0.1:8090/api/files/facility_tbl/${facility.id}/${facility.facility_photo}`;
+      const imgField = facility.facility_photo;
+      if (!imgField) return;
 
-      facilityDiv.innerHTML = `
-        <img
-          src="${imageUrl}"
-          alt="${facility.name}"
-          class="facility-img"
-        />
-        <p>${facility.name}</p>
+      const imgUrl = pb.files.getURL(facility, imgField);
+      const overCapacity = targetCapacity > facility.max_capacity;
+
+      const card = document.createElement("div");
+      card.classList.add("facility");
+      card.innerHTML = `
+        <div class="facility-inner ${overCapacity ? "disabled" : ""}"
+             style="pointer-events:${overCapacity ? "none" : "auto"}; opacity:${
+        overCapacity ? 0.5 : 1
+      }">
+          <img src="${imgUrl}" alt="${facility.name}" />
+          <p>${facility.name}</p>
+          ${
+            overCapacity
+              ? `<p class="text-danger small">Capacity too small</p>`
+              : ""
+          }
+        </div>
       `;
 
-      facilityDiv.addEventListener("click", () => {
-        selectedFacility = facility;
+      // Clicking the card (if allowed) opens the modal
+      card.addEventListener("click", () => {
+        // Populate modal
+        modalTitle.textContent =
+          facility.name + (overCapacity ? " (Unavailable)" : "");
+        modalBody.innerHTML = `
+          ${
+            overCapacity
+              ? `<p class="text-danger"><strong>Sorry:</strong> event capacity (${targetCapacity}) exceeds this facility’s max (${facility.max_capacity}).</p>`
+              : ""
+          }
+          <img src="${imgUrl}" class="img-fluid mb-3" alt="${facility.name}" />
+          <p><strong>Description:</strong> ${facility.description || "N/A"}</p>
+          <p><strong>Location:</strong> ${facility.location || "N/A"}</p>
+          <p><strong>Max Capacity:</strong> ${facility.max_capacity}</p>
+        `;
 
-        console.log("Selected Facility:", facility);
+        // Configure Reserve button
+        reserveBtn.disabled = overCapacity;
+        reserveBtn.onclick = overCapacity
+          ? null
+          : () => {
+              sessionStorage.setItem("selectedFacility", facility.name);
+              sessionStorage.setItem("facilityImage", imgUrl);
+              window.location.href = "student_equipment.html";
+            };
 
-        facilityName.textContent = facility.name || "N/A";
-        facilityDescription.textContent =
-          facility.description || "No description available.";
-        facilityCapacity.textContent = facility.max_capacity || "N/A";
-        facilityImage.src = imageUrl;
-        facilityImage.alt = facility.name;
-
-        facilityModal.show();
+        // Show modal
+        new bootstrap.Modal(modal).show();
       });
 
-      facilityList.appendChild(facilityDiv);
+      facilityContainer.appendChild(card);
     });
   } catch (err) {
-    console.error("Error loading facilities:", err.message);
+    console.error("Failed to load facilities:", err);
+  }
+}
+
+const draggableModal = document.getElementById("kt_modal_3");
+if (draggableModal) dragElement(draggableModal);
+
+function dragElement(elmnt) {
+  let pos1 = 0,
+    pos2 = 0,
+    pos3 = 0,
+    pos4 = 0;
+  const dragTarget = elmnt.querySelector(".modal-content") || elmnt;
+
+  dragTarget.onmousedown = function (e) {
+    e = e || window.event;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    document.onmousemove = elementDrag;
+  };
+
+  function elementDrag(e) {
+    e = e || window.event;
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    elmnt.style.top = elmnt.offsetTop - pos2 + "px";
+    elmnt.style.left = elmnt.offsetLeft - pos1 + "px";
   }
 
-  chooseFacilityButton.addEventListener("click", () => {
-    if (selectedFacility) {
-      sessionStorage.setItem(
-        "selectedFacility",
-        JSON.stringify(selectedFacility)
-      );
-      window.location.href = "student_equipment.html";
-    }
-  });
-});
-
-const stepper = new mdb.Stepper(
-  document.getElementById("stepper-form-example")
-);
-
-document
-  .getElementById("form-example-next-step")
-  .addEventListener("click", () => {
-    stepper.nextStep();
-  });
-
-document
-  .getElementById("form-example-prev-step")
-  .addEventListener("click", () => {
-    stepper.previousStep();
-  });
-document.addEventListener("DOMContentLoaded", function () {
-  const eventType = document.getElementById("eventType");
-  const academicFields = document.getElementById("academicFields");
-  const organizationFields = document.getElementById("organizationFields");
-
-  eventType.addEventListener("change", function () {
-    // Toggle event fields based on selected event type
-    if (eventType.value === "Academic") {
-      academicFields.style.display = "block";
-      organizationFields.style.display = "none";
-    } else if (eventType.value === "Organization") {
-      academicFields.style.display = "none";
-      organizationFields.style.display = "block";
-    } else {
-      academicFields.style.display = "none";
-      organizationFields.style.display = "none";
-    }
-  });
-});
+  function closeDragElement() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}

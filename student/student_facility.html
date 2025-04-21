@@ -9,13 +9,12 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <!-- Burger Menu Button -->
-    <div class="burger-menu" onclick="toggleSidebar()">
-      <i class="fas fa-bars"></i>
-    </div>
-
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
       <div class="logo">
@@ -24,67 +23,76 @@
       </div>
       <nav>
         <ul>
-          <li>
-            <i class="fas fa-home"></i> <span class="menu-text">Home</span>
-          </li>
-          <li>
-            <i class="fas fa-calendar-check"></i>
-            <span class="menu-text">Reservation Record</span>
-          </li>
-          <li>
-            <i class="fas fa-user-cog"></i>
-            <span class="menu-text">Manage Account</span>
-          </li>
+          <li><i class="fas fa-home"></i> Home</li>
+          <li><i class="fas fa-calendar-check"></i> Reservation Record</li>
+          <li><i class="fas fa-user-cog"></i> Manage Account</li>
         </ul>
       </nav>
       <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
-    <div class="content">
-      <h1>PUP TAGUIG PROPERTY & FACILITY RESERVATION</h1>
 
-      <div class="progress-container">
-        <div class="progressbar">
-          <div class="progress"></div>
-          <div class="progress-step completed">1</div>
-          <div class="progress-step active">2</div>
-          <div class="progress-step">3</div>
-          <div class="progress-step">4</div>
-        </div>
-      </div>
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PUP Facility Reservation</title>
+        <link rel="stylesheet" href="student_facility.css" />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        />
+        <link
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+          rel="stylesheet"
+        />
+      </head>
+      <body>
+        <div class="content">
+          <h1>PUP TAGUIG PROPERTY & FACILITY RESERVATION</h1>
 
-      <!-- Steps-->
-      <h2>CHOOSE FACILITY</h2>
+          <h2>CHOOSE FACILITY</h2>
+          <div class="facilities"></div>
+        </div>
 
-      <div class="facilities">
-        <div class="facility">
-          <a href="student_equipment.html?facility=Gymnasium">
-            <img src="/assets/PUP Facilities/Gymnasium.jpg" alt="Gymnasium" />
-          </a>
-          <p>Gymnasium</p>
+        <!-- Facility Modal -->
+        <div
+          class="modal fade"
+          id="facilityModal"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content position-relative">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Facility Details</h5>
+                <button type="button" class="close" data-bs-dismiss="modal">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="modal-body" id="modalBody">
+                <!-- Populated by JS -->
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Close
+                </button>
+                <button type="button" class="btn btn-primary" id="reserveBtn">
+                  Reserve
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="facility">
-          <a href="student_equipment.html?facility=ConferenceRoom">
-            <img
-              src="/assets/PUP Facilities/ConferenceRoom.jpg"
-              alt="Conference Room"
-            />
-          </a>
-          <p>Conference Room</p>
-        </div>
-        <div class="facility">
-          <a href="student_equipment.html?facility=DOSTLab">
-            <img src="/assets/PUP Facilities/DOSTLab.jpg" alt="DOST Lab" />
-          </a>
-          <p>DOST Lab</p>
-        </div>
-        <div class="facility">
-          <a href="student_equipment.html?facility=NCRPO">
-            <img src="/assets/PUP Facilities/NCRPO.jpeg" alt="NCRPO" />
-          </a>
-          <p>NCRPO</p>
-        </div>
-      </div>
-    </div>
-    <script src="student_facility.js"></script>
+
+        <!-- ES module script -->
+        <script type="module" src="student_facility.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+      </body>
+    </html>
   </body>
 </html>
