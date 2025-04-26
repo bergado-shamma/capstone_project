@@ -75,7 +75,6 @@ body {
   transition: background-color 0.3s;
 }
 
-
 .logout:hover {
   background-color: #c9302c;
 }
@@ -127,6 +126,54 @@ body {
 .scheduled {
   background-color: green;
   color: white;
+}
+
+/* 🟡🟢🔵 Legend styles */
+.status-legend {
+  margin-top: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.status-legend strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+  text-align: center;
+}
+
+.status-container {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.status-box {
+  display: inline-block;
+  padding: 5px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  color: #000;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  pointer-events: none;
+  cursor: default;
+}
+
+.status-box.pending {
+  background-color: #ddff00;
+  border-color: #e0b973;
+}
+
+.status-box.ongoing {
+  background-color: #2b00ff;
+  border-color: #74c0fc;
+}
+
+.status-box.scheduled {
+  background-color: #00660e;
+  border-color: #8ce99a;
 }
 
 .calendar-header {
@@ -205,9 +252,9 @@ body {
 }
 
 .sidebar {
-  width: 200px; /* or 250px, your call */
+  width: 200px;
   height: 100vh;
-  background-color: #6E131D; /* use this or #781c1c */
+  background-color: #6E131D;
   color: white;
   position: fixed;
   left: 0;
@@ -219,7 +266,6 @@ body {
   align-items: center;
   transition: width 0.3s ease-in-out;
 }
-
 
 .sidebar.collapsed {
   width: 60px; 
