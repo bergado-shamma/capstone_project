@@ -1,0 +1,116 @@
+/* Reset and Fullscreen Setup */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+}
+
+/* Main container now full screen */
+.login-container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+/* Left Side - Full Height with Background */
+.left-side {
+  flex: 1;
+  background: #660000;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 50px;
+}
+
+/* Left Side Text */
+.left-side .content h2 {
+  font-size: 28px;
+  margin-top: 20px;
+}
+
+.left-side p {
+  font-size: 14px;
+}
+
+/* Right Side - Full Height */
+.right-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Logo */
+.logo {
+  width: 100px;
+  margin-bottom: 20px;
+}
+
+/* Form Title */
+h2 {
+  margin: 10px 0;
+  font-size: 22px;
+  color: #333;
+}
+
+/* Form */
+form {
+  width: 100%;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Input Fields */
+input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+}
+
+/* Remember Me & Forgot Password */
+.remember-forgot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 15px;
+}
+
+.remember-forgot a {
+  color: #660000;
+  text-decoration: none;
+}
+
+/* Submit Button */
+button {
+  width: 100%;
+  padding: 12px;
+  background: #660000;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #550000;
+}
+
+/* Register Link */
+.register {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.register a {
+  color: #660000;
+  text-decoration: none;
+  font-weight: bold;
+}
