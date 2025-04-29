@@ -1,0 +1,127 @@
+body,
+html {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.login-container {
+  display: flex;
+  height: 100vh;
+  flex-wrap: wrap;
+}
+
+.carousel-section {
+  flex: 7;
+  background-color: #600000;
+  overflow: hidden;
+}
+
+.carousel,
+.carousel-inner,
+.carousel-item,
+.carousel-item img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.login-section {
+  flex: 3;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  height: 100%;
+  width: 100%; /* Ensure it takes full width */
+  box-sizing: border-box;
+  position: relative; /* Just in case child absolute elements are used */
+  z-index: 1; /* Prevent being overlaid */
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+}
+
+.logo {
+  display: block;
+  max-height: 80px;
+  margin: 0 auto 1rem auto;
+}
+
+.system-title {
+  text-align: center;
+  color: #600000;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.system-subtitle {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.text-muted {
+  font-size: 0.95rem;
+}
+
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.remember-forgot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 10px;
+  background-color: #600000;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.register {
+  margin-top: 1rem;
+  text-align: center;
+  color: #600000;
+  font-weight: bold;
+}
+
+.register a {
+  color: #600000;
+  text-decoration: none;
+}
+
+.register a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+  }
+
+  .carousel-section,
+  .login-section {
+    flex: none;
+    width: 100%;
+    height: 50vh;
+  }
+}

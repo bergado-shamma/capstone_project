@@ -4,82 +4,250 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Register | PRFS</title>
-    <link rel="stylesheet" href="./sign-up-styles.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="" />
+    <style>
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+      }
+
+      .main-container {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .carousel-section {
+        flex: 7;
+        position: relative;
+      }
+
+      .carousel-inner,
+      .carousel-item,
+      .carousel-item img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+      }
+
+      .login-section {
+        flex: 3;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1.5rem;
+        overflow-y: auto;
+        height: 100%;
+        box-sizing: border-box;
+      }
+
+      .login-box {
+        width: 100%;
+        max-width: 340px;
+        transform: scale(0.95);
+      }
+
+      .logo {
+        display: block;
+        max-height: 70px;
+        margin: 0 auto 1rem auto;
+      }
+
+      h2 {
+        text-align: center;
+        color: #600000;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .subtext {
+        text-align: center;
+        margin-bottom: 1.2rem;
+        color: #555;
+        font-size: 0.9rem;
+      }
+
+      form input,
+      form select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 0.8rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 0.9rem;
+      }
+
+      .name-fields {
+        display: flex;
+        gap: 0.4rem;
+      }
+
+      .name-fields input {
+        flex: 1;
+      }
+
+      .dropdown-fields {
+        display: flex;
+        gap: 0.8rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .dropdown-fields select {
+        flex: 1;
+      }
+
+      .create-btn {
+        width: 100%;
+        padding: 9px;
+        background-color: #600000;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.95rem;
+        font-weight: bold;
+      }
+
+      .create-btn:hover {
+        background-color: #800000;
+      }
+
+      .login-text {
+        margin-top: 1rem;
+        text-align: center;
+        color: #000;
+        font-weight: bold;
+        font-size: 0.85rem;
+      }
+
+      .signin-link {
+        color: #28a745;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .signin-link:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 768px) {
+        .main-container {
+          flex-direction: column;
+        }
+
+        .carousel-section,
+        .login-section {
+          flex: none;
+          width: 100%;
+          height: 50vh;
+        }
+
+        .login-section {
+          padding: 1rem;
+        }
+
+        .login-box {
+          transform: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div class="container">
-      <!-- Left side: Background Image -->
-      <div class="left-section">
-        <img src="prfs-campus.jpg" alt="Campus Image" />
-      </div>
-
-      <!-- Right side: Registration Form -->
-      <div class="right-section">
-        <div class="logo">
-          <img src="logo.png" alt="PRFS Logo" />
+    <div class="main-container">
+      <section class="carousel-section">
+        <div
+          id="carouselExampleFade"
+          class="carousel slide carousel-fade"
+          data-bs-ride="carousel"
+          data-bs-interval="3000"
+        >
+          <div class="carousel-inner">
+            <div class="carousel-item active">
+              <img src="./assets/slideshow/slideshow-1.jpg" alt="Slide 1" />
+            </div>
+            <div class="carousel-item">
+              <img src="./assets/slideshow/slideshow-2.jpg" alt="Slide 2" />
+            </div>
+            <div class="carousel-item">
+              <img src="./assets/slideshow/slideshow-3.jpg" alt="Slide 3" />
+            </div>
+          </div>
         </div>
-        <h2>Get Started With PRFS</h2>
-        <p class="subtext">Getting started is easy</p>
+      </section>
+      <section class="login-section">
+        <div class="login-box">
+          <img src="./assets/puplogo.png" alt="University Logo" class="logo" />
+          <h2>Get Started With PRFS</h2>
+          <p class="subtext">Getting started is easy</p>
 
-        <form action="register.php" method="POST">
-          <input
-            type="text"
-            placeholder="Student Number"
-            name="student_number"
-            required
-          />
-
-          <div class="name-fields">
+          <form action="register.php" method="POST">
             <input
               type="text"
-              placeholder="Last Name"
-              name="last_name"
+              placeholder="Student Number"
+              name="student_number"
+              required
+            />
+
+            <div class="name-fields">
+              <input
+                type="text"
+                placeholder="Last Name"
+                name="last_name"
+                required
+              />
+              <input
+                type="text"
+                placeholder="First Name"
+                name="first_name"
+                required
+              />
+              <input type="text" placeholder="Middle Name" name="middle_name" />
+            </div>
+
+            <div class="dropdown-fields">
+              <select name="organization">
+                <option selected disabled>Organization</option>
+                <option value="org1">Organization 1</option>
+                <option value="org2">Organization 2</option>
+              </select>
+
+              <select name="course">
+                <option selected disabled>Course</option>
+                <option value="course1">Course 1</option>
+                <option value="course2">Course 2</option>
+              </select>
+            </div>
+
+            <input type="email" placeholder="Email" name="email" required />
+            <input
+              type="password"
+              placeholder="Password"
+              name="password"
               required
             />
             <input
-              type="text"
-              placeholder="First Name"
-              name="first_name"
+              type="password"
+              placeholder="Confirm Password"
+              name="confirm_password"
               required
             />
-            <input type="text" placeholder="Middle Name" name="middle_name" />
-          </div>
 
-          <div class="dropdown-fields">
-            <select name="organization">
-              <option selected disabled>Organization</option>
-              <option value="org1">Organization 1</option>
-              <option value="org2">Organization 2</option>
-            </select>
+            <button type="submit" class="create-btn">Create Account</button>
+          </form>
 
-            <select name="course">
-              <option selected disabled>Course</option>
-              <option value="course1">Course 1</option>
-              <option value="course2">Course 2</option>
-            </select>
-          </div>
-
-          <input type="email" placeholder="Email" name="email" required />
-          <input
-            type="password"
-            placeholder="Password"
-            name="password"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            name="confirm_password"
-            required
-          />
-
-          <button type="submit" class="create-btn">Create Account</button>
-        </form>
-
-        <p class="login-text">
-          Have an account? <a href="./index.html" class="signin-link">Sign in!</a>
-        </p>
-      </div>
+          <p class="login-text">
+            Have an account?
+            <a href="./index.html" class="signin-link">Sign in!</a>
+          </p>
+        </div>
+      </section>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
