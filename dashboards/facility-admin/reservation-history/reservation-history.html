@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reservation History</title>
+    <link rel="stylesheet" href="./Admin2ReservationHistory.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+  </head>
+  <body>
+    <div class="burger-menu" onclick="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="sidebar">
+      <div class="logo">
+        <img src="/assets/puplogo.png" alt="Logo Image" class="logo-img" />
+        <span class="logo-text">PRFS</span>
+      </div>
+      <nav>
+        <ul>
+          <li>
+            <i class="fas fa-home"></i> <span class="menu-text">Home</span>
+          </li>
+          <li>
+            <i class="fas fa-calendar-check"></i>
+            <span class="menu-text">Reservation Event/Record</span>
+          </li>
+          <li>
+            <i class="fas fa-user-cog"></i>
+            <span class="menu-text">Manage Account</span>
+          </li>
+          <li>
+            <i class="fas fa-Dashboard"></i>
+            <span class="menu-text">📊 Dashboard</span>
+          </li>
+        </ul>
+      </nav>
+      <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+
+    <div class="main-content">
+      <h1>Reservation History</h1>
+      <div class="filter-buttons">
+        <button onclick="filterReservations('All')" class="active">All</button>
+        <button onclick="filterReservations('Pending')">Pending</button>
+        <button onclick="filterReservations('Approved')">Approved</button>
+        <button onclick="filterReservations('Rejected')">Rejected</button>
+      </div>
+
+      <table class="reservation-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Reservation ID</th>
+            <th>Event Name</th>
+            <th>Facility Name</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="reservation-body"></tbody>
+      </table>
+    </div>
+
+    <script src="./Admin2ReservationHistory.js"></script>
+  </body>
+</html>

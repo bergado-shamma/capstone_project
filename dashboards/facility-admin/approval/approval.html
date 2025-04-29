@@ -12,6 +12,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
+    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
 </head>
 
 <body>
@@ -29,47 +30,47 @@
                 <li><i class="fas fa-calendar-check"></i> <span class="menu-text">Reservation Event/Record</span></li>
                 <li><i class="fas fa-user-cog"></i> <span class="menu-text">Manage Account</span></li>
                 <li><i class="fas fa-Dashboard"></i> <span class="menu-text">📊 Dashboard</span></li>
-
-                
             </ul>
         </nav>
         <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
+
     <div class="main-content">
         <h1 class="section-title">Reservation Event</h1>
         <button class="view-btn">View Reservation</button>
-      
+
         <div class="reservation-container">
-          <div class="facility-info">
-            <img src="../assets/PUP Facilities/DOSTLab.jpg" alt="Facility Image" />
-            <div class="facility-details">
-              <p><strong>Name:</strong> DOST LAB</p>
-              <p><strong>Capacity:</strong> 200</p>
-              <a href="#" class="doc-link">View Documents</a>
+            <div class="facility-info">
+                <img id="facility-image" src="" alt="Facility Image" />
+                <div class="facility-details">
+                    <p><strong>Name:</strong> <span id="facility-name">Loading...</span></p>
+                    <p><strong>Capacity:</strong> <span id="facility-capacity">Loading...</span></p>
+                    <a href="#" class="doc-link" id="facility-doc-link">View Documents</a>
+                </div>
             </div>
-          </div>
-      
-          <div class="approve-panel">
-            <div class="approve-header">
-              <h2>Approve Facility Reservation</h2>
-              <span class="date">2024-07-27</span>
+
+            <div class="approve-panel">
+                <div class="approve-header">
+                    <h2>Approve Facility Reservation</h2>
+                    <span id="reservation-date" class="date">Loading...</span>
+                </div>
+                <p><strong>Person In-charge:</strong> <span id="person-in-charge">Loading...</span></p>
+                <p><strong>Reservation Code:</strong> <span id="reservation-code">Loading...</span></p>
+                <p><strong>Event Name:</strong> <span id="event-name">Loading...</span></p>
+                <p><strong>Event Type:</strong> <span id="event-type">Loading...</span></p>
+                <p><strong>Organization:</strong> <span id="organization">Loading...</span></p>
+                <p><strong>Time:</strong> <span id="event-time">Loading...</span></p>
+                <p><strong>Properties:</strong> <span id="properties">Loading...</span></p>
+
+                <div class="buttons">
+                    <button class="approve-btn">✔ APPROVED</button>
+                    <button class="reject-btn">✖ REJECT</button>
+                </div>
+
             </div>
-            <p><strong>Person In-charge:</strong> Tricia Castenada</p>
-            <p><strong>Reservation Code:</strong> RS-44278-TG-0</p>
-            <p><strong>Event Name:</strong> General Assembly</p>
-            <p><strong>Event Type:</strong> Organizational</p>
-            <p><strong>Organization:</strong> Computer Society</p>
-            <p><strong>Time:</strong> 8:30 to 4:30</p>
-            <p><strong>Properties:</strong> 2 Speaker, 3 Tables</p>
-      
-            <div class="buttons">
-              <button class="approve-btn">✔ APPROVED</button>
-              <button class="reject-btn">✖ REJECT</button>
-            </div>
-          </div>
         </div>
-      </div>
-        
+    </div>
+
     <script src="./Admin2Approval.js"></script>
 </body>
 
