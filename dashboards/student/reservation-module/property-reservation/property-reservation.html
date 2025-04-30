@@ -1,114 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="./property-reservation-styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <!-- Burger Menu Button -->
-    <div class="burger-menu" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Choose Facility - PUP Facility Reservation</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./property-reservation-styles.css" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  </head>
+  <body id="body-pd">
+    <header class="header" id="header">
+      <div class="header_toggle">
+        <i class="bx bx-menu" id="header-toggle"></i>
+      </div>
+    </header>
 
-    <div class="sidebar">
-        <div class="logo">
-            <img src="/assets/puplogo.png" alt="Logo Image" class="logo-img">
-            <span class="logo-text">PRFS</span>
-        </div>
-        <nav>
-            <ul>
-                <li><i class="fas fa-home"></i> <span class="menu-text">Home</span></li>
-                <li><i class="fas fa-calendar-check"></i> <span class="menu-text">Reservation Record</span></li>
-                <li><i class="fas fa-user-cog"></i> <span class="menu-text">Manage Account</span></li>
-            </ul>
-        </nav>
-        <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </div>
+    <div class="l-navbar" id="nav-bar">
+      <nav class="nav">
+        <div>
+          <a href="#" class="nav_logo">
+            <img
+              src="/assets/puplogo.png"
+              alt="PFRS Logo"
+              class="nav_logo-icon"
+            />
+            <span class="nav_logo-name">PFRS</span>
+          </a>
 
-    <div class="content">
-        <h1>PUP TAGUIG PROPERTY & FACILITY RESERVATION</h1>
-        
-
-        <!-- Progress Bar -->
-        <div class="progress-bar">
-            <div class="step active">Choose Facility</div>
-            <div class="step">Choose Equipment</div>
-            <div class="step">Review & Submit</div>
-            <div class="step">Confirmation</div>
-        </div>  
-        <div class="reservation-table">
-            <h2><em>Available Property</em></h2>
-            <table>
-              <tr>
-                <th>#</th>
-                <th>Quantity</th>
-                <th>Asset</th>
-                <th>Add</th>
-              </tr>
-              <tr>
-                <td>1</td>
-                <td>6</td>
-                <td>Speaker</td>
-                <td><button class="add-btn">+</button></td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>3</td>
-                <td>Table</td>
-                <td><button class="add-btn">+</button></td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>2</td>
-                <td>Mic</td>
-                <td><button class="add-btn">+</button></td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>50</td>
-                <td>Chair</td>
-                <td><button class="add-btn">+</button></td>
-              </tr>
-            </table>
-          
-            <h2>Added Asset</h2>
-            <table>
-              <tr>
-                <th>#</th>
-                <th>Asset</th>
-                <th>Item Inserted</th>
-                <th>Remove</th>
-              </tr>
-              <tr>
-                <td>1</td>
-                <td>Speaker</td>
-                <td>2</td>
-                <td><button class="remove-btn">Remove</button></td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>Mic</td>
-                <td>2</td>
-                <td><button class="remove-btn">Remove</button></td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>Chair</td>
-                <td>20</td>
-                <td><button class="remove-btn">Remove</button></td>
-              </tr>
-            </table>
-            <a href="../reservation-details/reservation-details.html">
-              <button class="confirm-btn">CONFIRMED</button>
+          <div class="nav_list">
+            <a
+              href="../dashboard/student/student-home.html"
+              class="nav_link active"
+            >
+              <i class="bx bx-home nav_icon"></i>
+              <span class="nav_name">Home</span>
+            </a>
+            <a href="../reservation-history" class="nav_link">
+              <i class="bx bx-calendar-event nav_icon"></i>
+              <span class="nav_name">Reservation Record</span>
+            </a>
+            <a href="#" class="nav_link">
+              <i class="bx bx-user nav_icon"></i>
+              <span class="nav_name">Users</span>
             </a>
           </div>
-          
-    </div>
-    
 
-    <script src="./property-reservation-script.js"></script>
-</body>
+          <div class="logout">
+            <a href="#" class="nav_link">
+              <i class="bx bx-log-out nav_icon"></i>
+              <span class="nav_name">Sign Out</span>
+            </a>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <div class="container mt-5">
+      <div class="progress-bar-container mb-4">
+        <div class="progress-step" data-step="1">
+          <div class="step-circle">1</div>
+          <span>Choose Facility</span>
+        </div>
+        <div class="progress-step active" data-step="2">
+          <div class="step-circle">2</div>
+          <span>Choose Equipment</span>
+        </div>
+        <div class="progress-step" data-step="3">
+          <div class="step-circle">3</div>
+          <span>Reservation Details</span>
+        </div>
+        <div class="progress-step" data-step="4">
+          <div class="step-circle">4</div>
+          <span>Review & Submit</span>
+        </div>
+      </div>
+
+      <div class="reservation-table">
+        <h2>Available Property</h2>
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Add</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Data will be populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Added Asset</h2>
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Asset</th>
+                <th>Quantity Added</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Added assets will be populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div
+        class="alert alert-danger d-flex align-items-center d-none"
+        role="alert"
+      >
+        <svg
+          class="bi flex-shrink-0 me-2"
+          width="24"
+          height="24"
+          role="img"
+          aria-label="Danger:"
+        >
+          <use xlink:href="#exclamation-triangle-fill" />
+        </svg>
+        <div></div>
+        <!-- This is where the message gets injected -->
+      </div>
+
+      <a href="../reservation-details/reservation-details.html">
+        <button class="btn btn-success confirm-btn">CONFIRMED</button>
+      </a>
+    </div>
+
+    <script type="module" src="./property-reservation-script.js"></script>
+  </body>
 </html>
