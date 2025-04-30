@@ -2,19 +2,22 @@ body,
 html {
   height: 100%;
   margin: 0;
+  font-family: Arial, sans-serif;
 }
 
-.main-container {
+.login-container {
   display: flex;
   height: 100vh;
-  overflow: hidden;
+  flex-wrap: wrap;
 }
 
 .carousel-section {
   flex: 7;
-  position: relative;
+  background-color: #600000;
+  overflow: hidden;
 }
 
+.carousel,
 .carousel-inner,
 .carousel-item,
 .carousel-item img {
@@ -32,99 +35,86 @@ html {
   padding: 1.5rem;
   overflow-y: auto;
   height: 100%;
+  width: 100%; /* Ensure it takes full width */
   box-sizing: border-box;
+  position: relative; /* Just in case child absolute elements are used */
+  z-index: 1; /* Prevent being overlaid */
 }
 
 .login-box {
   width: 100%;
-  max-width: 340px;
-  transform: scale(0.95);
+  max-width: 400px;
 }
 
 .logo {
   display: block;
-  max-height: 70px;
+  max-height: 80px;
   margin: 0 auto 1rem auto;
 }
 
-h2 {
+.system-title {
   text-align: center;
   color: #600000;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
-.subtext {
+.system-subtitle {
   text-align: center;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.5rem;
   color: #555;
-  font-size: 0.9rem;
 }
 
-form input,
-form select {
+.text-muted {
+  font-size: 0.95rem;
+}
+
+input[type="email"],
+input[type="password"] {
   width: 100%;
-  padding: 8px;
-  margin-bottom: 0.8rem;
+  padding: 10px;
+  margin-bottom: 1rem;
   border: 1px solid #ccc;
   border-radius: 5px;
+}
+
+.remember-forgot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 0.9rem;
+  margin-bottom: 1rem;
 }
 
-.name-fields {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.name-fields input {
-  flex: 1;
-}
-
-.dropdown-fields {
-  display: flex;
-  gap: 0.8rem;
-  margin-bottom: 0.8rem;
-}
-
-.dropdown-fields select {
-  flex: 1;
-}
-
-.create-btn {
+button[type="submit"] {
   width: 100%;
-  padding: 9px;
+  padding: 10px;
   background-color: #600000;
   color: white;
   border: none;
   border-radius: 5px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: bold;
 }
 
-.create-btn:hover {
-  background-color: #800000;
-}
-
-.login-text {
+.register {
   margin-top: 1rem;
   text-align: center;
-  color: #000;
+  color: #600000;
   font-weight: bold;
-  font-size: 0.85rem;
 }
 
-.signin-link {
-  color: #28a745;
+.register a {
+  color: #600000;
   text-decoration: none;
-  font-weight: bold;
 }
 
-.signin-link:hover {
+.register a:hover {
   text-decoration: underline;
 }
 
 @media (max-width: 768px) {
-  .main-container {
+  .login-container {
     flex-direction: column;
   }
 
@@ -133,13 +123,5 @@ form select {
     flex: none;
     width: 100%;
     height: 50vh;
-  }
-
-  .login-section {
-    padding: 1rem;
-  }
-
-  .login-box {
-    transform: none;
   }
 }
