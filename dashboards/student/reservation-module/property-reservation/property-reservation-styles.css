@@ -1,85 +1,270 @@
-.sidebar {
-  width: 200px; /* or 250px */
-  height: 100vh;
-  background-color: #6E131D; /* or #781c1c */
-  color: white;
-  position: fixed;
-  left: 0;
-  top: 0;
-  padding: 20px;
-  overflow-y: auto;
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+
+:root {
+  --header-height: 3rem;
+  --nav-width: 68px;
+  --first-color: #6e131d;
+  --first-color-light: white;
+  --white-color: #f7f6fb;
+  --body-font: "Nunito", sans-serif;
+  --normal-font-size: 1rem;
+  --z-fixed: 100;
+}
+
+*,
+::before,
+::after {
+  box-sizing: border-box;
+}
+
+body {
+  position: relative;
+  margin: var(--header-height) 0 0 0;
+  padding: 0 1rem;
+  font-family: var(--body-font);
+  font-size: var(--normal-font-size);
+  transition: 0.5s;
+  background-color: white;
+  color: #fff;
+}
+
+a {
+  text-decoration: none;
+}
+
+.progress-bar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 40px 0;
+  width: 80%;
+  max-width: 900px;
+  margin: 20px auto;
+}
+
+.progress-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: width 0.3s ease-in-out;
-
-  /* Add these to match font settings */
-  font-family: Arial, sans-serif;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #555;
 }
 
+.step-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #ddd;
+  color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  transition: all 0.3s;
+}
 
-.sidebar.open {
+.progress-step.active .step-circle {
+  background-color: #c0392b;
+  color: white;
+}
+
+.step-content {
+  display: none;
+}
+
+.step-content.active {
+  display: block;
+}
+
+.card-container {
+  margin-top: 100px;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card img {
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.card:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease-in-out;
+}
+
+.btn {
+  margin: 10px;
+}
+
+.header {
+  width: 100%;
+  height: var(--header-height);
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background-color: var(--white-color);
+  z-index: var(--z-fixed);
+  transition: 0.5s;
+}
+
+.header_toggle {
+  color: var(--first-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.header_img {
+  width: 35px;
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.header_img img {
+  width: 40px;
+}
+
+.l-navbar {
+  position: fixed;
+  top: 0;
+  left: -30%;
+  width: var(--nav-width);
+  height: 100vh;
+  background-color: var(--first-color);
+  padding: 0.5rem 1rem 0 0;
+  transition: 0.5s;
+  z-index: var(--z-fixed);
+}
+
+.nav {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.nav_logo,
+.nav_link {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  align-items: center;
+  column-gap: 1rem;
+  padding: 0.5rem 0 0.5rem 1.5rem;
+}
+
+.nav_logo {
+  margin-bottom: 23px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 10px;
+}
+
+.nav_logo-icon {
+  width: 40px;
+  height: auto;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 2.3px;
+}
+
+.nav_logo-name {
+  color: var(--white-color);
+  font-weight: 700;
+}
+
+.nav_link {
+  position: relative;
+  color: var(--first-color-light);
+  margin-bottom: 1.5rem;
+  transition: 0.3s;
+}
+
+.nav_link:hover {
+  color: var(--white-color);
+}
+
+.nav_icon {
+  font-size: 1.25rem;
+}
+
+.show {
   left: 0;
 }
 
-.sidebar.collapsed {
-  width: 60px;
+.body-pd {
+  padding-left: calc(var(--nav-width) + 1rem);
 }
 
-.sidebar .logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.sidebar .logo-img {
-  width: 50px;
-  height: auto;
-}
-
-.sidebar .logo-text {
-  font-size: 20px;
-  font-weight: bold;
+.active {
   color: white;
 }
 
-.sidebar nav ul,
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  width: 100%;
-  text-align: left;
+.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 2px;
+  height: 32px;
+  background-color: var(--white-color);
 }
 
-.sidebar nav ul li,
-.sidebar ul li {
-  margin: 20px 0;
-  display: flex;
-  align-items: center;
-  padding: 15px;
+.height-100 {
+  height: 100vh;
 }
 
-.sidebar nav ul li a,
-.sidebar ul li a {
-  text-decoration: none;
-  color: white;
-  display: flex;
-  align-items: center;
-  font-size: 18px;
-  gap: 20px;
-  padding: 10px;
-  margin-right: 15px;
-}
+@media screen and (min-width: 768px) {
+  body {
+    margin: calc(var(--header-height) + 1rem) 0 0 0;
+    padding-left: calc(var(--nav-width) + 2rem);
+  }
 
-.sidebar nav ul li a i,
-.sidebar ul li a i {
-  min-width: 30px;
-  text-align: center;
-  font-size: 18px;
+  .header {
+    height: calc(var(--header-height) + 1rem);
+    padding: 0 2rem 0 calc(var(--nav-width) + 2rem);
+  }
+
+  .header_img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header_img img {
+    width: 45px;
+  }
+
+  .l-navbar {
+    left: 0;
+    padding: 1rem 1rem 0 0;
+  }
+
+  .show {
+    width: calc(var(--nav-width) + 156px);
+  }
+
+  .body-pd {
+    padding-left: calc(var(--nav-width) + 188px);
+  }
 }
 
 .sidebar ul li a span {
@@ -97,50 +282,9 @@
 }
 
 .logout {
-  padding: 10px;
-  background-color: #d9534f;
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
-  border-radius: 5px;
-  width: 100%;
-  margin-top: 20px;
-  transition: background-color 0.3s;
+  margin-top: 250px;
 }
 
-.logout:hover {
-  background-color: #c9302c;
-}
-
-.burger-menu {
-  position: fixed;
-  top: 10px;
-  left: 15px;
-  font-size: 24px;
-  color: white;
-  cursor: pointer;
-  z-index: 1000;
-}
-/* Content shifting when sidebar expands/collapses */
-.content {
-  margin-left: 250px;
-  padding: 20px;
-  width: calc(100% - 250px);
-  transition: margin-left 0.3s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-/* Adjust content when sidebar is collapsed */
-.sidebar.collapsed + .content {
-  margin-left: 60px;
-  width: calc(100% - 60px);
-}
-
-/* Progress Bar */
 .progress-bar {
   display: flex;
   justify-content: space-between;
@@ -150,29 +294,35 @@
   position: relative;
 }
 
-/* Background line */
 .progress-bar::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 0;
   right: 0;
-  height: 8px; /* Even thicker line */
+  height: 8px;
   background-color: #ddd;
   z-index: 0;
   transform: translateY(-50%);
 }
 
-/* Step circles */
+.progress-step.active span {
+  color: #781c1c;
+  font-weight: bold;
+}
+.progress-step span {
+  color: #6c757d;
+}
+
 .step {
-  width: 100px;  /* Largest size */
-  height: 100px; /* Largest size */
+  width: 100px;
+  height: 100px;
   background-color: #ddd;
   color: #000;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 26px; /* Larger text */
+  font-size: 26px;
   font-weight: bold;
   border-radius: 50%;
   position: relative;
@@ -183,71 +333,38 @@
   overflow: hidden;
 }
 
-/* Active step */
 .step.active {
   background-color: #781c1c;
   color: #fff;
 }
 
-/* Step container to align circles and arrows */
 .step-container {
   display: flex;
   align-items: center;
   position: relative;
 }
 
-/* Centered arrow between steps */
 .step-container:not(:last-child)::after {
   content: "→";
   position: absolute;
-  right: -50px; /* Adjusted for better positioning */
+  right: -50px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 40px;
   color: #aaa;
   font-weight: bold;
 }
-.reservation-table {
-  background-color: #ccc;
-  padding: 20px;
-  border-radius: 10px;
-  width: 50%;
-  margin: auto;
+
+.form-control {
+  background-color: white;
+  color: black;
+  border: 1px solid #444;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
+.form-control::placeholder {
+  color: #888;
 }
 
-th,
-td {
-  border: 1px solid black;
-  padding: 8px;
-  text-align: center;
-}
-
-th {
-  background-color: #ffffcc;
-}
-
-.add-btn,
-.remove-btn {
-  background-color: red;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-.confirm-btn {
-  background-color: green;
-  color: white;
-  border: none;
-  padding: 10px;
-  display: block;
-  width: 100%;
-  margin-top: 10px;
-  text-align: center;
-  cursor: pointer;
+label {
+  color: black;
 }
