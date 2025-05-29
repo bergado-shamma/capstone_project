@@ -1,0 +1,112 @@
+import PocketBase from 'https://esm.sh/pocketbase';
+
+const pb = new PocketBase('http://127.0.0.1:8090');
+
+// Show Bootstrap floating alert
+function showAlert(message, type = 'danger') {
+  const alertContainer = document.getElementById('alert-floating');
+  alertContainer.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show text-center" role="alert">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
+  alertContainer.classList.add('visible');
+
+  setTimeout(() => {
+    const alert = bootstrap.Alert.getOrCreateInstance(document.querySelector('.alert'));
+    alert?.close();
+    alertContainer.classList.remove('visible');
+  }, 6000);
+}
+
+// Email format validator
+function validateEmail(email) {
+  const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return pattern.test(email);
+}
+
+// Main logic
+document.addEventListener('DOMContentLoaded', () => {
+  const loginForm = document.querySelector('form');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const rememberCheckbox = document.getElementById('remember');
+  const forgotPasswordLink = document.querySelector('.remember-forgot a');
+
+  // Autofill saved email
+  const savedEmail = localStorage.getItem('rememberedEmail');
+  if (savedEmail) {
+    emailInput.value = savedEmail;
+    rememberCheckbox.checked = true;
+  }
+
+  // Login submit handler
+  loginForm.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !validateEmail(email)) {
+      showAlert('Please enter a valid email address.');
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      showAlert('Password must be at least 6 characters long.');
+      return;
+    }
+
+    try {
+      const authData = await pb.collection('users').authWithPassword(email, password);
+
+      if (rememberCheckbox.checked) {
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
+
+      const role = authData.record.role;
+      showAlert('Login successful! Redirecting...', 'success');
+
+      setTimeout(() => {
+        switch (role) {
+          case 'facility-admin':
+            window.location.href = './dashboards/facility-admin/home.html';
+            break;
+          case 'property-admin':
+            window.location.href = './dashboards/property-admin/home.html';
+            break;
+          case 'staff':
+            window.location.href = './dashboards/staff';
+            break;
+          case 'student':
+            window.location.href = './dashboards/student/student-home.html';
+            break;
+          default:
+            showAlert('Your account does not have a valid role assigned.');
+        }
+      }, 1000);
+    } catch (err) {
+      showAlert('Login failed: ' + (err?.message || 'Invalid credentials.'));
+    }
+  });
+
+  // Forgot Password
+  forgotPasswordLink.addEventListener('click', async e => {
+    e.preventDefault();
+    const email = prompt('Enter your email to receive a reset link:');
+    if (!email || !validateEmail(email)) {
+      showAlert('Please enter a valid email.');
+      return;
+    }
+
+    try {
+      await pb.collection('users').requestPasswordReset(email);
+      showAlert('Reset link sent! Please check your email.', 'success');
+    } catch (err) {
+      showAlert('Error sending reset link: ' + (err?.message || 'Unknown error.'));
+    }
+  });
+});
