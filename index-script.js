@@ -69,6 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const role = authData.record.role;
       showAlert('Login successful! Redirecting...', 'success');
 
+      // Clear email and password after successful login
+      emailInput.value = '';
+      passwordInput.value = '';
+
       setTimeout(() => {
         switch (role) {
           case 'facility-admin':
@@ -89,6 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 1000);
     } catch (err) {
       showAlert('Login failed: ' + (err?.message || 'Invalid credentials.'));
+
+      // Clear only the password field after failed login
+      passwordInput.value = '';
     }
   });
 
