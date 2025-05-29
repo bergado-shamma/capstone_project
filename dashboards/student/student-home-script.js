@@ -1,47 +1,44 @@
 document.addEventListener('DOMContentLoaded', function () {
-    var calendarEl = document.getElementById('calendar');
+    const calendarEl = document.getElementById('calendar');
 
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth', // Initial view is the month view
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: ''
         },
-        slotMinTime: "07:00:00", // Earliest time on the calendar
-        slotMaxTime: "21:00:00", // Latest time on the calendar
+        slotMinTime: "07:00:00",
+        slotMaxTime: "21:00:00",
         slotLabelFormat: {
-            hour: '2-digit', // Format hours
-            minute: '2-digit', // Format minutes
-            hour12: false // Use 24-hour format
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
         },
         events: function(info, successCallback, failureCallback) {
-            // Fetch events from 'fetch_events.php'
             fetch('fetch_events.php')
-                .then(response => response.json()) // Parse the JSON response
+                .then(response => response.json())
                 .then(events => {
-                    console.log('Fetched events:', events); // Log the events to the console
-                    // Call successCallback with event data
+                    console.log('Fetched events:', events);
                     successCallback(events);
                 })
                 .catch(error => {
-                    console.error('Error fetching events:', error); // Log any errors
-                    failureCallback(error); // Handle error if fetching fails
+                    console.error('Error fetching events:', error);
+                    failureCallback(error);
                 });
         },
         eventClick: function(info) {
-            const eventId = info.event.id;  // Get the event ID
-            console.log("Event ID clicked: ", eventId); // Debugging: Check the event ID
+            const eventId = info.event.id;
+            console.log("Event ID clicked: ", eventId);
 
             fetch(`get_event.php?id=${eventId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        console.error("Error:", data.error); // Log error message from PHP
-                        return;  // Exit if there's an error
+                        console.error("Error:", data.error);
+                        return;
                     }
 
-                    // Populate event details if data is valid
                     document.getElementById("eventTitle").textContent = data.title || "N/A";
                     document.getElementById("personInCharge").textContent = data.person_in_charge || "N/A";
                     document.getElementById("reservationCode").textContent = data.reservation_code || "N/A";
@@ -54,7 +51,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById("capacity").textContent = data.capacity || "N/A";
                     document.getElementById("eventImage").src = data.image_url || '';
 
-                    // Show modal
                     document.getElementById("eventModal").style.display = "block";
                 })
                 .catch(error => {
@@ -63,32 +59,45 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Render the calendar
     calendar.render();
 
-    // Dropdown view change functionality
+    // Dropdown toggle
     const dropdownBtn = document.getElementById('dropdownBtn');
     const dropdownMenu = document.getElementById('dropdownMenu');
 
-    dropdownBtn.addEventListener('click', function () {
-        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+    dropdownBtn.addEventListener('click', function (event) {
+        event.stopPropagation();
+        const isVisible = dropdownMenu.style.display === 'block';
+        toggleDropdown(dropdownMenu, !isVisible);
     });
 
     dropdownMenu.querySelectorAll('li').forEach(item => {
         item.addEventListener('click', function () {
-            let view = this.getAttribute('data-view');
-            calendar.changeView(view); // Change the calendar view
-            dropdownMenu.style.display = 'none';
+            const view = this.getAttribute('data-view');
+            calendar.changeView(view);
+            toggleDropdown(dropdownMenu, false);
         });
     });
 
     document.addEventListener('click', function (event) {
         if (!dropdownBtn.contains(event.target) && !dropdownMenu.contains(event.target)) {
-            dropdownMenu.style.display = 'none'; // Close dropdown if clicked outside
+            toggleDropdown(dropdownMenu, false);
         }
     });
 
-    // Sidebar toggle functionality
+    function toggleDropdown(menu, show) {
+        if (show) {
+            menu.style.display = 'block';
+            menu.style.opacity = 1;
+            menu.style.transition = 'opacity 0.3s ease-in-out';
+        } else {
+            menu.style.opacity = 0;
+            setTimeout(() => {
+                menu.style.display = 'none';
+            }, 300);
+        }
+    }
+
     const burgerMenu = document.querySelector('.burger-menu');
     const sidebar = document.querySelector('.sidebar');
     const sidebarText = document.querySelectorAll('.sidebar ul li span');
@@ -105,12 +114,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     burgerMenu.addEventListener('click', function () {
-        let isCollapsed = sidebar.classList.contains('collapsed');
+        const isCollapsed = sidebar.classList.contains('collapsed');
         toggleSidebarState(!isCollapsed);
     });
 
-    // Load sidebar state from localStorage
     if (localStorage.getItem('sidebarState') === 'collapsed') {
         toggleSidebarState(true);
     }
+
+    // Modal close
+    const modal = document.getElementById("eventModal");
+    const closeModalBtn = document.querySelector("#eventModal .close");
+
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', function () {
+            modal.style.display = "none";
+        });
+    }
+
+    window.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    });
 });
