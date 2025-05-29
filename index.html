@@ -55,7 +55,7 @@
             <div class="mb-3">
               <label for="password" class="form-label">Password</label>
               <input
-                type="text"
+                type="password"
                 id="password"
                 class="form-control"
                 placeholder="**********"
@@ -67,7 +67,7 @@
                 <input class="form-check-input" type="checkbox" id="remember" />
                 <label class="form-check-label" for="remember">Remember Me</label>
               </div>
-              <a href="#">Forgot Password?</a>
+              <a href="#" id="forgot-password-link">Forgot Password?</a>
             </div>
 
             <button type="submit">Login</button>
@@ -80,8 +80,21 @@
       </section>
     </main>
 
-    <!-- Floating alert container -->
+    <!-- Floating alert -->
     <div id="alert-floating"></div>
+
+    <!-- Reset password modal -->
+    <div id="reset-popup" class="reset-popup">
+      <div class="popup-content">
+        <h5>Reset Password</h5>
+        <p>Enter your email to receive a reset link:</p>
+        <input type="text" id="reset-email" class="form-control mb-2" placeholder="mail@sample.com" />
+        <div class="d-flex justify-content-end gap-2">
+          <button id="reset-cancel" class="btn btn-secondary btn-sm">Cancel</button>
+          <button id="reset-send" class="btn btn-primary btn-sm">Send</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Scripts -->
     <script type="module" src="index-script.js"></script>

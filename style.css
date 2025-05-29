@@ -70,7 +70,8 @@ html {
 }
 
 input[type="email"],
-input[type="password"] {
+input[type="password"],
+input[type="text"] {
   width: 100%;
   padding: 10px;
   margin-bottom: 1rem;
@@ -126,7 +127,7 @@ button[type="submit"] {
   }
 }
 
-/* Floating alert in center */
+/* Floating alert */
 #alert-floating {
   position: fixed;
   top: 50%;
@@ -139,8 +140,27 @@ button[type="submit"] {
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
-
 #alert-floating.visible {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Reset Password Popup */
+.reset-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: none;
+  width: 90%;
+  max-width: 400px;
+}
+
+.reset-popup.active {
+  display: block;
 }

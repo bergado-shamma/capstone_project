@@ -2,7 +2,6 @@ import PocketBase from 'https://esm.sh/pocketbase';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
 
-// Show Bootstrap floating alert
 function showAlert(message, type = 'danger') {
   const alertContainer = document.getElementById('alert-floating');
   alertContainer.innerHTML = `
@@ -20,31 +19,31 @@ function showAlert(message, type = 'danger') {
   }, 6000);
 }
 
-// Email format validator
 function validateEmail(email) {
   const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return pattern.test(email);
 }
 
-// Main logic
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.querySelector('form');
   const emailInput = document.getElementById('email');
   const passwordInput = document.getElementById('password');
   const rememberCheckbox = document.getElementById('remember');
-  const forgotPasswordLink = document.querySelector('.remember-forgot a');
+  const forgotPasswordLink = document.getElementById('forgot-password-link');
 
-  // Autofill saved email
+  const resetPopup = document.getElementById('reset-popup');
+  const resetEmailInput = document.getElementById('reset-email');
+  const resetSendBtn = document.getElementById('reset-send');
+  const resetCancelBtn = document.getElementById('reset-cancel');
+
   const savedEmail = localStorage.getItem('rememberedEmail');
   if (savedEmail) {
     emailInput.value = savedEmail;
     rememberCheckbox.checked = true;
   }
 
-  // Login submit handler
-  loginForm.addEventListener('submit', async e => {
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const email = emailInput.value.trim();
     const password = passwordInput.value;
 
@@ -93,10 +92,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Forgot Password
-  forgotPasswordLink.addEventListener('click', async e => {
+  // Forgot password link triggers popup
+  forgotPasswordLink.addEventListener('click', (e) => {
     e.preventDefault();
-    const email = prompt('Enter your email to receive a reset link:');
+    resetEmailInput.value = '';
+    resetPopup.classList.add('active');
+  });
+
+  // Cancel reset
+  resetCancelBtn.addEventListener('click', () => {
+    resetPopup.classList.remove('active');
+  });
+
+  // Send reset link
+  resetSendBtn.addEventListener('click', async () => {
+    const email = resetEmailInput.value.trim();
     if (!email || !validateEmail(email)) {
       showAlert('Please enter a valid email.');
       return;
@@ -105,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await pb.collection('users').requestPasswordReset(email);
       showAlert('Reset link sent! Please check your email.', 'success');
+      resetPopup.classList.remove('active');
     } catch (err) {
       showAlert('Error sending reset link: ' + (err?.message || 'Unknown error.'));
     }
