@@ -5,12 +5,14 @@ body {
   background-color: #f4f4f4;
   height: 100vh;
 }
+
 .logo {
   font-size: 20px;
   font-weight: bold;
   margin-bottom: 20px;
   text-align: center;
 }
+
 .nav-btn {
   display: block;
   background: none;
@@ -23,48 +25,54 @@ body {
   width: 100%;
   padding: 10px;
 }
+
 .main-content {
   flex: 1;
   padding: 20px;
   background-color: white;
   margin-left: 250px;
-
 }
+
 .reservation-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 }
+
 th,
 td {
   border: 1px solid black;
   padding: 8px;
   text-align: center;
 }
+
 th {
   background-color: #c44e4e;
   color: white;
 }
+
 .filter-buttons {
   display: flex;
   gap: 10px;
   margin-bottom: 10px;
 }
+
 .filter-buttons button {
   padding: 8px 15px;
   border: none;
   cursor: pointer;
   background-color: #ddd;
 }
+
 .filter-buttons button.active {
   background-color: #c44e4e;
   color: white;
 }
-/* Sidebar */
+
 .sidebar {
-  width: 200px; /* or 250px */
+  width: 200px;
   height: 100vh;
-  background-color: #6E131D; /* or #781c1c */
+  background-color: #6e131d;
   color: white;
   position: fixed;
   left: 0;
@@ -75,12 +83,9 @@ th {
   flex-direction: column;
   align-items: center;
   transition: width 0.3s ease-in-out;
-
-  /* Add these to match font settings */
   font-family: Arial, sans-serif;
   font-size: 16px;
 }
-
 
 .sidebar.open {
   left: 0;
@@ -151,10 +156,7 @@ th {
   transition: opacity 0.3s ease-in-out;
 }
 
-.sidebar.collapsed ul li a span {
-  display: none;
-}
-
+.sidebar.collapsed ul li a span,
 .sidebar.collapsed .menu-text {
   display: none;
 }
