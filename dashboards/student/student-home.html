@@ -1,92 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Calendar Activities</title>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/x-icon" href="/path/to/favicon.ico" />
     <link rel="stylesheet" href="./student-home-styles.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
-</head>
+  </head>
 
-<body>
+    <body id="body-pd">
+    <header class="header" id="header">
+      <div class="header_toggle">
+        <i class="bx bx-menu" id="header-toggle"></i>
+      </div>
+    </header>
 
-    <div class="burger-menu"><i class="fas fa-bars"></i></div>
+    <div class="l-navbar" id="nav-bar">
+      <nav class="nav">
+        <div>
+          <a href="#" class="nav_logo">
+            <img
+              src="/assets/puplogo.png"
+              alt="PFRS Logo"
+              class="nav_logo-icon"
+            />
+            <span class="nav_logo-name">PFRS</span>
+          </a>
 
-    <div class="sidebar">
-        <div class="logo">
-            <img src="/assets/puplogo.png" alt="Logo Image" class="logo-img" />
-            <span class="logo-text">PRFS</span>
+           <div class="nav_list">
+            <a
+              href="/dashboards/student/student-home.html"
+              class="nav_link active"
+            >
+              <i class="bx bx-home nav_icon"></i>
+              <span class="nav_name">Home</span>
+            </a>
+            <a
+              href="/dashboards/student/reservation-history/reservation-history.html"
+              class="nav_link "
+            >
+              <i class="bx bx-calendar-event nav_icon"></i>
+              <span class="nav_name">Reservation Record</span>
+            </a>
+          <div class="logout">
+            <a href="#" class="nav_link">
+              <i class="bx bx-log-out nav_icon"></i>
+              <span class="nav_name">Sign Out</span>
+            </a>
+          </div>
         </div>
-        <nav>
-            <ul>
-                <li><i class="fas fa-home"></i> <span class="menu-text">Home</span></li>
-                <li><i class="fas fa-calendar-check"></i> <span class="menu-text">Reservation Record</span></li>
-                <li><i class="fas fa-user-cog"></i> <span class="menu-text">Manage Account</span></li>
-            </ul>
-        </nav>
-        <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </nav>
     </div>
 
     <main class="content">
-        <h1>Overview of Calendar Activities</h1>
-        <div class="status-legend">
-            <div class="status-container">
-                <strong>Legend:</strong>
-                <div class="status-box pending">Pending Reservation</div>
-                <div class="status-box ongoing">On-going Reservation</div>
-                <div class="status-box scheduled">Scheduled</div>
-            </div>
-        </div>        
+      <h1>Overview of Calendar Activities</h1>
+      <div class="status-legend">
+        <div class="status-container">
+          <strong>Legend:</strong>
+          <div class="status-box pending">Pending Reservation</div>
+          <div class="status-box ongoing">On-going Reservation</div>
+          <div class="status-box scheduled">Scheduled</div>
+        </div>
+      </div>
 
-        <div class="calendar-header">
-            <button id="addEventBtn">+ ADD EVENT</button>
-            <div class="dropdown">
-                <button id="dropdownBtn"><i class="fas fa-calendar-alt"></i></button>
-                <ul id="dropdownMenu" class="dropdown-menu">
-                    <li data-view="dayGridMonth">Month</li>
-                    <li data-view="timeGridWeek">Week</li>
-                    <li data-view="timeGridDay">Day</li>
-                </ul>
-            </div>
+      <div class="calendar-header">
+        <a href="././reservation-module/facility-reservation/facility-reservation.html">
+        <button id="addEventBtn">+ ADD EVENT</button></a>
+        <div class="dropdown">
+          <button id="dropdownBtn"><i class="fas fa-calendar-alt"></i></button>
+          <ul id="dropdownMenu" class="dropdown-menu">
+            <li data-view="dayGridMonth">Month</li>
+            <li data-view="timeGridWeek">Week</li>
+            <li data-view="timeGridDay">Day</li>
+          </ul>
         </div>
+      </div>
 
-        <div class="calendar-container">
-            <div id="currentMonth"></div>
-            <div id="calendar"></div>
+      <div class="calendar-container">
+        <div id="currentMonth"></div>
+        <div id="calendar"></div>
+      </div>
+
+      <div id="eventModal" class="modal">
+        <div class="modal-content">
+          <span
+            class="close"
+            onclick="document.getElementById('eventModal').style.display='none'"
+            >&times;</span
+          >
+          <h2 id="eventTitle"></h2>
+          <p>
+            <strong>Person In-charge:</strong> <span id="personInCharge"></span>
+          </p>
+          <p>
+            <strong>Reservation Code:</strong>
+            <span id="reservationCode"></span>
+          </p>
+          <p><strong>Event Name:</strong> <span id="eventName"></span></p>
+          <p><strong>Event Type:</strong> <span id="eventType"></span></p>
+          <p><strong>Organization:</strong> <span id="organization"></span></p>
+          <p><strong>Time:</strong> <span id="eventTime"></span></p>
+          <p><strong>Properties:</strong> <span id="properties"></span></p>
+          <p><strong>Facility Name:</strong> <span id="facilityName"></span></p>
+          <p><strong>Capacity:</strong> <span id="capacity"></span></p>
+          <img id="eventImage" src="" alt="Event Image" />
         </div>
-        
-        <div id="eventModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="document.getElementById('eventModal').style.display='none'">&times;</span>
-                <h2 id="eventTitle"></h2>
-                <p><strong>Person In-charge:</strong> <span id="personInCharge"></span></p>
-                <p><strong>Reservation Code:</strong> <span id="reservationCode"></span></p>
-                <p><strong>Event Name:</strong> <span id="eventName"></span></p>
-                <p><strong>Event Type:</strong> <span id="eventType"></span></p>
-                <p><strong>Organization:</strong> <span id="organization"></span></p>
-                <p><strong>Time:</strong> <span id="eventTime"></span></p>
-                <p><strong>Properties:</strong> <span id="properties"></span></p>
-                <p><strong>Facility Name:</strong> <span id="facilityName"></span></p>
-                <p><strong>Capacity:</strong> <span id="capacity"></span></p>
-                <img id="eventImage" src="" alt="Event Image" />
-            </div>
-        </div>
-        
-        <style>
-            .modal { display: none; position: fixed; z-index: 1; padding-top: 60px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-            .modal-content { background-color: white; margin: auto; padding: 20px; border: 1px solid #888; width: 50%; }
-            .close { color: red; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        </style>
-        
+      </div>
+
+      <style>
+        .modal {
+          display: none;
+          position: fixed;
+          z-index: 1;
+          padding-top: 60px;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          overflow: auto;
+          background-color: rgba(0, 0, 0, 0.4);
+        }
+        .modal-content {
+          background-color: white;
+          margin: auto;
+          padding: 20px;
+          border: 1px solid #888;
+          width: 50%;
+        }
+        .close {
+          color: red;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+      </style>
     </main>
 
     <script src="./student-home-script.js"></script>
-</body>
-
+  </body>
 </html>

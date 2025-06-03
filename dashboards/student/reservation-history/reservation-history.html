@@ -4,28 +4,73 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reservation History</title>
+       <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./reservation-history-styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/x-icon" href="/path/to/favicon.ico" />
   </head>
-  <body>
-    <div class="burger-menu" onclick="toggleSidebar()">
-      <i class="fas fa-bars"></i>
-    </div>
-
-    <div class="sidebar">
-      <div class="logo">
-        <img src="/assets/puplogo.png" alt="Logo Image" class="logo-img">
-        <span class="logo-text">PRFS</span>
+  <body id="body-pd">
+    <header class="header" id="header">
+      <div class="header_toggle">
+        <i class="bx bx-menu" id="header-toggle"></i>
       </div>
-      <nav>
-        <ul>
-          <li><i class="fas fa-home"></i> <span class="menu-text">Home</span></li>
-          <li><i class="fas fa-calendar-check"></i> <span class="menu-text">Calendar</span></li>
-          <li><i class="fas fa-user-cog"></i> <span class="menu-text">Settings</span></li>
-        </ul>
+    </header>
+
+    <div class="l-navbar" id="nav-bar">
+      <nav class="nav">
+        <div>
+          <a href="#" class="nav_logo">
+            <img
+              src="/assets/puplogo.png"
+              alt="PFRS Logo"
+              class="nav_logo-icon"
+            />
+            <span class="nav_logo-name">PFRS</span>
+          </a>
+
+           <div class="nav_list">
+            <a
+              href="/dashboards/student/student-home.html"
+              class="nav_link"
+            >
+              <i class="bx bx-home nav_icon"></i>
+              <span class="nav_name">Home</span>
+            </a>
+            <a
+              href="/dashboards/student/reservation-history/reservation-history.html"
+              class="nav_link active"
+            >
+              <i class="bx bx-calendar-event nav_icon"></i>
+              <span class="nav_name">Reservation Record</span>
+            </a>
+          <div class="logout">
+            <a href="#" class="nav_link">
+              <i class="bx bx-log-out nav_icon"></i>
+              <span class="nav_name">Sign Out</span>
+            </a>
+          </div>
+        </div>
       </nav>
-      <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
 
     <div class="main-content">
@@ -52,6 +97,7 @@
         <tbody id="reservation-body"></tbody>
       </table>
     </div>
+<script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
 
     <script src="./reservation-history-script.js"></script>
   </body>
