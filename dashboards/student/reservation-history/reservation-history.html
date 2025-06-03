@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reservation History</title>
     <link rel="stylesheet" href="./reservation-history-styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
     <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
   </head>
   <body>
@@ -15,14 +18,22 @@
 
     <div class="sidebar">
       <div class="logo">
-        <img src="/assets/puplogo.png" alt="Logo Image" class="logo-img">
+        <img src="/assets/puplogo.png" alt="Logo Image" class="logo-img" />
         <span class="logo-text">PRFS</span>
       </div>
       <nav>
         <ul>
-          <li><i class="fas fa-home"></i> <span class="menu-text">Home</span></li>
-          <li><i class="fas fa-calendar-check"></i> <span class="menu-text">Calendar</span></li>
-          <li><i class="fas fa-user-cog"></i> <span class="menu-text">Settings</span></li>
+          <li>
+            <i class="fas fa-home"></i> <span class="menu-text">Home</span>
+          </li>
+          <li>
+            <i class="fas fa-calendar-check"></i>
+            <span class="menu-text">Calendar</span>
+          </li>
+          <li>
+            <i class="fas fa-user-cog"></i>
+            <span class="menu-text">Settings</span>
+          </li>
         </ul>
       </nav>
       <button class="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -31,10 +42,11 @@
     <div class="main-content">
       <h1>Reservation History</h1>
       <div class="filter-buttons">
-        <button onclick="filterReservations('All')" class="active">All</button>
-        <button onclick="filterReservations('Pending')">Pending</button>
-        <button onclick="filterReservations('Approved')">Approved</button>
-        <button onclick="filterReservations('Rejected')">Rejected</button>
+        <button data-status="all" class="active">All</button>
+        <button data-status="pending">Pending</button>
+        <button data-status="approved">Approved</button>
+        <button data-status="rejected">Rejected</button>
+        <button data-status="cancelled">Cancelled</button>
       </div>
 
       <table class="reservation-table">
