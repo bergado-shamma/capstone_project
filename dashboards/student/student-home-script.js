@@ -113,4 +113,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (localStorage.getItem('sidebarState') === 'collapsed') {
         toggleSidebarState(true);
     }
+  document.getElementById("addEventBtn").addEventListener("click", function () {
+    window.location.href = "./reservation-module/facility-reservation/facility-reservation.html"; // Redirect to facility reservation page
+  });
+
 });
