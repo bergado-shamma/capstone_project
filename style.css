@@ -26,9 +26,14 @@ html {
   object-fit: cover;
 }
 
+/* Updated login-section for glass transparency */
 .login-section {
   flex: 3;
-  background-color: #fff;
+  background-color: rgba(255, 255, 255, 0.2); /* White with 20% opacity */
+  backdrop-filter: blur(10px); /* Frosted glass effect */
+  /* You might want to add a subtle border for definition, e.g.: */
+  /* border: 1px solid rgba(255, 255, 255, 0.3); */
+  
   display: flex;
   justify-content: center;
   align-items: center;
@@ -127,15 +132,16 @@ button[type="submit"] {
   }
 }
 
-/* Floating alert */
+/* Floating alert (Revised) */
 #alert-floating {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 20px; /* Position from the top */
+  right: 20px; /* Position from the right */
+  left: auto; /* Override left: 50% */
+  transform: none; /* Remove translation */
   z-index: 9999;
-  max-width: 90%;
-  width: 350px;
+  max-width: 350px; /* Max width for readability */
+  width: 90%; /* Responsive width */
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
