@@ -10,4 +10,5 @@ document.addEventListener("DOMContentLoaded", function () {
     bodypd.classList.toggle("body-pd");
     headerpd.classList.toggle("body-pd");
   });
+  // });
 });

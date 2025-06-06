@@ -50,6 +50,7 @@ async function loadFacilities() {
 
         reserveBtn.disabled = false;
         reserveBtn.onclick = () => {
+          sessionStorage.setItem("facilityID", facility.id); // Store facility ID here
           sessionStorage.setItem("selectedFacility", facility.name);
           sessionStorage.setItem("max_capacity", facility.maxCapacity);
           sessionStorage.setItem("facilityImage", imgUrl);
