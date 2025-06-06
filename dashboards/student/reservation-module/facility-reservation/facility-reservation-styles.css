@@ -33,6 +33,7 @@ a {
 }
 
 .progress-bar-container {
+  height: 135px;
   display: flex;
   justify-content: space-between;
   align-items: center;
