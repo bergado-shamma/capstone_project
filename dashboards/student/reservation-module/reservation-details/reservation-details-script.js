@@ -246,6 +246,13 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
+      // Get user ID - ensure it's available
+      const userId = pb.authStore.model?.id || "";
+      if (!userId) {
+        alert("User authentication required. Please login and try again.");
+        return;
+      }
+
       // Handle Event Creation/Update
       let eventID = sessionStorage.getItem("eventID");
       if (!eventID || eventID.length !== 15) {
@@ -299,9 +306,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       formData.append("eventName", updatedEventData.event_name);
 
-      // User ID
-      const userId = pb.authStore.model?.id || "";
-      if (userId) formData.append("userID", userId);
+      // 🔧 NEW: Add status field (automatically set)
+      formData.append("status", "pending");
+
+      // 🔧 UPDATED: User ID (ensure it's properly added)
+      formData.append("userID", userId);
+      formData.append("user_id", userId); // Adding both formats for compatibility
 
       // 🔧 FIXED: Property IDs handling
       const addedAssets = JSON.parse(
@@ -385,6 +395,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.querySelector(".reservation-details");
   const eventType = document.getElementById("event_type");
