@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superadmin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Superadmin Dashboard</h1>
+        <nav>
+            <a href="superadmin-dashboard.html">Dashboard</a>
+            <a href="manage-account.html">My Account</a>
+            <a href="calendar.html">Manage Calendar</a>
+            <a href="statistics.html">View Statistics</a>
+            <button id="logout-button" class="logout-button hidden">Logout</button>
+        </nav>
+    </header>
+    <main>
+        <section id="dashboard-overview">
+            <h2>Welcome, Superadmin!</h2>
+            <p id="loading-dashboard" class="message">Loading dashboard data...</p>
+            <p id="error-dashboard" class="message error-message hidden"></p>
+            <p id="permission-error-dashboard" class="message error-message hidden">Access Denied: You do not have
+                superadmin privileges to view this page.</p>
+
+            <div id="dashboard-content" class="hidden">
+                <div class="stat-cards-container">
+                    <div class="stat-card">
+                        <h3>Total Registered Users</h3>
+                        <p id="total-users-dashboard">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Events</h3>
+                        <p id="total-events-dashboard">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Users Pending Verification</h3>
+                        <p id="pending-verification-dashboard">--</p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Users by Role (All System Users)</h3>
+                    <canvas id="usersByRoleChartDashboard"></canvas>
+                </div>
+
+                <div class="dashboard-links">
+                    <h3>Quick Actions</h3>
+                    <a href="calendar.html">Go to Calendar Management</a>
+                    <a href="statistics.html">Go to Detailed Statistics</a>
+                </div>
+            </div>
+            <div id="auth-buttons-dashboard" class="auth-buttons-container hidden">
+                <p>You must be logged in with superadmin privileges to access the dashboard.</p>
+                <button onclick="window.location.href='login.html'">Login</button>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Your App. All rights reserved.</p>
+    </footer>
+
+    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    <script src="superadmin-dashboard.js"></script>
+</body>
+
+</html>

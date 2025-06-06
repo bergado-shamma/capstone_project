@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Statistics</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Detailed Application Statistics</h1>
+        <nav>
+            <a href="superadmin-dashboard.html">Dashboard</a>
+            <a href="manage-account.html">My Account</a>
+            <a href="calendar.html">Manage Calendar</a>
+            <a href="statistics.html">View Statistics</a>
+            <button id="logout-button" class="logout-button hidden">Logout</button>
+        </nav>
+    </header>
+    <main>
+        <section id="statistics-section">
+            <h2>System-Wide Data Overview</h2>
+            <p id="loading-stats" class="message">Loading statistics...</p>
+            <p id="error-stats" class="message error-message hidden"></p>
+            <p id="permission-error-stats" class="message error-message hidden">Access Denied: You do not have superadmin privileges to view detailed statistics.</p>
+
+            <div id="stats-content" class="hidden">
+                <div class="stat-cards-container">
+                    <div class="stat-card">
+                        <h3>Total Registered Users</h3>
+                        <p id="total-users">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Verified Users</h3>
+                        <p id="verified-users">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Events Created</h3>
+                        <p id="total-events">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Events This Month</h3>
+                        <p id="events-this-month">--</p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Users by Role</h3>
+                    <canvas id="usersByRoleChart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Users by Organization</h3>
+                    <canvas id="usersByOrganizationChart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Users by Course</h3>
+                    <canvas id="usersByCourseChart"></canvas>
+                </div>
+            </div>
+            <div id="auth-buttons-stats" class="auth-buttons-container hidden">
+                <p>You must be logged in with superadmin privileges to view detailed statistics.</p>
+                <button onclick="window.location.href='login.html'">Login</button>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Your App. All rights reserved.</p>
+    </footer>
+
+    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    <script src="statistics.js"></script>
+</body>
+</html>
