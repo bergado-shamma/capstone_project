@@ -1,35 +1,24 @@
-const pb = new PocketBase('http://localhost:8090');
-
-document.addEventListener('DOMContentLoaded', function () {
-    fetchReservations();
-
-    const burgerMenu = document.querySelector('.burger-menu');
-    if (burgerMenu) {
-        burgerMenu.addEventListener('click', toggleSidebar);
-    } else {
-        console.error("Burger menu button not found!");
-    }
-});
+const pb = new PocketBase("http://localhost:8090");
 
 async function fetchReservations() {
-    try {
-        const records = await pb.collection('reservation_tbl').getFullList({
-            sort: '-created',
-            expand: 'facility_id,user_id'
-        });
+  try {
+    const records = await pb.collection("reservation_tbl").getFullList({
+      sort: "-created",
+      expand: "facility_id,user_id",
+    });
 
-        const tbody = document.getElementById('reservation-body');
-        tbody.innerHTML = '';
+    const tbody = document.getElementById("reservation-body");
+    tbody.innerHTML = "";
 
-        if (records.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8">No reservations found.</td></tr>';
-            return;
-        }
+    if (records.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8">No reservations found.</td></tr>';
+      return;
+    }
 
-        records.forEach((item, index) => {
-            const facilityName = item.expand?.facility_id?.name || 'N/A';
-            const requesterName = item.expand?.user_id?.name || 'Unknown';
-            const row = `
+    records.forEach((item, index) => {
+      const facilityName = item.expand?.facility_id?.name || "N/A";
+      const requesterName = item.expand?.user_id?.name || "Unknown";
+      const row = `
                 <tr class="reservation-row" data-status="${item.Status}">
                     <td>${index + 1}</td>
                     <td>${item.reservation_id}</td>
@@ -40,43 +29,52 @@ async function fetchReservations() {
                     <td>${item.Status}</td>
                 </tr>
             `;
-            tbody.innerHTML += row;
-        });
-    } catch (error) {
-        console.error('Error fetching data from PocketBase:', error);
-    }
+      tbody.innerHTML += row;
+    });
+  } catch (error) {
+    console.error("Error fetching data from PocketBase:", error);
+  }
 }
 
 function filterReservations(status) {
-    let rows = document.querySelectorAll('.reservation-row');
-    rows.forEach(row => {
-        if (status === 'All' || row.getAttribute('data-status') === status) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
+  let rows = document.querySelectorAll(".reservation-row");
+  rows.forEach((row) => {
+    if (status === "All" || row.getAttribute("data-status") === status) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
 
-    document.querySelectorAll('.filter-buttons button').forEach(btn => {
-        btn.classList.remove('active');
-    });
+  document.querySelectorAll(".filter-buttons button").forEach((btn) => {
+    btn.classList.remove("active");
+  });
 
-    event.target.classList.add('active');
+  event.target.classList.add("active");
 }
 
 function formatDateTime(dateTimeStr) {
-    const date = new Date(dateTimeStr);
-    return date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    });
+  const date = new Date(dateTimeStr);
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('collapsed');
-}
+document.addEventListener("DOMContentLoaded", function () {
+  const toggle = document.getElementById("header-toggle"),
+    nav = document.getElementById("nav-bar"),
+    bodypd = document.getElementById("body-pd"),
+    headerpd = document.getElementById("header");
+
+  toggle.addEventListener("click", () => {
+    nav.classList.toggle("show");
+    toggle.classList.toggle("bx-x");
+    bodypd.classList.toggle("body-pd");
+    headerpd.classList.toggle("body-pd");
+  });
+});
