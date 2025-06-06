@@ -40,7 +40,11 @@
           <p class="subtext">Getting started is easy</p>
 
           <form id="register-form">
-            <input type="text" placeholder="Student Number" name="student_number" />
+            <input
+              type="text"
+              placeholder="Student Number"
+              name="student_number"
+            />
 
             <div class="name-fields">
               <input type="text" placeholder="Last Name" name="last_name" />
@@ -50,21 +54,42 @@
 
             <div class="dropdown-fields">
               <select name="organization">
-                <option selected disabled>Organization</option>
-                <option value="org1">Organization 1</option>
-                <option value="org2">Organization 2</option>
+                <option selected disabled value="">Organization</option>
+                <option value="CSC">CSC</option>
+                <option value="AECES">AECES</option>
+                <option value="CS">CS</option>
+                <option value="JMA">JMA</option>
+                <option value="JPIA">JPIA</option>
+                <option value="JPMAP">JPMAP</option>
+                <option value="JPSME">JPSME</option>
+                <option value="PASOA">PASOA</option>
+                <option value="MS">MS</option>
+                <option value="PUPUKAW">PUPUKAW</option>
+                <option value="ERG">ERG</option>
               </select>
 
               <select name="course">
-                <option selected disabled>Course</option>
-                <option value="course1">Course 1</option>
-                <option value="course2">Course 2</option>
+                <option selected disabled value="">Course</option>
+                <option value="BSECE">BSECE</option>
+                <option value="BSME">BSME</option>
+                <option value="BSBAHRM">BSBAHRM</option>
+                <option value="BSBAMM">BSBAMM</option>
+                <option value="BSIT">BSIT</option>
+                <option value="BSED-MATH">BSED-MATH</option>
+                <option value="BSED-ENGLISH">BSED-ENGLISH</option>
+                <option value="BSOA">BSOA</option>
+                <option value="DIT">DIT</option>
+                <option value="DOMT">DOMT</option>
               </select>
             </div>
 
             <input type="text" placeholder="Email" name="email" />
-            <input type="text" placeholder="Password" name="password" />
-            <input type="text" placeholder="Confirm Password" name="confirm_password" />
+            <input type="password" placeholder="Password" name="password" />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              name="confirm_password"
+            />
 
             <button type="submit" class="create-btn">Create Account</button>
           </form>
@@ -77,7 +102,6 @@
       </section>
     </div>
 
-    <!-- Floating alert -->
     <div id="alert-floating"></div>
 
     <script type="module" src="./sign-up-script.js"></script>
