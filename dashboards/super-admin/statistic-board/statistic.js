@@ -1,203 +1,389 @@
-const pb = new PocketBase('YOUR_POCKETBASE_URL'); // <<< IMPORTANT: REPLACE THIS
+// statistic.js
+const pb = new PocketBase('http://127.0.0.1:8090'); // Replace with your PocketBase URL
 
-const loadingStats = document.getElementById('loading-stats');
-const errorStats = document.getElementById('error-stats');
-const permissionErrorStats = document.getElementById('permission-error-stats');
-const statsContent = document.getElementById('stats-content');
-const totalUsersElement = document.getElementById('total-users');
-const verifiedUsersElement = document.getElementById('verified-users');
-const totalEventsElement = document.getElementById('total-events');
-const eventsThisMonthElement = document.getElementById('events-this-month'); // New
-const usersByRoleChartCanvas = document.getElementById('usersByRoleChart');
-const usersByOrganizationChartCanvas = document.getElementById('usersByOrganizationChart');
-const usersByCourseChartCanvas = document.getElementById('usersByCourseChart'); // New
-const authButtonsStats = document.getElementById('auth-buttons-stats');
-const logoutButton = document.getElementById('logout-button'); // Added for header nav
+document.addEventListener('DOMContentLoaded', async () => {
+    const loadingStats = document.getElementById('loading-stats');
+    const errorStats = document.getElementById('error-stats');
+    // permissionErrorStats and authButtonsStats are no longer relevant as checks are removed
+    const statsContent = document.getElementById('stats-content');
 
-let usersByRoleChartInstance;
-let usersByOrganizationChartInstance;
-let usersByCourseChartInstance; // New chart instance
+    // Stat Cards
+    const totalUsersEl = document.getElementById('total-users');
+    const verifiedUsersEl = document.getElementById('verified-users');
+    const totalEventsEl = document.getElementById('total-events');
+    const eventsThisMonthEl = document.getElementById('events-this-month');
 
-// Helper function to display messages
-function displayMessage(element, message, type) {
-    element.textContent = message;
-    element.classList.remove('hidden', 'success-message', 'error-message');
-    if (type) {
-        element.classList.add(`${type}-message`);
-    }
-}
+    // Chart Canvases
+    const usersByRoleChartCtx = document.getElementById('usersByRoleChart').getContext('2d');
+    const usersByOrganizationChartCtx = document.getElementById('usersByOrganizationChart').getContext('2d');
+    const usersByCourseChartCtx = document.getElementById('usersByCourseChart').getContext('2d');
+    const eventsByOrganizationChartCtx = document.getElementById('eventsByOrganizationChart').getContext('2d');
+    const academicEventsByProgramChartCtx = document.getElementById('academicEventsByProgramChart').getContext('2d');
 
-async function fetchStatistics() {
-    loadingStats.classList.remove('hidden');
-    errorStats.classList.add('hidden');
-    permissionErrorStats.classList.add('hidden');
-    statsContent.classList.add('hidden');
-    authButtonsStats.classList.add('hidden');
+    // Logout functionality (no longer relevant if not logging in, but keeping for completeness if you re-add login later)
+    const logoutButton = document.getElementById('logout-button');
+    const sidebarLogoutLink = document.getElementById('sidebar-logout-link');
 
-    // Check auth status for logout button
-    if (pb.authStore.isValid) {
-        logoutButton.classList.remove('hidden');
-    } else {
-        logoutButton.classList.add('hidden');
-    }
-
-    try {
-        if (!pb.authStore.isValid) {
-            loadingStats.classList.add('hidden');
-            authButtonsStats.classList.remove('hidden');
-            return;
+    const setupLogout = () => {
+        // These will only work if there's an active session, which there won't be without login.
+        // You might want to hide these buttons/links in your HTML if you're not logging in.
+        if (logoutButton) {
+            logoutButton.classList.remove('hidden'); // This might not be needed if button is always hidden
+            logoutButton.addEventListener('click', async () => {
+                pb.authStore.clear();
+                window.location.href = 'login.html'; // Redirect to login page
+            });
         }
-
-        const currentUserRole = pb.authStore.model.role;
-        const isSuperAdmin = currentUserRole === 'super-admin';
-
-        if (!isSuperAdmin) {
-            loadingStats.classList.add('hidden');
-            permissionErrorStats.classList.remove('hidden');
-            authButtonsStats.classList.remove('hidden');
-            return;
+        if (sidebarLogoutLink) {
+            sidebarLogoutLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                pb.authStore.clear();
+                window.location.href = 'login.html';
+            });
         }
+    };
 
-        // --- Fetch Data from PocketBase ---
-        const allUsers = await pb.collection('users').getFullList({});
-        const allEvents = await pb.collection('events').getFullList({});
+    // Sidebar toggle (from your HTML)
+    const headerToggle = document.getElementById('header-toggle');
+    const navbar = document.getElementById('nav-bar');
+    const bodypd = document.getElementById('body-pd');
 
-        // --- Calculate Summary Statistics ---
-        const totalUsers = allUsers.length;
-        const verifiedUsers = allUsers.filter(user => user.verified).length;
-        const totalEvents = allEvents.length;
-
-        // Calculate events this month
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59); // Last day of month
-        const eventsThisMonth = allEvents.filter(event => {
-            const eventStartDate = new Date(event.start_date);
-            return eventStartDate >= startOfMonth && eventStartDate <= endOfMonth;
-        }).length;
-
-
-        // --- Populate Summary Cards ---
-        totalUsersElement.textContent = totalUsers;
-        verifiedUsersElement.textContent = verifiedUsers;
-        totalEventsElement.textContent = totalEvents;
-        eventsThisMonthElement.textContent = eventsThisMonth; // Display new stat
-
-        // --- Prepare Data for Charts ---
-
-        const roles = ["super-admin", "property-admin", "facility-admin", "staff", "student"];
-        const usersByRole = {};
-        roles.forEach(role => usersByRole[role] = 0);
-        allUsers.forEach(user => {
-            if (user.role && usersByRole.hasOwnProperty(user.role)) {
-                usersByRole[user.role]++;
-            }
+    if (headerToggle && navbar && bodypd) {
+        headerToggle.addEventListener('click', () => {
+            navbar.classList.toggle('show');
+            headerToggle.classList.toggle('bx-x');
+            bodypd.classList.toggle('body-pd');
         });
-
-        const organizations = ["CSC", "AECES", "CS", "JMA", "JPIA", "JPMAP", "JPSME", "PASOA", "MS", "PUPUKAW", "ERG"];
-        const usersByOrganization = {};
-        organizations.forEach(org => usersByOrganization[org] = 0);
-        allUsers.forEach(user => {
-            if (user.organization && usersByOrganization.hasOwnProperty(user.organization)) {
-                usersByOrganization[user.organization]++;
-            }
-        });
-
-        const courses = ["BSECE", "BSME", "BSBAHRM", "BSBAMM", "BSIT", "BSED-MATH", "BSED-ENGLISH", "BSOA", "DIT", "DOMT"];
-        const usersByCourse = {};
-        courses.forEach(course => usersByCourse[course] = 0);
-        allUsers.forEach(user => {
-            if (user.course && usersByCourse.hasOwnProperty(user.course)) {
-                usersByCourse[user.course]++;
-            }
-        });
-
-        // --- Render Charts ---
-
-        // Destroy existing chart instances before creating new ones
-        if (usersByRoleChartInstance) usersByRoleChartInstance.destroy();
-        if (usersByOrganizationChartInstance) usersByOrganizationChartInstance.destroy();
-        if (usersByCourseChartInstance) usersByCourseChartInstance.destroy(); // Destroy new chart
-
-        // Users by Role Chart (Doughnut Chart)
-        usersByRoleChartInstance = new Chart(usersByRoleChartCanvas, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(usersByRole),
-                datasets: [{
-                    data: Object.values(usersByRole),
-                    backgroundColor: [
-                        'rgba(128, 0, 0, 0.7)', // PUP Maroon (Superadmin)
-                        'rgba(204, 51, 51, 0.7)', // Lighter Maroon (Property Admin)
-                        'rgba(255, 102, 0, 0.7)', // Orange (Facility Admin)
-                        'rgba(0, 102, 204, 0.7)', // Blue (Staff)
-                        'rgba(102, 178, 255, 0.7)' // Light Blue (Student)
-                    ],
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: false } } }
-        });
-
-        // Users by Organization Chart (Bar Chart)
-        usersByOrganizationChartInstance = new Chart(usersByOrganizationChartCanvas, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(usersByOrganization),
-                datasets: [{
-                    label: 'Number of Users',
-                    data: Object.values(usersByOrganization),
-                    backgroundColor: 'rgba(178, 51, 0, 0.7)', // A warm color
-                    borderColor: 'rgba(178, 51, 0, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false }, title: { display: false } } }
-        });
-
-        // Users by Course Chart (New - Bar Chart)
-        usersByCourseChartInstance = new Chart(usersByCourseChartCanvas, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(usersByCourse),
-                datasets: [{
-                    label: 'Number of Users',
-                    data: Object.values(usersByCourse),
-                    backgroundColor: 'rgba(51, 153, 102, 0.7)', // A green shade
-                    borderColor: 'rgba(51, 153, 102, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false }, title: { display: false } } }
-        });
-
-
-        loadingStats.classList.add('hidden');
-        statsContent.classList.remove('hidden');
-
-    } catch (error) {
-        console.error('Error fetching statistics:', error);
-        loadingStats.classList.add('hidden');
-        displayMessage(errorStats, `Failed to load statistics: ${error.message || 'Unknown error'}. Ensure your account has the necessary permissions.`, 'error');
-        authButtonsStats.classList.remove('hidden');
     }
-}
 
-// Logout functionality
-logoutButton.addEventListener('click', () => {
-    pb.authStore.clear();
-    window.location.href = 'login.html';
+    const fetchData = async () => {
+        loadingStats.classList.remove('hidden');
+        errorStats.classList.add('hidden');
+        statsContent.classList.add('hidden');
+
+        try {
+            // **AUTHENTICATION/AUTHORIZATION CHECKS REMOVED FOR TESTING**
+            // DO NOT USE IN PRODUCTION WITHOUT RE-IMPLEMENTING SECURITY
+
+            // If you still want the logout button to appear if *any* user is logged in (not just superadmin)
+            // you might want to uncomment setupLogout() here. For full public access, leave it commented.
+            // setupLogout();
+
+            // Fetch all users
+            const users = await pb.collection('users').getFullList({
+                sort: '-created',
+            });
+
+            // Fetch all events
+            const events = await pb.collection('event').getFullList({
+                sort: '-created',
+            });
+
+            // --- Populate Stat Cards ---
+            totalUsersEl.textContent = users.length;
+            const verifiedUsers = users.filter(user => user.verified).length;
+            verifiedUsersEl.textContent = verifiedUsers;
+            totalEventsEl.textContent = events.length;
+
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const eventsThisMonth = events.filter(event => {
+                const eventDate = new Date(event.created);
+                return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+            }).length;
+            eventsThisMonthEl.textContent = eventsThisMonth;
+
+            // --- Chart Data Processing ---
+
+            // Users by Role
+            const usersByRole = users.reduce((acc, user) => {
+                acc[user.role] = (acc[user.role] || 0) + 1;
+                return acc;
+            }, {});
+            new Chart(usersByRoleChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(usersByRole),
+                    datasets: [{
+                        data: Object.values(usersByRole),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribution of Users by Role'
+                        }
+                    }
+                }
+            });
+
+            // Users by Organization
+            const usersByOrganization = users.reduce((acc, user) => {
+                if (user.organization) {
+                    acc[user.organization] = (acc[user.organization] || 0) + 1;
+                }
+                return acc;
+            }, {});
+            new Chart(usersByOrganizationChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(usersByOrganization),
+                    datasets: [{
+                        label: 'Number of Users',
+                        data: Object.values(usersByOrganization),
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Users'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Organization'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribution of Users by Organization'
+                        }
+                    }
+                }
+            });
+
+            // Users by Course
+            const usersByCourse = users.reduce((acc, user) => {
+                if (user.course) {
+                    acc[user.course] = (acc[user.course] || 0) + 1;
+                }
+                return acc;
+            }, {});
+            new Chart(usersByCourseChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(usersByCourse),
+                    datasets: [{
+                        label: 'Number of Users',
+                        data: Object.values(usersByCourse),
+                        backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Users'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Course'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribution of Users by Course'
+                        }
+                    }
+                }
+            });
+
+            // Events Conducted by Organization (using event.organization)
+            const eventsByOrganization = events.reduce((acc, event) => {
+                if (event.organization) {
+                    acc[event.organization] = (acc[event.organization] || 0) + 1;
+                }
+                return acc;
+            }, {});
+            new Chart(eventsByOrganizationChartCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(eventsByOrganization),
+                    datasets: [{
+                        data: Object.values(eventsByOrganization),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(199, 199, 199, 0.7)',
+                            'rgba(83, 102, 255, 0.7)',
+                            'rgba(255, 99, 255, 0.7)',
+                            'rgba(99, 255, 132, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(199, 199, 199, 1)',
+                            'rgba(83, 102, 255, 1)',
+                            'rgba(255, 99, 255, 1)',
+                            'rgba(99, 255, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Events Conducted by Organization'
+                        }
+                    }
+                }
+            });
+
+            // Academic Events by Organization (filtered by eventType = 'academic')
+            const academicEventsByOrganization = events.reduce((acc, event) => {
+                if (event.eventType === 'academic' && event.organization) {
+                    acc[event.organization] = (acc[event.organization] || 0) + 1;
+                }
+                return acc;
+            }, {});
+            new Chart(academicEventsByProgramChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(academicEventsByOrganization),
+                    datasets: [{
+                        label: 'Number of Academic Events',
+                        data: Object.values(academicEventsByOrganization),
+                        backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Events'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Organization'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        title: {
+                            display: true,
+                            text: 'Academic Events by Organization'
+                        }
+                    }
+                }
+            });
+
+            loadingStats.classList.add('hidden');
+            statsContent.classList.remove('hidden');
+
+        } catch (error) {
+            console.error('Error fetching statistics:', error);
+            loadingStats.classList.add('hidden');
+            errorStats.textContent = `Failed to load statistics: ${error.message}`;
+            errorStats.classList.remove('hidden');
+        }
+    };
+
+    fetchData();
 });
 
-// Load statistics when the page content is fully loaded
-document.addEventListener('DOMContentLoaded', fetchStatistics);
+// Basic sidebar functionality (from your HTML, ensure it's here or in a separate common JS file)
+document.addEventListener("DOMContentLoaded", function(event) {
+    const showNavbar = (toggleId, navId, bodyId, headerId) => {
+        const toggle = document.getElementById(toggleId),
+            nav = document.getElementById(navId),
+            bodypd = document.getElementById(bodyId),
+            headerpd = document.getElementById(headerId)
 
-// Listen for auth changes
-pb.authStore.onChange(() => {
-    if (!pb.authStore.isValid || pb.authStore.model.role !== 'super-admin') {
-        window.location.href = 'login.html'; // Redirect if not a valid superadmin
-    } else {
-        fetchStatistics(); // Re-fetch if auth changes and user is still superadmin
+        // Validate that all variables exist
+        if (toggle && nav && bodypd && headerpd) {
+            toggle.addEventListener('click', () => {
+                // show navbar
+                nav.classList.toggle('show')
+                // change icon
+                toggle.classList.toggle('bx-x')
+                // add padding to body
+                bodypd.classList.toggle('body-pd')
+                // add padding to header
+                headerpd.classList.toggle('body-pd')
+            })
+        }
     }
+
+    showNavbar('header-toggle', 'nav-bar', 'body-pd', 'header')
+
+    /*===== LINK ACTIVE =====*/
+    const linkColor = document.querySelectorAll('.nav_link')
+
+    function colorLink() {
+        if (linkColor) {
+            linkColor.forEach(l => l.classList.remove('active'))
+            this.classList.add('active')
+        }
+    }
+    linkColor.forEach(l => l.addEventListener('click', colorLink))
 });

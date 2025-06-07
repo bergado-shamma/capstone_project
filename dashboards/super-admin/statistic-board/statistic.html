@@ -1,29 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detailed Statistics</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./statistic.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-    <header>
-        <h1>Detailed Application Statistics</h1>
+
+<body id="body-pd">
+    <header class="header" id="header">
+        <div class="header_toggle">
+            <i class="bx bx-menu" id="header-toggle"></i>
+        </div>
         <nav>
             <a href="superadmin-dashboard.html">Dashboard</a>
             <a href="manage-account.html">My Account</a>
             <a href="calendar.html">Manage Calendar</a>
-            <a href="statistics.html">View Statistics</a>
+            <a href="statistics.html" class="active">View Statistics</a>
             <button id="logout-button" class="logout-button hidden">Logout</button>
         </nav>
     </header>
-    <main>
+
+    <div class="l-navbar" id="nav-bar">
+        <nav class="nav">
+            <div>
+                <a href="#" class="nav_logo">
+                    <img src="/assets/puplogo.png" alt="PFRS Logo" class="nav_logo-icon" />
+                    <span class="nav_logo-name">PFRS</span>
+                </a>
+                <div class="nav_list">
+                    <a href="superadmin-dashboard.html" class="nav_link">
+                        <i class="bx bx-grid-alt nav_icon"></i>
+                        <span class="nav_name">Dashboard</span>
+                    </a>
+                    <a href="manage-account.html" class="nav_link">
+                        <i class="bx bx-user nav_icon"></i>
+                        <span class="nav_name">My Account</span>
+                    </a>
+                    <a href="calendar.html" class="nav_link">
+                        <i class="bx bx-calendar nav_icon"></i>
+                        <span class="nav_name">Manage Calendar</span>
+                    </a>
+                    <a href="statistics.html" class="nav_link active">
+                        <i class="bx bx-bar-chart-alt nav_icon"></i>
+                        <span class="nav_name">View Statistics</span>
+                    </a>
+                </div>
+            </div>
+            <div class="logout">
+                <a href="#" class="nav_link" id="sidebar-logout-link">
+                    <i class="bx bx-log-out nav_icon"></i>
+                    <span class="nav_name">Sign Out</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <main class="content">
+        <h1>Detailed Application Statistics</h1>
+
         <section id="statistics-section">
             <h2>System-Wide Data Overview</h2>
             <p id="loading-stats" class="message">Loading statistics...</p>
             <p id="error-stats" class="message error-message hidden"></p>
-            <p id="permission-error-stats" class="message error-message hidden">Access Denied: You do not have superadmin privileges to view detailed statistics.</p>
+            <p id="permission-error-stats" class="message error-message hidden">Access Denied: You do not have
+                superadmin privileges to view detailed statistics.</p>
 
             <div id="stats-content" class="hidden">
                 <div class="stat-cards-container">
@@ -59,18 +103,27 @@
                     <h3>Users by Course</h3>
                     <canvas id="usersByCourseChart"></canvas>
                 </div>
+
+                <div class="chart-container">
+                    <h3>Events Conducted by Organization</h3>
+                    <canvas id="eventsByOrganizationChart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Academic Events by Program/Course</h3>
+                    <canvas id="academicEventsByProgramChart"></canvas>
+                </div>
             </div>
+
             <div id="auth-buttons-stats" class="auth-buttons-container hidden">
                 <p>You must be logged in with superadmin privileges to view detailed statistics.</p>
                 <button onclick="window.location.href='login.html'">Login</button>
             </div>
         </section>
     </main>
-    <footer>
-        <p>&copy; 2025 Your App. All rights reserved.</p>
-    </footer>
 
     <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
-    <script src="statistics.js"></script>
+    <script src="./statistic.js"></script>
 </body>
+
 </html>
