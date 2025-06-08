@@ -1,0 +1,368 @@
+/* Import Google Fonts - Nunito */
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+
+/* Root variables for consistent styling */
+:root {
+    --header-height: 3rem;
+    --nav-width: 68px;
+    --first-color: #6e131d; /* Deep red for primary elements like sidebar */
+    --first-color-light: #f7f6fb; /* Lighter shade, almost white for links */
+    --white-color: #f7f6fb; /* White for header background */
+    --body-font: "Nunito", sans-serif;
+    --normal-font-size: 1rem;
+    --z-fixed: 100; /* Z-index for fixed elements like header and sidebar */
+}
+
+/* Universal box-sizing */
+*,
+::before,
+::after {
+    box-sizing: border-box;
+}
+
+/* Body styles */
+body {
+    position: relative;
+    margin: var(--header-height) 0 0 0; /* Margin from the top to account for fixed header */
+    padding: 0 1rem; /* Padding on sides */
+    font-family: var(--body-font);
+    font-size: var(--normal-font-size);
+    transition: 0.5s; /* Smooth transition for sidebar movement */
+    background-color: #f0f2f5; /* Light grey background for content area */
+    color: #333; /* Default text color for body content */
+}
+
+/* Link styles */
+a {
+    text-decoration: none; /* Remove underline from links */
+}
+
+/* Header styles */
+.header {
+    width: 100%;
+    height: var(--header-height);
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    background-color: var(--white-color);
+    z-index: var(--z-fixed);
+    transition: 0.5s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for header */
+}
+
+/* Header toggle icon */
+.header_toggle {
+    color: var(--first-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Sidebar navigation bar */
+.l-navbar {
+    position: fixed;
+    top: 0;
+    left: -30%; /* Hidden by default on small screens */
+    width: var(--nav-width);
+    height: 100vh;
+    background-color: var(--first-color);
+    padding: 0.5rem 1rem 0 0;
+    transition: 0.5s;
+    z-index: var(--z-fixed);
+}
+
+/* Navigation container within the sidebar */
+.nav {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden; /* Hide overflow when sidebar is collapsed */
+}
+
+/* Navigation logo and links base style */
+.nav_logo,
+.nav_link {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    align-items: center;
+    column-gap: 1rem;
+    padding: 0.5rem 0 0.5rem 1.5rem;
+}
+
+/* Navigation logo specific styles */
+.nav_logo {
+    margin-bottom: 23px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 10px;
+}
+
+.nav_logo-icon {
+    width: 40px;
+    height: auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.nav_logo-name {
+    color: var(--white-color);
+    font-weight: 700;
+}
+
+/* Navigation link specific styles */
+.nav_link {
+    position: relative;
+    color: var(--first-color-light);
+    margin-bottom: 1.5rem;
+    transition: 0.3s;
+}
+
+.nav_link:hover {
+    color: var(--white-color); /* Change color on hover */
+}
+
+/* Navigation icon styles */
+.nav_icon {
+    font-size: 1.25rem;
+}
+
+/* Class to show the sidebar */
+.show {
+    left: 0;
+}
+
+/* Body padding when sidebar is shown */
+.body-pd {
+    padding-left: calc(var(--nav-width) + 1rem);
+}
+
+/* Active navigation link */
+.active {
+    color: white;
+}
+
+.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 2px;
+    height: 32px;
+    background-color: var(--white-color);
+}
+
+/* Main content area */
+.content {
+    flex: 1;
+    padding: 20px;
+    margin-top: calc(var(--header-height) + 1rem); /* Adjust margin for fixed header */
+    color: #333; /* Ensure content text is readable */
+}
+
+/* Account management section styling */
+#account-management-section, #user-management-section {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 90%; /* Adjusted for wider table */
+    margin: 40px auto; /* Center the form on the page */
+}
+
+#account-management-section h2, #user-management-section h2 {
+    text-align: center;
+    color: var(--first-color);
+    margin-bottom: 25px;
+}
+
+/* Form styling */
+#profile-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+#profile-form input[type="email"],
+#profile-form input[type="text"],
+#profile-form select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+#profile-form input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+#profile-form button[type="submit"] {
+    background-color: var(--first-color);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+#profile-form button[type="submit"]:hover {
+    background-color: #5a1414; /* Darker red on hover */
+}
+
+/* Message styling */
+.message {
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: 500;
+}
+
+#loading-profile, #loading-users {
+    background-color: #e0f7fa;
+    color: #00796b;
+    border: 1px solid #00796b;
+}
+
+#error-profile, #error-users, .error-message {
+    background-color: #ffe0e0;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+}
+
+#save-status.success-message {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #2e7d32;
+}
+
+/* Hidden utility class */
+.hidden {
+    display: none;
+}
+
+/* Auth buttons container for non-logged-in state */
+.auth-buttons-container {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.auth-buttons-container p {
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.auth-buttons-container button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.auth-buttons-container button:hover {
+    background-color: #0056b3;
+}
+
+/* Table styles */
+#users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#users-table th,
+#users-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+#users-table th {
+    background-color: var(--first-color);
+    color: white;
+    font-weight: bold;
+}
+
+#users-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+#users-table .action-buttons button {
+    padding: 5px 10px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+#users-table .edit-btn {
+    background-color: #28a745; /* Green */
+    color: white;
+}
+
+#users-table .edit-btn:hover {
+    background-color: #218838;
+}
+
+#users-table .delete-btn {
+    background-color: #dc3545; /* Red */
+    color: white;
+}
+
+#users-table .delete-btn:hover {
+    background-color: #c82333;
+}
+
+/* Responsive adjustments */
+@media screen and (min-width: 768px) {
+    body {
+        margin: calc(var(--header-height) + 1rem) 0 0 0;
+        padding-left: calc(var(--nav-width) + 2rem);
+    }
+
+    .header {
+        height: calc(var(--header-height) + 1rem);
+        padding: 0 2rem 0 calc(var(--nav-width) + 2rem);
+    }
+
+    .l-navbar {
+        left: 0; /* Always visible on larger screens */
+        padding: 1rem 1rem 0 0;
+    }
+
+    .show {
+        width: calc(var(--nav-width) + 156px); /* Expanded width for sidebar */
+    }
+
+    /* Adjust body padding when sidebar is expanded */
+    .body-pd {
+        padding-left: calc(var(--nav-width) + 188px);
+    }
+
+    .content {
+        margin-left: var(--nav-width); /* Push content to the right of the expanded sidebar */
+        transition: margin-left 0.5s;
+    }
+
+    .body-pd .content {
+        margin-left: calc(var(--nav-width) + 156px);
+    }
+}

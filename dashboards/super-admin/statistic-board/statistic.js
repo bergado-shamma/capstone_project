@@ -1,389 +1,428 @@
-// statistic.js
-const pb = new PocketBase('http://127.0.0.1:8090'); // Replace with your PocketBase URL
+// External JS: statistic.js
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", function() {
+    const headerToggle = document.getElementById('header-toggle');
+    const navBar = document.getElementById('nav-bar');
+    const bodypd = document.getElementById('body-pd');
+    const header = document.getElementById('header');
+
+    // Login related elements
+    const loginModal = document.getElementById('loginModal');
+    const loginUsernameInput = document.getElementById('loginUsername');
+    const loginPasswordInput = document.getElementById('loginPassword');
+    const loginMessage = document.getElementById('loginMessage');
+    const mainContent = document.getElementById('main-content');
+    const permissionErrorStats = document.getElementById('permission-error-stats');
+    const statsContent = document.getElementById('stats-content');
     const loadingStats = document.getElementById('loading-stats');
     const errorStats = document.getElementById('error-stats');
-    // permissionErrorStats and authButtonsStats are no longer relevant as checks are removed
-    const statsContent = document.getElementById('stats-content');
 
-    // Stat Cards
-    const totalUsersEl = document.getElementById('total-users');
-    const verifiedUsersEl = document.getElementById('verified-users');
-    const totalEventsEl = document.getElementById('total-events');
-    const eventsThisMonthEl = document.getElementById('events-this-month');
+    // PocketBase client instance
+    const pb = new PocketBase('YOUR_POCKETBASE_URL_HERE'); // !!! IMPORTANT: Replace with your PocketBase URL
 
-    // Chart Canvases
-    const usersByRoleChartCtx = document.getElementById('usersByRoleChart').getContext('2d');
-    const usersByOrganizationChartCtx = document.getElementById('usersByOrganizationChart').getContext('2d');
-    const usersByCourseChartCtx = document.getElementById('usersByCourseChart').getContext('2d');
-    const eventsByOrganizationChartCtx = document.getElementById('eventsByOrganizationChart').getContext('2d');
-    const academicEventsByProgramChartCtx = document.getElementById('academicEventsByProgramChart').getContext('2d');
-
-    // Logout functionality (no longer relevant if not logging in, but keeping for completeness if you re-add login later)
-    const logoutButton = document.getElementById('logout-button');
-    const sidebarLogoutLink = document.getElementById('sidebar-logout-link');
-
-    const setupLogout = () => {
-        // These will only work if there's an active session, which there won't be without login.
-        // You might want to hide these buttons/links in your HTML if you're not logging in.
-        if (logoutButton) {
-            logoutButton.classList.remove('hidden'); // This might not be needed if button is always hidden
-            logoutButton.addEventListener('click', async () => {
-                pb.authStore.clear();
-                window.location.href = 'login.html'; // Redirect to login page
-            });
-        }
-        if (sidebarLogoutLink) {
-            sidebarLogoutLink.addEventListener('click', async (e) => {
-                e.preventDefault();
-                pb.authStore.clear();
-                window.location.href = 'login.html';
-            });
-        }
-    };
-
-    // Sidebar toggle (from your HTML)
-    const headerToggle = document.getElementById('header-toggle');
-    const navbar = document.getElementById('nav-bar');
-    const bodypd = document.getElementById('body-pd');
-
-    if (headerToggle && navbar && bodypd) {
+    // --- Sidebar/Navbar Toggle (Existing Functionality) ---
+    if (headerToggle && navBar && bodypd && header) {
         headerToggle.addEventListener('click', () => {
-            navbar.classList.toggle('show');
+            navBar.classList.toggle('show');
             headerToggle.classList.toggle('bx-x');
             bodypd.classList.toggle('body-pd');
+            header.classList.toggle('header-pd');
         });
     }
 
-    const fetchData = async () => {
-        loadingStats.classList.remove('hidden');
-        errorStats.classList.add('hidden');
-        statsContent.classList.add('hidden');
+    const navLinks = document.querySelectorAll('.nav_link');
+
+    function colorLink() {
+        navLinks.forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+    }
+
+    navLinks.forEach(l => l.addEventListener('click', colorLink));
+
+    // --- Login/Logout Functionality ---
+
+    // Function to show the login modal
+    window.showLoginModal = function() {
+        loginModal.style.display = 'flex'; // Use flex to center
+        mainContent.classList.add('hidden'); // Hide main content
+        permissionErrorStats.style.display = 'none'; // Hide permission error
+        loginMessage.classList.add('hidden'); // Hide previous login messages
+        loginUsernameInput.value = ''; // Clear inputs
+        loginPasswordInput.value = '';
+        loginUsernameInput.focus(); // Focus on username field
+    }
+
+    // Function to hide the login modal and show permission error
+    function showPermissionDenied() {
+        loginModal.style.display = 'none';
+        mainContent.classList.add('hidden'); // Ensure main content is hidden
+        permissionErrorStats.style.display = 'block'; // Show permission error
+        statsContent.classList.add('hidden'); // Hide stats content
+        loadingStats.classList.add('hidden'); // Hide loading message
+        errorStats.classList.add('hidden'); // Hide other error messages
+    }
+
+    // Function to show the main content
+    function showMainContent() {
+        loginModal.style.display = 'none';
+        permissionErrorStats.style.display = 'none';
+        mainContent.classList.remove('hidden');
+        // The statistics loading will then proceed from here
+    }
+
+    // Attempt Login Function
+    window.attemptLogin = async function() {
+        const username = loginUsernameInput.value;
+        const password = loginPasswordInput.value;
+
+        if (!username || !password) {
+            loginMessage.textContent = 'Please enter both username and password.';
+            loginMessage.classList.remove('hidden');
+            return;
+        }
 
         try {
-            // **AUTHENTICATION/AUTHORIZATION CHECKS REMOVED FOR TESTING**
-            // DO NOT USE IN PRODUCTION WITHOUT RE-IMPLEMENTING SECURITY
+            // Authenticate with PocketBase using email/username and password
+            const authData = await pb.collection('users').authWithPassword(username, password);
 
-            // If you still want the logout button to appear if *any* user is logged in (not just superadmin)
-            // you might want to uncomment setupLogout() here. For full public access, leave it commented.
-            // setupLogout();
+            // Check if the authenticated user has the 'superadmin' role
+            // This assumes your 'users' collection has a 'role' field
+            if (authData.record.role === 'superadmin') {
+                sessionStorage.setItem('loggedIn', 'true');
+                sessionStorage.setItem('userRole', authData.record.role); // Store role
+                sessionStorage.setItem('pbToken', pb.authStore.token); // Store token
+                sessionStorage.setItem('pbUser', JSON.stringify(authData.record)); // Store user data
 
-            // Fetch all users
-            const users = await pb.collection('users').getFullList({
-                sort: '-created',
+                loginMessage.classList.add('hidden');
+                showMainContent();
+                fetchStatistics(); // Fetch stats only after successful login
+            } else {
+                // Not a superadmin
+                await pb.authStore.clear(); // Clear authentication
+                loginMessage.textContent = 'Access Denied: Only superadmins can view this page.';
+                loginMessage.classList.remove('hidden');
+                showPermissionDenied(); // Show the permission denied message
+            }
+        } catch (error) {
+            console.error("Login failed:", error);
+            if (error.response && error.response.code === 400) {
+                loginMessage.textContent = 'Invalid username or password.';
+            } else {
+                loginMessage.textContent = 'An error occurred during login. Please try again.';
+            }
+            loginMessage.classList.remove('hidden');
+            await pb.authStore.clear(); // Clear authentication on failure
+        }
+    }
+
+    // Logout Function
+    window.logout = async function() {
+        sessionStorage.removeItem('loggedIn');
+        sessionStorage.removeItem('userRole');
+        sessionStorage.removeItem('pbToken');
+        sessionStorage.removeItem('pbUser');
+        await pb.authStore.clear(); // Clear PocketBase authentication
+        showLoginModal(); // Show login modal after logout
+    }
+
+    // Attach logout to sidebar link
+    const sidebarLogoutLink = document.getElementById('sidebar-logout-link');
+    if (sidebarLogoutLink) {
+        sidebarLogoutLink.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default link behavior
+            logout();
+        });
+    }
+
+    // --- Initial Check on Page Load ---
+    const checkLoginStatus = async () => {
+        const loggedIn = sessionStorage.getItem('loggedIn');
+        const userRole = sessionStorage.getItem('userRole');
+        const pbToken = sessionStorage.getItem('pbToken');
+
+        // Attempt to auto-reauthenticate with PocketBase if a token exists
+        if (pbToken) {
+            try {
+                pb.authStore.save(pbToken, null); // Temporarily set token for reauth check
+                await pb.collection('users').authRefresh(); // Try to refresh token
+                if (pb.authStore.isValid && pb.authStore.model.role === 'superadmin') {
+                    sessionStorage.setItem('loggedIn', 'true'); // Confirm logged in
+                    sessionStorage.setItem('userRole', pb.authStore.model.role);
+                    sessionStorage.setItem('pbUser', JSON.stringify(pb.authStore.model));
+                    sessionStorage.setItem('pbToken', pb.authStore.token);
+
+                    showMainContent();
+                    fetchStatistics(); // Proceed to fetch stats
+                    return; // Stop further execution
+                } else {
+                    // Token invalid or user is not superadmin
+                    await pb.authStore.clear();
+                    sessionStorage.clear(); // Clear session storage if token invalid/role wrong
+                    showPermissionDenied();
+                }
+            } catch (error) {
+                console.error("Auto-reauthentication failed:", error);
+                await pb.authStore.clear();
+                sessionStorage.clear(); // Clear session storage on auto-reauth failure
+                showPermissionDenied();
+            }
+        } else if (loggedIn === 'true' && userRole === 'superadmin') {
+            // Fallback for simple loggedIn flag if PocketBase reauth fails or isn't used
+            // This part might be redundant if PocketBase is used exclusively for auth
+            showMainContent();
+            fetchStatistics();
+        } else {
+            showPermissionDenied(); // Show permission denied if not logged in or not superadmin
+        }
+    };
+
+    // --- Statistics Fetching (Modified to run after login) ---
+    async function fetchStatistics() {
+        loadingStats.classList.remove('hidden');
+        statsContent.classList.add('hidden');
+        errorStats.classList.add('hidden');
+        permissionErrorStats.style.display = 'none'; // Ensure permission error is hidden
+
+        try {
+            // Example: Fetch total registered users
+            const totalUsersResponse = await pb.collection('users').getList(1, 1, {
+                // You might need to adjust filter/params based on your PocketBase schema
+                // For a total count, you'd typically have a separate endpoint or aggregate
+                // For simplicity, let's assume we can count all records
             });
+            document.getElementById('total-users').textContent = totalUsersResponse.totalItems;
 
-            // Fetch all events
-            const events = await pb.collection('event').getFullList({
-                sort: '-created',
+            // Example: Fetch verified users (assuming a 'isVerified' field)
+            const verifiedUsersResponse = await pb.collection('users').getList(1, 1, {
+                filter: 'isVerified = true'
             });
+            document.getElementById('verified-users').textContent = verifiedUsersResponse.totalItems;
 
-            // --- Populate Stat Cards ---
-            totalUsersEl.textContent = users.length;
-            const verifiedUsers = users.filter(user => user.verified).length;
-            verifiedUsersEl.textContent = verifiedUsers;
-            totalEventsEl.textContent = events.length;
+            // Fetch other statistics from PocketBase as needed
+            // Replace these with your actual PocketBase collection and data fetching logic
+            const totalEventsResponse = await pb.collection('events').getList(1, 1);
+            document.getElementById('total-events').textContent = totalEventsResponse.totalItems;
 
-            const currentMonth = new Date().getMonth();
+            const currentMonth = new Date().getMonth() + 1; // getMonth() is 0-indexed
             const currentYear = new Date().getFullYear();
-            const eventsThisMonth = events.filter(event => {
-                const eventDate = new Date(event.created);
-                return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
-            }).length;
-            eventsThisMonthEl.textContent = eventsThisMonth;
+            // This filter depends on your 'events' collection date field
+            // Example: Assuming 'eventDate' is a datetime field
+            const eventsThisMonthResponse = await pb.collection('events').getList(1, 1, {
+                filter: `strftime('%Y-%m', eventDate) = '${currentYear}-${String(currentMonth).padStart(2, '0')}'`
+            });
+            document.getElementById('events-this-month').textContent = eventsThisMonthResponse.totalItems;
 
-            // --- Chart Data Processing ---
 
-            // Users by Role
-            const usersByRole = users.reduce((acc, user) => {
+            // --- Chart Data Fetching (Replace with real data from PocketBase) ---
+            // Example: Users by Role
+            const usersByRole = await pb.collection('users').getFullList({
+                sort: '-created', // Example sort
+            });
+            const roleCounts = usersByRole.reduce((acc, user) => {
                 acc[user.role] = (acc[user.role] || 0) + 1;
                 return acc;
             }, {});
-            new Chart(usersByRoleChartCtx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(usersByRole),
-                    datasets: [{
-                        data: Object.values(usersByRole),
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)',
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(153, 102, 255, 0.7)',
-                            'rgba(255, 159, 64, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Distribution of Users by Role'
-                        }
-                    }
-                }
-            });
+            renderUsersByRoleChart(Object.keys(roleCounts), Object.values(roleCounts));
 
-            // Users by Organization
-            const usersByOrganization = users.reduce((acc, user) => {
-                if (user.organization) {
-                    acc[user.organization] = (acc[user.organization] || 0) + 1;
-                }
+            // Example: Users by Organization
+            const usersByOrg = await pb.collection('users').getFullList({
+                // Adjust filter/expand if 'organization' is a relation
+            });
+            const orgCounts = usersByOrg.reduce((acc, user) => {
+                const orgName = user.organization_name || 'N/A'; // Assuming a field or relation
+                acc[orgName] = (acc[orgName] || 0) + 1;
                 return acc;
             }, {});
-            new Chart(usersByOrganizationChartCtx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(usersByOrganization),
-                    datasets: [{
-                        label: 'Number of Users',
-                        data: Object.values(usersByOrganization),
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Users'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Organization'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false,
-                        },
-                        title: {
-                            display: true,
-                            text: 'Distribution of Users by Organization'
-                        }
-                    }
-                }
-            });
+            renderUsersByOrganizationChart(Object.keys(orgCounts), Object.values(orgCounts));
 
-            // Users by Course
-            const usersByCourse = users.reduce((acc, user) => {
-                if (user.course) {
-                    acc[user.course] = (acc[user.course] || 0) + 1;
-                }
+            // Example: Users by Course
+            const usersByCourse = await pb.collection('users').getFullList({});
+            const courseCounts = usersByCourse.reduce((acc, user) => {
+                const courseName = user.course_name || 'N/A';
+                acc[courseName] = (acc[courseName] || 0) + 1;
                 return acc;
             }, {});
-            new Chart(usersByCourseChartCtx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(usersByCourse),
-                    datasets: [{
-                        label: 'Number of Users',
-                        data: Object.values(usersByCourse),
-                        backgroundColor: 'rgba(153, 102, 255, 0.7)',
-                        borderColor: 'rgba(153, 102, 255, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Users'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Course'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false,
-                        },
-                        title: {
-                            display: true,
-                            text: 'Distribution of Users by Course'
-                        }
-                    }
-                }
-            });
+            renderUsersByCourseChart(Object.keys(courseCounts), Object.values(courseCounts));
 
-            // Events Conducted by Organization (using event.organization)
-            const eventsByOrganization = events.reduce((acc, event) => {
-                if (event.organization) {
-                    acc[event.organization] = (acc[event.organization] || 0) + 1;
-                }
+            // Example: Events Conducted by Organization
+            const eventsByOrg = await pb.collection('events').getFullList({
+                // Adjust filter/expand if 'organization' is a relation
+            });
+            const eventOrgCounts = eventsByOrg.reduce((acc, event) => {
+                const orgName = event.organizing_organization_name || 'N/A'; // Assuming a field
+                acc[orgName] = (acc[orgName] || 0) + 1;
                 return acc;
             }, {});
-            new Chart(eventsByOrganizationChartCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(eventsByOrganization),
-                    datasets: [{
-                        data: Object.values(eventsByOrganization),
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)',
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(153, 102, 255, 0.7)',
-                            'rgba(255, 159, 64, 0.7)',
-                            'rgba(199, 199, 199, 0.7)',
-                            'rgba(83, 102, 255, 0.7)',
-                            'rgba(255, 99, 255, 0.7)',
-                            'rgba(99, 255, 132, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)',
-                            'rgba(199, 199, 199, 1)',
-                            'rgba(83, 102, 255, 1)',
-                            'rgba(255, 99, 255, 1)',
-                            'rgba(99, 255, 132, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Events Conducted by Organization'
-                        }
-                    }
-                }
-            });
+            renderEventsByOrganizationChart(Object.keys(eventOrgCounts), Object.values(eventOrgCounts));
 
-            // Academic Events by Organization (filtered by eventType = 'academic')
-            const academicEventsByOrganization = events.reduce((acc, event) => {
-                if (event.eventType === 'academic' && event.organization) {
-                    acc[event.organization] = (acc[event.organization] || 0) + 1;
-                }
+
+            // Example: Academic Events by Program/Course
+            const academicEvents = await pb.collection('events').getFullList({
+                filter: 'eventType = "Academic"' // Assuming an eventType field
+            });
+            const academicEventProgramCounts = academicEvents.reduce((acc, event) => {
+                const programName = event.related_program_course || 'N/A'; // Assuming a field
+                acc[programName] = (acc[programName] || 0) + 1;
                 return acc;
             }, {});
-            new Chart(academicEventsByProgramChartCtx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(academicEventsByOrganization),
-                    datasets: [{
-                        label: 'Number of Academic Events',
-                        data: Object.values(academicEventsByOrganization),
-                        backgroundColor: 'rgba(255, 159, 64, 0.7)',
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Events'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Organization'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false,
-                        },
-                        title: {
-                            display: true,
-                            text: 'Academic Events by Organization'
-                        }
-                    }
-                }
-            });
+            renderAcademicEventsByProgramChart(Object.keys(academicEventProgramCounts), Object.values(academicEventProgramCounts));
+
 
             loadingStats.classList.add('hidden');
             statsContent.classList.remove('hidden');
 
         } catch (error) {
-            console.error('Error fetching statistics:', error);
+            console.error("Error fetching statistics:", error);
             loadingStats.classList.add('hidden');
-            errorStats.textContent = `Failed to load statistics: ${error.message}`;
             errorStats.classList.remove('hidden');
-        }
-    };
-
-    fetchData();
-});
-
-// Basic sidebar functionality (from your HTML, ensure it's here or in a separate common JS file)
-document.addEventListener("DOMContentLoaded", function(event) {
-    const showNavbar = (toggleId, navId, bodyId, headerId) => {
-        const toggle = document.getElementById(toggleId),
-            nav = document.getElementById(navId),
-            bodypd = document.getElementById(bodyId),
-            headerpd = document.getElementById(headerId)
-
-        // Validate that all variables exist
-        if (toggle && nav && bodypd && headerpd) {
-            toggle.addEventListener('click', () => {
-                // show navbar
-                nav.classList.toggle('show')
-                // change icon
-                toggle.classList.toggle('bx-x')
-                // add padding to body
-                bodypd.classList.toggle('body-pd')
-                // add padding to header
-                headerpd.classList.toggle('body-pd')
-            })
+            errorStats.textContent = "Failed to load statistics. Please try again later or check your network connection.";
+            statsContent.classList.add('hidden'); // Ensure stats content is hidden on error
+            if (error.response && error.response.code === 401) { // Unauthorized
+                showPermissionDenied();
+            }
         }
     }
 
-    showNavbar('header-toggle', 'nav-bar', 'body-pd', 'header')
-
-    /*===== LINK ACTIVE =====*/
-    const linkColor = document.querySelectorAll('.nav_link')
-
-    function colorLink() {
-        if (linkColor) {
-            linkColor.forEach(l => l.classList.remove('active'))
-            this.classList.add('active')
-        }
+    // --- Chart Rendering Functions (No changes needed here from previous example) ---
+    function renderUsersByRoleChart(labels, data) {
+        const ctx = document.getElementById('usersByRoleChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of Users',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                        'rgba(255, 159, 64, 0.6)',
+                        'rgba(255, 99, 132, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
     }
-    linkColor.forEach(l => l.addEventListener('click', colorLink))
+
+    function renderUsersByOrganizationChart(labels, data) {
+        const ctx = document.getElementById('usersByOrganizationChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Users by Organization',
+                    data: data,
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+            }
+        });
+    }
+
+    function renderUsersByCourseChart(labels, data) {
+        const ctx = document.getElementById('usersByCourseChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Users by Course',
+                    data: data,
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#6A5ACD', '#DAA520'
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+            }
+        });
+    }
+
+    function renderEventsByOrganizationChart(labels, data) {
+        const ctx = document.getElementById('eventsByOrganizationChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of Events',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                        'rgba(255, 159, 64, 0.6)',
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function renderAcademicEventsByProgramChart(labels, data) {
+        const ctx = document.getElementById('academicEventsByProgramChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Academic Events by Program/Course',
+                    data: data,
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#A9A9A9', '#20B2AA'
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+            }
+        });
+    }
+
+    // Call checkLoginStatus on page load
+    checkLoginStatus();
 });

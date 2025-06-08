@@ -20,7 +20,6 @@
             <a href="manage-account.html">My Account</a>
             <a href="calendar.html">Manage Calendar</a>
             <a href="statistics.html" class="active">View Statistics</a>
-            <button id="logout-button" class="logout-button hidden">Logout</button>
         </nav>
     </header>
 
@@ -59,15 +58,30 @@
         </nav>
     </div>
 
-    <main class="content">
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2>Login Required</h2>
+            <p>Please enter your credentials to proceed.</p>
+            <input type="text" id="loginUsername" placeholder="Username">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button onclick="attemptLogin()">Login</button>
+            <p id="loginMessage" class="message error-message hidden"></p>
+        </div>
+    </div>
+
+    <main class="content" id="main-content">
         <h1>Detailed Application Statistics</h1>
 
         <section id="statistics-section">
             <h2>System-Wide Data Overview</h2>
             <p id="loading-stats" class="message">Loading statistics...</p>
             <p id="error-stats" class="message error-message hidden"></p>
-            <p id="permission-error-stats" class="message error-message hidden">Access Denied: You do not have
-                superadmin privileges to view detailed statistics.</p>
+            <p id="permission-error-stats" class="message error-message" style="display: none;">
+                <strong>Access Denied!</strong><br>
+                You must be logged in as an authorized user to view this content.
+                <br>
+                <a href="#" class="button" onclick="showLoginModal()">Login Now</a>
+            </p>
 
             <div id="stats-content" class="hidden">
                 <div class="stat-cards-container">
@@ -89,35 +103,34 @@
                     </div>
                 </div>
 
-                <div class="chart-container">
+                <div class="chart-container full-width-chart">
                     <h3>Users by Role</h3>
                     <canvas id="usersByRoleChart"></canvas>
                 </div>
 
-                <div class="chart-container">
-                    <h3>Users by Organization</h3>
-                    <canvas id="usersByOrganizationChart"></canvas>
+                <div class="chart-group">
+                    <div class="chart-container">
+                        <h3>Users by Organization</h3>
+                        <canvas id="usersByOrganizationChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Users by Course</h3>
+                        <canvas id="usersByCourseChart"></canvas>
+                    </div>
                 </div>
 
-                <div class="chart-container">
-                    <h3>Users by Course</h3>
-                    <canvas id="usersByCourseChart"></canvas>
-                </div>
+                <div class="chart-group">
+                    <div class="chart-container">
+                        <h3>Events Conducted by Organization</h3>
+                        <canvas id="eventsByOrganizationChart"></canvas>
+                    </div>
 
-                <div class="chart-container">
-                    <h3>Events Conducted by Organization</h3>
-                    <canvas id="eventsByOrganizationChart"></canvas>
+                    <div class="chart-container">
+                        <h3>Academic Events by Program/Course</h3>
+                        <canvas id="academicEventsByProgramChart"></canvas>
+                    </div>
                 </div>
-
-                <div class="chart-container">
-                    <h3>Academic Events by Program/Course</h3>
-                    <canvas id="academicEventsByProgramChart"></canvas>
-                </div>
-            </div>
-
-            <div id="auth-buttons-stats" class="auth-buttons-container hidden">
-                <p>You must be logged in with superadmin privileges to view detailed statistics.</p>
-                <button onclick="window.location.href='login.html'">Login</button>
             </div>
         </section>
     </main>

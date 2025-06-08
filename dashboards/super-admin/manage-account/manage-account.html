@@ -3,21 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Your Account</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Manage Accounts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="/assets/puplogo.png" />
+    <link rel="stylesheet" href="./manage-account-style.css">
 </head>
-<body>
-    <header>
-        <h1>Manage Your Account</h1>
-        <nav>
-            <a href="superadmin-dashboard.html">Dashboard</a>
-            <a href="manage-account.html">My Account</a>
-            <a href="calendar.html">Manage Calendar</a>
-            <a href="statistics.html">View Statistics</a>
-            <button id="logout-button" class="logout-button hidden">Logout</button>
-        </nav>
+<body id="body-pd">
+    <header class="header" id="header">
+        <div class="header_toggle">
+            <i class="bx bx-menu" id="header-toggle"></i>
+        </div>
     </header>
-    <main>
+
+    <div class="l-navbar" id="nav-bar">
+        <nav class="nav">
+            <div>
+                <a href="#" class="nav_logo">
+                    <img src="/assets/puplogo.png" alt="PFRS Logo" class="nav_logo-icon" />
+                    <span class="nav_logo-name">PFRS</span>
+                </a>
+
+                <div class="nav_list">
+                    <a href="../superadmin-home.html" class="nav_link">
+                        <i class="bx bx-grid-alt nav_icon"></i> <span class="nav_name">Dashboard</span>
+                    </a>
+                    <a href="./manage-account.html" class="nav_link active">
+                        <i class="bx bx-user nav_icon"></i> <span class="nav_name">My Account</span>
+                    </a>
+                    <a href="calendar.html" class="nav_link">
+                        <i class="bx bx-calendar nav_icon"></i> <span class="nav_name">Manage Calendar</span>
+                    </a>
+                    <a href="../statistic-board/statistic.html" class="nav_link">
+                        <i class="bx bx-bar-chart-alt-2 nav_icon"></i> <span class="nav_name">View Statistics</span>
+                    </a>
+                    <a href="#" class="nav_link" id="manage-users-nav-link" style="display: none;">
+                        <i class="bx bx-group nav_icon"></i> <span class="nav_name">Manage Users</span>
+                    </a>
+                </div>
+            </div>
+            <div class="logout">
+                <a href="#" id="logout-button" class="nav_link">
+                    <i class="bx bx-log-out nav_icon"></i>
+                    <span class="nav_name">Sign Out</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <main class="content">
         <section id="account-management-section">
             <h2>Your Profile</h2>
             <p id="loading-profile" class="message">Loading profile...</p>
@@ -34,11 +71,11 @@
                 <input type="text" id="role" name="role" readonly>
                 <label for="organization">Organization:</label>
                 <select id="organization" name="organization">
-                    </select>
+                </select>
 
                 <label for="course">Course:</label>
                 <select id="course" name="course">
-                    </select>
+                </select>
 
                 <label for="student_number">Student Number:</label>
                 <input type="text" id="student_number" name="student_number" placeholder="Your Student Number">
@@ -50,14 +87,41 @@
             <div id="auth-buttons-manage" class="auth-buttons-container hidden">
                 <p>You must be logged in to manage your account.</p>
                 <button onclick="window.location.href='login.html'">Login</button>
-                </div>
+            </div>
         </section>
+
+        <section id="user-management-section" class="hidden">
+            <h2>Manage System Users</h2>
+            <p id="loading-users" class="message">Loading users...</p>
+            <p id="error-users" class="message error-message hidden"></p>
+            
+            <div class="table-responsive">
+                <table id="users-table" class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Organization</th>
+                            <th>Course</th>
+                            <th>Student Number</th>
+                            <th>Verified</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+            <p id="no-users-message" class="message hidden">No users found.</p>
+        </section>
+
     </main>
-    <footer>
-        <p>&copy; 2025 Your App. All rights reserved.</p>
-    </footer>
 
     <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
-    <script src="manage-account.js"></script>
+    <script src="./manage-account-script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
