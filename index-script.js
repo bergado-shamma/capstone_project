@@ -75,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setTimeout(() => {
         switch (role) {
+          case 'super-admin': // Added super-admin case
+            window.location.href = 'dashboards/super-admin/superadmin-home.html';
+            break;
           case 'facility-admin':
             window.location.href = './dashboards/facility-admin/home.html';
             break;
@@ -82,13 +85,16 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = './dashboards/property-admin/home.html';
             break;
           case 'staff':
-            window.location.href = './dashboards/staff';
+            window.location.href = './dashboards/staff/home.html'; // Assuming a staff home page
             break;
           case 'student':
             window.location.href = './dashboards/student/student-home.html';
             break;
           default:
-            showAlert('Your account does not have a valid role assigned.');
+            showAlert('Your account does not have a valid role assigned or is not yet verified.');
+            // Clear auth data if role is invalid and redirect to login
+            pb.authStore.clear();
+            window.location.href = './login.html';
         }
       }, 1000);
     } catch (err) {

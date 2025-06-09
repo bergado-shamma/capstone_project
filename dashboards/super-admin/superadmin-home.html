@@ -5,22 +5,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Superadmin Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./superadmin-styles.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
-    <header>
-        <h1>Superadmin Dashboard</h1>
-        <nav>
-            <a href="superadmin-dashboard.html">Dashboard</a>
-            <a href="manage-account.html">My Account</a>
-            <a href="calendar.html">Manage Calendar</a>
-            <a href="statistics.html">View Statistics</a>
-            <button id="logout-button" class="logout-button hidden">Logout</button>
-        </nav>
+<body id="body-pd">
+    <header class="header" id="header">
+        <div class="header_toggle">
+            <i class="bx bx-menu" id="header-toggle"></i>
+        </div>
+        <h1>Superadmin Dashboard</h1> 
     </header>
-    <main>
+
+    <div class="l-navbar" id="nav-bar">
+        <nav class="nav">
+            <div>
+                <a href="#" class="nav_logo">
+                    <img src="/assets/puplogo.png" alt="PFRS Logo" class="nav_logo-icon" /> 
+                    <span class="nav_logo-name">PFRS</span>
+                </a>
+                <div class="nav_list">
+                    <a href="superadmin-home.html" class="nav_link active">
+                        <i class='bx bx-grid-alt nav_icon'></i>
+                        <span class="nav_name">Dashboard</span>
+                    </a>
+                    <a href="manage-account.html" class="nav_link">
+                        <i class='bx bx-user nav_icon'></i>
+                        <span class="nav_name">Manage Account</span>
+                    </a>
+                    <a href="calendar.html" class="nav_link">
+                        <i class='bx bx-calendar nav_icon'></i>
+                        <span class="nav_name">Manage Calendar</span>
+                    </a>
+                    <a href="statistics.html" class="nav_link">
+                        <i class='bx bx-bar-chart-alt-2 nav_icon'></i>
+                        <span class="nav_name">View Statistics</span>
+                    </a>
+                </div>
+            </div>
+            <button id="logout-button" class="nav_link logout-button">
+                <i class='bx bx-log-out nav_icon'></i>
+                <span class="nav_name">Logout</span>
+            </button>
+        </nav>
+    </div>
+
+    <main class="height-100 bg-light">
         <section id="dashboard-overview">
             <h2>Welcome, Superadmin!</h2>
             <p id="loading-dashboard" class="message">Loading dashboard data...</p>
@@ -31,7 +62,7 @@
             <div id="dashboard-content" class="hidden">
                 <div class="stat-cards-container">
                     <div class="stat-card">
-                        <h3>Total Registered Users</h3>
+                        <h3>Total Users</h3>
                         <p id="total-users-dashboard">--</p>
                     </div>
                     <div class="stat-card">
@@ -57,16 +88,13 @@
             </div>
             <div id="auth-buttons-dashboard" class="auth-buttons-container hidden">
                 <p>You must be logged in with superadmin privileges to access the dashboard.</p>
-                <button onclick="window.location.href='login.html'">Login</button>
+                <button onclick="window.location.href='../login.html'">Login</button>
             </div>
         </section>
     </main>
-    <footer>
-        <p>&copy; 2025 Your App. All rights reserved.</p>
-    </footer>
 
     <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
-    <script src="superadmin-dashboard.js"></script>
+    <script src="./superadmin-script.js"></script>
 </body>
 
 </html>
