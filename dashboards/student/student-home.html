@@ -26,6 +26,25 @@
     <div class="header_toggle">
       <i class="bx bx-menu" id="header-toggle"></i>
     </div>
+    <div class="notification-container">
+    <button id="notifyBtn" class="notification-button">
+      🔔 <span id="badge" class="badge">3</span>
+    </button>
+    <div id="notificationBox" class="notification-box hidden">
+      <ul id="notificationList">
+  <li data-info="This is your new message content.">You have a new message.</li>
+  <li data-info="You have a meeting with the team at 3PM in Conference Room A.">Reminder: Meeting at 3PM.</li>
+  <li data-info="Version 2.0.1 is available for download.">Update available!</li>
+</ul>
+    </div>
+  </div>
+  <div id="notificationDetail" class="notification-detail hidden">
+  <div class="detail-header">
+    <span class="detail-title">📩 Notification</span>
+    <button id="closeDetail" class="close-btn">&times;</button>
+  </div>
+  <div id="detailText" class="detail-text"></div>
+</div>
   </header>
 
   <div class="l-navbar" id="nav-bar">

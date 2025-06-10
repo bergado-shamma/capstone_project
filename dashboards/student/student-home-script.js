@@ -90,3 +90,44 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   };
 });
+
+const notifyBtn = document.getElementById("notifyBtn");
+const notificationBox = document.getElementById("notificationBox");
+const notificationList = document.getElementById("notificationList");
+const notificationDetail = document.getElementById("notificationDetail");
+const badge = document.getElementById("badge");
+const detailText = document.getElementById("detailText");
+const closeDetail = document.getElementById("closeDetail");
+
+let unreadCount = notificationList.children.length;
+updateBadge();
+
+notifyBtn.addEventListener("click", () => {
+  notificationBox.classList.toggle("hidden");
+  notificationDetail.classList.add("hidden");
+});
+
+notificationList.addEventListener("click", (event) => {
+  if (event.target.tagName === "LI") {
+    const info = event.target.getAttribute("data-info");
+    detailText.textContent = info;
+    notificationDetail.classList.remove("hidden");
+
+    if (!event.target.classList.contains("read")) {
+      event.target.classList.add("read");
+      unreadCount--;
+      updateBadge();
+    }
+
+    notificationBox.classList.add("hidden");
+  }
+});
+
+closeDetail.addEventListener("click", () => {
+  notificationDetail.classList.add("hidden");
+});
+
+function updateBadge() {
+  badge.textContent = unreadCount;
+  badge.style.display = unreadCount > 0 ? "inline-block" : "none";
+}
