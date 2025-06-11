@@ -16,6 +16,18 @@
 ::after {
   box-sizing: border-box;
 }
+.header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  color: #000000;
+ font-family: 'Outfit', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase; 
+}
+
 
 body {
   position: relative;
@@ -26,6 +38,8 @@ body {
   transition: 0.5s;
   background-color: white;
   color: #000000;
+   -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -285,19 +299,22 @@ a {
 
 .status-box.pending {
   background-color: #ddff00;
-  border-color: #e0b973;
+  border-color: #000000;
 }
 
-.status-box.ongoing {
-  background-color: #2b00ff;
-  border-color: #74c0fc;
-}
-
-.status-box.scheduled {
+.status-box.Approved {
   background-color: #00660e;
-  border-color: #8ce99a;
+  border-color: #000000;
 }
 
+.status-box.Rejected {
+  background-color: #FF0000;
+  border-color: #000000;
+}
+.status-box.Cancelled {
+  background-color: #bfbfbf;
+  border-color: #000000;
+}
 .calendar-header {
   display: flex;
   justify-content: flex-end;
