@@ -1,0 +1,378 @@
+/* Import Google Fonts - Nunito */
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+
+/* Root variables for consistent styling */
+:root {
+    --header-height: 3rem;
+    --nav-width: 68px;
+    --first-color: #6e131d;
+    /* Deep red for primary elements like sidebar */
+    --first-color-light: #f7f6fb;
+    /* Lighter shade, almost white for links */
+    --white-color: #f7f6fb;
+    /* White for header background */
+    --body-font: "Nunito", sans-serif;
+    --normal-font-size: 1rem;
+    --z-fixed: 100;
+    /* Z-index for fixed elements like header and sidebar */
+}
+
+/* Universal box-sizing */
+*
+{
+    box-sizing: border-box;
+}
+
+/* Body styles */
+body {
+    position: relative;
+    margin: var(--header-height) 0 0 0;
+    /* Margin from the top to account for fixed header */
+    padding: 0 1rem;
+    /* Padding on sides */
+    font-family: var(--body-font);
+    font-size: var(--normal-font-size);
+    transition: 0.5s;
+    /* Smooth transition for sidebar movement */
+    background-color: #f0f2f5;
+    /* Light grey background */
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Header styles */
+.header {
+    width: 100%;
+    height: var(--header-height);
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    background-color: var(--white-color);
+    z-index: var(--z-fixed);
+    transition: 0.5s;
+}
+
+.header_toggle {
+    color: var(--first-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.header_img {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.header_img img {
+    width: 40px;
+}
+
+/* Navbar styles */
+.l-navbar {
+    position: fixed;
+    top: 0;
+    left: -30%;
+    width: var(--nav-width);
+    height: 100vh;
+    background-color: var(--first-color);
+    padding: 0.5rem 1rem 0 0;
+    transition: 0.5s;
+    z-index: var(--z-fixed);
+}
+
+.nav {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.nav_logo {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.nav_logo-icon {
+    font-size: 1.5rem;
+    color: var(--white-color);
+    width: 30px;
+    /* Adjust as needed for your logo */
+    height: auto;
+    margin-left: 10px;
+}
+
+.nav_logo-name {
+    color: var(--white-color);
+    font-weight: 700;
+    margin-left: 10px;
+}
+
+.nav_link {
+    position: relative;
+    color: var(--first-color-light);
+    margin-bottom: 1.5rem;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+}
+
+.nav_link:hover {
+    color: var(--white-color);
+}
+
+.nav_icon {
+    font-size: 1.5rem;
+    margin-right: 1.5rem;
+}
+
+/* Active and Hover states */
+.active {
+    color: var(--white-color);
+}
+
+.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background-color: var(--white-color);
+}
+
+/* Show Navbar */
+.show {
+    left: 0;
+}
+
+/* Add padding to body */
+.body-pd {
+    padding-left: calc(var(--nav-width) + 1rem);
+}
+
+/* Add padding to header */
+.header.show {
+    padding-left: calc(var(--nav-width) + 1rem);
+}
+
+/* Container */
+.height-100 {
+    height: 100vh;
+}
+
+/* Account/User Management Section Styles */
+.account-section {
+    margin-top: 20px;
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.account-section h2 {
+    color: var(--first-color);
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.8em;
+}
+
+.message {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.loading-message {
+    background-color: #e0f7fa;
+    color: #007bff;
+}
+
+.error-message {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.success-message {
+    background-color: #e8f5e9;
+    color: #28a745;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.auth-buttons-container {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.auth-buttons-container button {
+    background-color: var(--first-color);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.auth-buttons-container button:hover {
+    background-color: #800000;
+}
+
+/* Form Styling */
+#profile-form {
+    max-width: 600px;
+    margin: 0 auto 40px auto; /* Add margin-bottom for separation from user management */
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fcfcfc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+
+#profile-form label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+    display: block;
+}
+
+#profile-form .form-control,
+#profile-form .form-select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+#profile-form .form-control:focus,
+#profile-form .form-select:focus {
+    border-color: var(--first-color);
+    box-shadow: 0 0 0 0.25rem rgba(110, 19, 29, 0.25);
+    outline: none;
+}
+
+#profile-form button.btn-primary {
+    background-color: var(--first-color);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+#profile-form button.btn-primary:hover {
+    background-color: #800000;
+}
+
+/* User Management Table Styling */
+#user-management-section {
+    margin-top: 40px; /* Space from profile form */
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+#users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#users-table th,
+#users-table td {
+    padding: 12px 15px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+    vertical-align: middle;
+    font-size: 0.9em;
+}
+
+#users-table th {
+    background-color: var(--first-color);
+    color: white;
+    font-weight: bold;
+}
+
+#users-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+#users-table .action-buttons button {
+    padding: 5px 10px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+#users-table .edit-btn {
+    background-color: #28a745;
+    /* Green */
+    color: white;
+}
+
+#users-table .edit-btn:hover {
+    background-color: #218838;
+}
+
+#users-table .delete-btn {
+    background-color: #dc3545;
+    /* Red */
+    color: white;
+}
+
+#users-table .delete-btn:hover {
+    background-color: #c82333;
+}
+
+/* Responsive adjustments */
+@media screen and (min-width: 768px) {
+    body {
+        margin: calc(var(--header-height) + 1rem) 0 0 0;
+        padding-left: calc(var(--nav-width) + 2rem);
+    }
+
+    .header {
+        height: calc(var(--header-height) + 1rem);
+        padding: 0 2rem 0 calc(var(--nav-width) + 2rem);
+    }
+
+    .l-navbar {
+        left: 0;
+        padding: 1rem 1rem 0 0;
+    }
+
+    .show {
+        width: calc(var(--nav-width) + 156px);
+    }
+
+    .body-pd {
+        padding-left: calc(var(--nav-width) + 188px);
+    }
+
+    .header.show {
+        padding-left: calc(var(--nav-width) + 188px);
+    }
+}
