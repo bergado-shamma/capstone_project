@@ -91,22 +91,20 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadReservations() {
   try {
     const records = await pb.collection("reservation").getFullList({
-      sort: "-created",
-      filter:
-        'status != "approved" && campusDirectorApprove != "approved" && status != "rejected" && status != "canceled"',
+      sort: "created",
     });
 
     console.log("Loaded reservations:", records.length);
-    // Debug: Check if any records have propertyCustodianApproval
-    const recordsWithApproval = records.filter(
-      (r) => r.propertyCustodianApprove
-    );
-    console.log(
-      "Records with propertyCustodianApprove:",
-      recordsWithApproval.length
+
+    // Filter out fully reviewed records
+    const filteredRecords = records.filter(
+      (rec) =>
+        rec.status === "pending" && rec.propertyCustodianApprove !== "Approved"
     );
 
-    reservationCache = records;
+    console.log("Records to display after filtering:", filteredRecords.length);
+
+    reservationCache = filteredRecords;
 
     const tbody = document.querySelector("#reservationTable tbody");
     const noDataState = document.getElementById("noDataState");
@@ -119,26 +117,25 @@ async function loadReservations() {
 
     tbody.innerHTML = "";
 
-    if (records.length === 0) {
+    if (filteredRecords.length === 0) {
       noDataState.classList.remove("d-none");
       recordCount.textContent = "0";
       return;
     }
 
     noDataState.classList.add("d-none");
-    recordCount.textContent = records.length;
+    recordCount.textContent = filteredRecords.length;
 
-    records.forEach((rec) => {
+    filteredRecords.forEach((rec) => {
       const row = document.createElement("tr");
       const statusClass = getStatusClass(rec.status);
 
-      // Debug log for each record
       console.log(
         `Record ${rec.id} propertyCustodianApprove:`,
         rec.propertyCustodianApprove
       );
 
-      // Display property custodian approval status from database
+      // Display property custodian approval status
       let approvalStatus = "";
       if (
         rec.propertyCustodianApprove &&
@@ -162,7 +159,6 @@ async function loadReservations() {
         }
         approvalStatus = `<span class="badge ${badgeClass} ms-2">${rec.propertyCustodianApprove}</span>`;
       } else {
-        // Check if this reservation has in-memory approval status (fallback)
         const approvalData = currentApprovals.get(rec.id);
         if (approvalData) {
           const allApproved = approvalData.approvals.every(
@@ -183,7 +179,6 @@ async function loadReservations() {
               '<span class="badge bg-warning ms-2">Under Review</span>';
           }
         } else {
-          // Show "Pending Review" if no approval data exists
           approvalStatus =
             '<span class="badge bg-secondary ms-2">Pending Review</span>';
         }
@@ -310,29 +305,96 @@ async function handleViewButtonClick(event) {
 
 // Display reservation details in modal
 async function displayReservationDetails(record) {
-  // Set the global current reservation ID
   currentReservationId = record.id;
 
   const modalBody = document.getElementById("reservationDetails");
+
+  // Show loading while fetching details
   if (modalBody) {
     modalBody.innerHTML = `
-    <dt class="col-sm-4">Event Name</dt>
-    <dd class="col-sm-8">${record.eventName || "N/A"}</dd>
-    <dt class="col-sm-4">Event Type</dt>
-    <dd class="col-sm-8">${record.eventType || "N/A"}</dd>
-    <dt class="col-sm-4">Person In-Charge</dt>
-    <dd class="col-sm-8">${record.personInCharge || "N/A"}</dd>
-    <dt class="col-sm-4">Start Time</dt>
-    <dd class="col-sm-8">${formatDateTime(record.startTime)}</dd>
-    <dt class="col-sm-4">End Time</dt>
-    <dd class="col-sm-8">${formatDateTime(record.endTime)}</dd>
-    <dt class="col-sm-4">Status</dt>
-    <dd class="col-sm-8">
-      <span class="status-badge ${getStatusClass(record.status)}">
-        ${record.status || "pending"}
-      </span>
-    </dd>
-  `;
+      <div class="text-center py-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 mb-0">Loading reservation details...</p>
+      </div>
+    `;
+  }
+
+  let facilityName = "N/A";
+  // console.log("Facility ID:", record.facilityID);
+
+  // Fetch facility name from PocketBase
+  try {
+    const facilityId = record.facilityID;
+    if (facilityId) {
+      const facility = await pb.collection("facility").getOne(facilityId);
+      facilityName = facility.name || "N/A";
+    }
+  } catch (err) {
+    console.error("Failed to fetch facility details:", err);
+  }
+
+  // Prepare optional academic or org fields
+  let additionalFields = "";
+
+  if (record.eventType === "academic") {
+    additionalFields += `
+      <dt class="col-sm-4">Course</dt>
+      <dd class="col-sm-8">${record.course || "N/A"}</dd>
+
+      <dt class="col-sm-4">Subject Code</dt>
+      <dd class="col-sm-8">${record.SubjectCode || "N/A"}</dd>
+
+      <dt class="col-sm-4">Subject Description</dt>
+      <dd class="col-sm-8">${record.SubjectDescription || "N/A"}</dd>
+
+      <dt class="col-sm-4">Faculty In-Charge</dt>
+      <dd class="col-sm-8">${record.facultyInCharge || "N/A"}</dd>
+    `;
+  } else if (record.eventType === "organization") {
+    additionalFields += `
+      <dt class="col-sm-4">Organization Name</dt>
+      <dd class="col-sm-8">${record.OrganizationName || "N/A"}</dd>
+
+      <dt class="col-sm-4">Organization Adviser</dt>
+      <dd class="col-sm-8">${record.OrganizationAdviser || "N/A"}</dd>
+    `;
+  }
+
+  // Final render of modal details
+  if (modalBody) {
+    modalBody.innerHTML = `
+      <dt class="col-sm-4">Event Name</dt>
+      <dd class="col-sm-8">${record.eventName || "N/A"}</dd>
+
+      <dt class="col-sm-4">Event Type</dt>
+      <dd class="col-sm-8">${record.eventType || "N/A"}</dd>
+
+      <dt class="col-sm-4">Person In-Charge</dt>
+      <dd class="col-sm-8">${record.personInCharge || "N/A"}</dd>
+
+      <dt class="col-sm-4">Facility Name</dt>
+      <dd class="col-sm-8">${facilityName}</dd>
+
+      <dt class="col-sm-4">Preparation Time</dt>
+      <dd class="col-sm-8">${formatDateTime(record.preperationTime)}</dd>
+
+      <dt class="col-sm-4">Start Time</dt>
+      <dd class="col-sm-8">${formatDateTime(record.startTime)}</dd>
+
+      <dt class="col-sm-4">End Time</dt>
+      <dd class="col-sm-8">${formatDateTime(record.endTime)}</dd>
+
+      <dt class="col-sm-4">Status</dt>
+      <dd class="col-sm-8">
+        <span class="status-badge ${getStatusClass(record.status)}">
+          ${record.status || "pending"}
+        </span>
+      </dd>
+
+      ${additionalFields}
+    `;
   }
 
   // Load property items
@@ -351,7 +413,6 @@ async function displayReservationDetails(record) {
   try {
     await loadPropertyDetails(record, propertyListDiv);
 
-    // Show modal
     const modal = new bootstrap.Modal(
       document.getElementById("reservationModal")
     );
@@ -370,7 +431,7 @@ async function displayReservationDetails(record) {
 // Load property details
 async function loadPropertyDetails(record, propertyListDiv) {
   const propertyIDs = record.propertyID || [];
-  const propertyQuantities = record.propertyQuantity || [];
+  const propertyQuantities = record.propertyQuantity || {};
 
   if (propertyIDs.length === 0) {
     propertyListDiv.innerHTML = `
@@ -394,15 +455,12 @@ async function loadPropertyDetails(record, propertyListDiv) {
   );
 
   const validItems = items.filter((item) => item !== null);
-
-  // Check if there are existing approvals for this reservation
   const existingApprovals = currentApprovals.get(record.id);
 
   propertyListDiv.innerHTML = validItems
     .map((item, i) => {
-      const quantity = propertyQuantities[i] || 1;
+      const quantity = propertyQuantities[item.id] ?? 1; // ← FIXED HERE
 
-      // Pre-fill with existing approval data if available
       let approvedChecked = "";
       let rejectedChecked = "";
       let rejectionReason = "";
@@ -460,7 +518,6 @@ async function loadPropertyDetails(record, propertyListDiv) {
     })
     .join("");
 
-  // Add event listeners for approval radio buttons
   setupApprovalRadioListeners();
 }
 
