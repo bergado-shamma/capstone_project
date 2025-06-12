@@ -268,7 +268,7 @@ a {
   color: black;
 }
 .event.blue {
-  background-color: blue;
+  background-color: #6e131d;
 }
 .calendar-event {
   background-color: #0056b3;
@@ -316,13 +316,26 @@ a {
 }
 
 .ongoing {
-  background-color: #10b981;
+  background-color: #991b1b;
   color: white;
 }
 
 .scheduled {
-  background-color: #3b82f6;
+  background-color: green;
   color: white;
+}
+
+.cancelled {
+  background-color: #92400e;
+  color: white;
+}
+
+.event.cancelled {
+  background-color: #f44336; /* red tone */
+  color: white;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin-top: 2px;
 }
 
 .date-display {
@@ -345,7 +358,7 @@ a {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: #1e3a8a;
+  background-color: #6e131d;
   color: white;
 }
 
@@ -425,7 +438,7 @@ a {
 
 .event.ongoing {
   background-color: #d1fae5;
-  color: #065f46;
+  color: red;
   border-left: 3px solid #10b981;
 }
 

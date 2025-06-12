@@ -16,17 +16,6 @@
 ::after {
   box-sizing: border-box;
 }
-.header-title {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-weight: bold;
-  color: #000000;
-  font-family: "Outfit", sans-serif;
-  font-size: 2.5rem;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
 
 body {
   position: relative;
@@ -36,13 +25,11 @@ body {
   font-size: var(--normal-font-size);
   transition: 0.5s;
   background-color: white;
-  color: #000000;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  color: #fff;
 }
 
 a {
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 .main-content {
@@ -281,7 +268,7 @@ a {
   color: black;
 }
 .event.blue {
-  background-color: blue;
+  background-color: #6e131d;
 }
 .calendar-event {
   background-color: #0056b3;
@@ -329,13 +316,26 @@ a {
 }
 
 .ongoing {
-  background-color: #10b981;
+  background-color: #991b1b;
   color: white;
 }
 
 .scheduled {
-  background-color: #3b82f6;
+  background-color: green;
   color: white;
+}
+
+.cancelled {
+  background-color: #92400e;
+  color: white;
+}
+
+.event.cancelled {
+  background-color: #f44336; /* red tone */
+  color: white;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin-top: 2px;
 }
 
 .date-display {
@@ -353,20 +353,12 @@ a {
   overflow: hidden;
 }
 
-.status-box.Rejected {
-  background-color: #ff0000;
-  border-color: #000000;
-}
-.status-box.Cancelled {
-  background-color: #bfbfbf;
-  border-color: #000000;
-}
 .calendar-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: #1e3a8a;
+  background-color: #6e131d;
   color: white;
 }
 
@@ -446,7 +438,7 @@ a {
 
 .event.ongoing {
   background-color: #d1fae5;
-  color: #065f46;
+  color: red;
   border-left: 3px solid #10b981;
 }
 
@@ -530,20 +522,55 @@ a {
   background-color: #2563eb;
 }
 
-.calendar-container {
-  background: white;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
+.btn-danger {
+  background-color: #dc2626;
+  color: white;
 }
 
-.content h1 {
-  text-align: center;
+.btn-danger:hover {
+  background-color: #b91c1c;
+} /* Add these CSS rules to your existing stylesheet */
+
+.event.approved {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-left: 3px solid #10b981;
 }
 
-#currentMonth {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: -1px;
+.event.rejected {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-left: 3px solid #ef4444;
+}
+
+/* You might also want to add these common statuses */
+.event.cancelled {
+  background-color: #f3f4f6;
+  color: #374151;
+  border-left: 3px solid #9ca3af;
+}
+
+.event.confirmed {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-left: 3px solid #3b82f6;
+}
+
+@media (max-width: 768px) {
+  .calendar-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .status-buttons {
+    justify-content: center;
+  }
+
+  .calendar-day {
+    min-height: 80px;
+  }
+
+  .event {
+    font-size: 0.7rem;
+  }
 }

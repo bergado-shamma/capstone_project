@@ -980,18 +980,26 @@ function getApprovalStepsForEventType(eventType) {
   return approvalSteps;
 }
 
+function sanitizeReservationForUpdate(reservation) {
+  const {
+    id,
+    collectionId,
+    collectionName,
+    expand,
+    created,
+    updated,
+    ...sanitized
+  } = reservation;
+  return sanitized;
+}
+
 async function checkAndUpdateReservationStatus(reservation) {
   const eventType = reservation.eventType?.toLowerCase() || "";
-
-  // Define approval steps based on event type
   const approvalSteps = getApprovalStepsForEventType(eventType);
 
-  // Check if all required approvals are completed
   const allApproved = approvalSteps.every(
     (step) => getStepStatus(reservation, step.field) === "approved"
   );
-
-  // Check if any approval is rejected
   const anyRejected = approvalSteps.some(
     (step) => getStepStatus(reservation, step.field) === "rejected"
   );
@@ -999,60 +1007,37 @@ async function checkAndUpdateReservationStatus(reservation) {
   let updatedReservation = reservation;
 
   try {
-    // Auto-approve if all steps are approved and current status is not already approved
-    if (allApproved && reservation.status !== "approved") {
-      console.log(
-        `All approvals completed for reservation ${reservation.id}. Auto-approving...`
-      );
+    const cleanReservation = sanitizeReservationForUpdate(reservation);
 
+    if (allApproved && reservation.status !== "approved") {
       updatedReservation = await pb
         .collection("reservation")
         .update(reservation.id, {
+          ...cleanReservation,
           status: "approved",
-          approvalFinalizedAt: new Date().toISOString(),
-          lastStatusUpdate: new Date().toISOString(),
         });
 
       console.log("Reservation status auto-updated to approved.");
-
-      // Show success notification
       showNotification("Reservation has been fully approved!", "success");
-    }
-    // Auto-reject if any approval is rejected and current status is not already rejected
-    else if (anyRejected && reservation.status !== "rejected") {
-      console.log(
-        `Approval rejected for reservation ${reservation.id}. Auto-rejecting...`
-      );
-
+    } else if (anyRejected && reservation.status !== "rejected") {
       updatedReservation = await pb
         .collection("reservation")
         .update(reservation.id, {
+          ...cleanReservation,
           status: "rejected",
           rejectionFinalizedAt: new Date().toISOString(),
           lastStatusUpdate: new Date().toISOString(),
         });
 
       console.log("Reservation status auto-updated to rejected.");
-
-      // Show rejection notification
       showNotification("Reservation has been rejected.", "error");
     }
-    // Update to under-review if some approvals are in progress
-    else if (
-      hasApprovalInProgress(reservation, approvalSteps) &&
-      reservation.status === "pending"
-    ) {
-      updatedReservation = await pb
-        .collection("reservation")
-        .update(reservation.id, {
-          status: "under-review",
-          lastStatusUpdate: new Date().toISOString(),
-        });
-
-      console.log("Reservation status updated to under-review.");
-    }
+    // No update if still pending and partially approved (remove "under-review" logic)
   } catch (error) {
     console.error("Error updating reservation status:", error);
+    if (error?.response?.data) {
+      console.error("Validation errors:", error.response.data);
+    }
     showNotification(
       "Error updating reservation status. Please contact support.",
       "error"
