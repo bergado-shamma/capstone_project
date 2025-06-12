@@ -82,17 +82,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setTimeout(() => {
         switch (role) {
+          case 'super-admin':
+            window.location.href = './dashboards/super-admin/home.html' // Assuming home.html for super-admin
+            break
           case 'facility-admin':
             window.location.href = './dashboards/facility-admin/home.html'
             break
           case 'property-admin':
             window.location.href = './dashboards/property-admin/home.html'
             break
-          case 'staff':
-            window.location.href = './dashboards/staff'
-            break
           case 'student':
             window.location.href = './dashboards/student/student-home.html'
+            break
+          case 'academic-programs':
+            window.location.href =
+              './dashboards/officials/academic-programs/home.html' // Path based on image structure
+            break
+          case 'campus-director':
+            window.location.href =
+              './dashboards/officials/campus-director/home.html' // Path based on image structure
+            break
+          case 'student-affairs':
+            window.location.href =
+              './dashboards/officials/student-affairs/home.html' // Path based on image structure
+            break
+          case 'organization-adviser':
+            window.location.href =
+              './dashboards/organization-adviser/home.html' // Path based on image structure
+            break
+          case 'professors':
+            window.location.href = './dashboards/professors/home.html' // Path based on image structure
             break
           default:
             showAlert('Your account does not have a valid role assigned.')
