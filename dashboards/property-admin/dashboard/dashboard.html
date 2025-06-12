@@ -29,15 +29,371 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
     <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .dashboard-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #667eea;
+      }
+
+      .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .filter-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+
+      .btn-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        border-radius: 25px;
+        padding: 10px 25px;
+      }
+
+      .btn-custom:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        color: white;
+      }
+
+      .table-responsive {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      .status-approved {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .status-cancelled {
+        background-color: #e2e3e5;
+        color: #383d41;
+      }
+
+            :root {
+        --sidebar-primary: #6e131d;
+        --sidebar-secondary: #6e131d;
+        --sidebar-hover: #6e131d;
+        --sidebar-text: #ffffff;
+        --sidebar-text-muted: #fecaca;
+      }
+
+      /* Custom styles for improved table design */
+
+      .approval-header {
+        background: linear-gradient(
+          135deg,
+          var(--sidebar-primary) 0%,
+          var(--sidebar-secondary) 100%
+        );
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(185, 28, 28, 0.2);
+      }
+
+      .approval-header h2 {
+        margin: 0;
+        font-weight: 600;
+      }
+
+      .approval-header p {
+        margin: 0.5rem 0 0 0;
+        opacity: 0.9;
+      }
+
+      .filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--sidebar-primary);
+      }
+
+      .table-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        border-left: 4px solid var(--sidebar-primary);
+      }
+
+      .table {
+        margin: 0;
+      }
+
+      .table thead th {
+        background: linear-gradient(
+          135deg,
+          var(--sidebar-primary) 0%,
+          var(--sidebar-secondary) 100%
+        );
+        border: none;
+        font-weight: 600;
+        color: white;
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+      }
+
+      .table tbody td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+        border-color: #e9ecef;
+      }
+
+      .table tbody tr:hover {
+        background-color: rgba(185, 28, 28, 0.05);
+      }
+
+      .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .status-approved {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .btn-view {
+        background: linear-gradient(
+          135deg,
+          var(--sidebar-primary) 0%,
+          var(--sidebar-secondary) 100%
+        );
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .btn-view:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(185, 28, 28, 0.4);
+        color: white;
+        background: linear-gradient(
+          135deg,
+          var(--sidebar-hover) 0%,
+          var(--sidebar-primary) 100%
+        );
+      }
+
+      .modal-header {
+        background: linear-gradient(
+          135deg,
+          var(--sidebar-primary) 0%,
+          var(--sidebar-secondary) 100%
+        );
+        color: white;
+        border-radius: 10px 10px 0 0;
+      }
+
+      .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .property-item {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--sidebar-primary);
+      }
+
+      .property-item:hover {
+        box-shadow: 0 4px 15px rgba(185, 28, 28, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .property-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .property-name {
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+      }
+
+      .property-quantity {
+        background: var(--sidebar-primary);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+
+      .approval-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .form-check {
+        margin: 0;
+      }
+
+      .form-check-input:checked {
+        background-color: var(--sidebar-primary);
+        border-color: var(--sidebar-primary);
+      }
+
+      .form-check-input:focus {
+        border-color: var(--sidebar-secondary);
+        box-shadow: 0 0 0 0.25rem rgba(185, 28, 28, 0.25);
+      }
+
+      .rejection-reason {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border: 2px dashed #dc3545;
+        border-radius: 6px;
+        background: #fff5f5;
+      }
+
+      .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+      }
+
+      .no-data i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+        color: var(--sidebar-primary);
+      }
+
+      .text-primary {
+        color: var(--sidebar-primary) !important;
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+      }
+
+      .btn-success:hover {
+        background: linear-gradient(135deg, #218838 0%, #1abc9c 100%);
+        transform: translateY(-1px);
+      }
+
+      .spinner-border.text-primary {
+        color: var(--sidebar-primary) !important;
+      }
+
+      /* Search input focus */
+      .form-control:focus {
+        border-color: var(--sidebar-secondary);
+        box-shadow: 0 0 0 0.25rem rgba(185, 28, 28, 0.25);
+      }
+
+      /* Record count styling */
+      .record-count {
+        color: var(--sidebar-primary);
+        font-weight: 600;
+      }
+
+      @media (max-width: 768px) {
+        .main-content {
+          margin-left: 0;
+          padding: 1rem;
+        }
+
+        .property-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .approval-controls {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .table-responsive {
+          font-size: 0.85rem;
+        }
+      }
+    </style>
   </head>
   <body id="body-pd">
+    <i class='bx bx-bullhorn' style='font-size: 2rem; color: red;'></i> Testing Icon
+
     <header class="header" id="header">
       <div class="header_toggle">
         <i class="bx bx-menu" id="header-toggle"></i>
       </div>
     </header>
-
-    <div class="l-navbar" id="nav-bar">
+   <div class="l-navbar" id="nav-bar">
       <nav class="nav">
         <div>
           <a href="#" class="nav_logo">
@@ -49,101 +405,382 @@
             <span class="nav_logo-name">PFRS</span>
           </a>
 
-          <div class="nav_list">
-            <a href="/dashboards/property-admin/home.html" class="nav_link">
+           <div class="nav_list">
+            <a
+              href="/dashboards/property-admin/home.html"
+              class="nav_link"
+            >
               <i class="bx bx-home nav_icon"></i>
               <span class="nav_name">Home</span>
             </a>
             <a
               href="/dashboards/property-admin/reservation-history/reservation-history.html"
-              class="nav_link"
+              class="nav_link active"
             >
-              <i class="bx bx-calendar-event nav_icon"></i>
+              <i class="bx  bx-calendar-event nav_icon"></i>
               <span class="nav_name">Reservation History</span>
             </a>
-            <a
-              href="/dashboards/property-admin/approval/approval.html"
-              class="nav_link"
+                        <a
+              href="/dashboards/property-admin/approval/approval.html "
+              class="nav_link "
             >
               <i class="bx bx-check nav_icon"></i>
               <span class="nav_name">Approval</span>
             </a>
-            <a
+             
+                        <a
               href="/dashboards/property-admin/dashboard/dashboard.html"
-              class="nav_link active"
+              class="nav_link "
             >
-              <i class="bx bx-grid-alt nav_icon"></i>
-              <span class="nav_name">Dashboard</span>
+                <i class="bx bx-grid-alt nav_icon"></i>               
+                <span class="nav_name">Dashboard</span>
             </a>
-            <a
+             </a>
+                        <a
               href="/dashboards/property-admin/property-inventory/property-inventory.html"
-              class="nav_link"
+              class="nav_link "
             >
-              <i class="bx bx-chair" style="color: #ffffff"></i>
+              <i class='bx  bx-chair'  style='color:#ffffff'></i> 
               <span class="nav_name">Property Inventory</span>
             </a>
-            <a
-              href="/dashboards/property-admin/manage-accounts/manage-accounts.html"
-              class="nav_link"
-            >
-              <i class="bx bx-user" style="color: #ffffff"></i>
-              <span class="nav_name">Manage Account</span>
-            </a>
-            <a
+        
+                         <a
               href="/dashboards/property-admin/announcement/announcement.html"
-              class="nav_link"
+              class="nav_link "
             >
-              <i class="fas fa-bullhorn" style="font-size: 19px"></i>
-              <span class="nav_name">Announcement</span>
+<i class='fas fa-bullhorn' style='font-size: 19px'></i>   <span class="nav_name">Announcement</span>
+                         </a>
+
+            </a>
+           <div class="logout">
+            <a href="#" class="nav_link" id="logoutLink">
+              <i class="bx bx-log-out nav_icon"></i>
+              <span class="nav_name">Sign Out</span>
             </a>
           </div>
-        </div>
-        <div class="logout">
-          <a href="#" class="nav_link">
-            <i class="bx bx-log-out nav_icon"></i>
-            <span class="nav_name">Sign Out</span>
-          </a>
         </div>
       </nav>
     </div>
 
-    <div class="height-100 bg-light main-content">
-      <div class="topbar">
-        <h4>Dashboard</h4>
+    <div class="container">
+      <div class="dashboard-card">
+        <h1 class="mb-0">
+          <i class="fas fa-chart-line me-3"></i>
+          Reservations Dashboard
+        </h1>
+        <p class="mb-0">Monitor and analyze facility reservations</p>
       </div>
-      <div class="dashboard-container">
-        <button class="report-btn btn btn-primary">Generate Report</button>
-        <div class="charts-container">
-          <div class="chart-box large-chart card">
-            <div class="card-body">
-              <h5 class="card-title">Overall Reservations Chart</h5>
-              <p class="card-text">
-                (This area will display a bar chart or similar visualization.)
-              </p>
+
+      <!-- Statistics Cards -->
+      <div class="row">
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Total Reservations</h6>
+                <h3 class="mb-0" id="totalReservations">0</h3>
+              </div>
+              <i class="fas fa-calendar-alt fa-2x text-primary"></i>
             </div>
           </div>
-          <div class="chart-box small-chart card">
-            <div class="card-body">
-              <h5 class="card-title">Student per Course</h5>
-              <p class="card-text">
-                (This area will display a chart showing student distribution by
-                course.)
-              </p>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Pending Approval</h6>
+                <h3 class="mb-0" id="pendingReservations">0</h3>
+              </div>
+              <i class="fas fa-clock fa-2x text-warning"></i>
             </div>
           </div>
-          <div class="chart-box small-chart card">
-            <div class="card-body">
-              <h5 class="card-title">Reservation per Facility</h5>
-              <p class="card-text">
-                (This area will display a chart showing reservations per
-                facility.)
-              </p>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Approved</h6>
+                <h3 class="mb-0" id="approvedReservations">0</h3>
+              </div>
+              <i class="fas fa-check-circle fa-2x text-success"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">This Month</h6>
+                <h3 class="mb-0" id="monthlyReservations">0</h3>
+              </div>
+              <i class="fas fa-calendar-month fa-2x text-info"></i>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Filters and Report Generation -->
+      <div class="filter-section">
+        <div class="row">
+          <div class="col-md-3">
+            <label class="form-label">Date Range</label>
+            <select class="form-select" id="dateFilter">
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="statusFilter">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Event Type</label>
+            <select class="form-select" id="eventTypeFilter">
+              <option value="all">All Types</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Actions</label>
+            <div class="d-flex gap-2">
+              <button class="btn btn-custom" onclick="applyFilters()">
+                <i class="fas fa-filter me-1"></i>Filter
+              </button>
+              <button
+                class="btn btn-outline-primary"
+                onclick="generateReport()"
+              >
+                <i class="fas fa-file-export me-1"></i>Export
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-3" id="customDateRange" style="display: none">
+          <div class="col-md-3">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="startDate" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">End Date</label>
+            <input type="date" class="form-control" id="endDate" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="chart-container">
+            <h5 class="mb-3">
+              <i class="fas fa-chart-pie me-2"></i>
+              Reservations by Event Type
+            </h5>
+            <canvas id="eventTypeChart"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="chart-container">
+            <h5 class="mb-3">
+              <i class="fas fa-chart-donut me-2"></i>
+              Status Distribution
+            </h5>
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="chart-container">
+            <h5 class="mb-3">
+              <i class="fas fa-chart-line me-2"></i>
+              Monthly Trends
+            </h5>
+            <canvas id="monthlyTrendChart"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="chart-container">
+            <h5 class="mb-3">
+              <i class="fas fa-chart-bar me-2"></i>
+              Approval Workflow Status
+            </h5>
+            <canvas id="approvalChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reservations Table -->
+      <div class="chart-container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">
+            <i class="fas fa-table me-2"></i>
+            Recent Reservations
+          </h5>
+          <div class="d-flex gap-2">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search..."
+              id="searchInput"
+              style="width: 250px"
+            />
+            <button class="btn btn-outline-secondary" onclick="refreshData()">
+              <i class="fas fa-refresh"></i>
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Event Name</th>
+                <th>Event Type</th>
+                <th>Person In-Charge</th>
+                <th>Date & Time</th>
+                <th>Participants</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="reservationTableBody">
+              <!-- Filled by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            <span class="text-muted"
+              >Showing <span id="showingCount">0</span> of
+              <span id="totalCount">0</span> reservations</span
+            >
+          </div>
+          <nav>
+            <ul class="pagination pagination-sm" id="pagination">
+              <!-- Pagination controls -->
+            </ul>
+          </nav>
+        </div>
+      </div>
     </div>
-    <script src="dashboard-script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Reservation Details Modal -->
+    <div class="modal fade" id="reservationModal" tabindex="-1">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-info-circle me-2"></i>
+              Reservation Details
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row" id="reservationDetails">
+              <!-- Filled by displayReservationDetails -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report Generation Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-file-export me-2"></i>
+              Generate Report
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Report Type</label>
+              <select class="form-select" id="reportType">
+                <option value="summary">Summary Report</option>
+                <option value="detailed">Detailed Report</option>
+                <option value="analytics">Analytics Report</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Format</label>
+              <select class="form-select" id="reportFormat">
+                <option value="pdf">PDF</option>
+                <option value="excel">Excel</option>
+                <option value="csv">CSV</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Include Charts</label>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="includeCharts"
+                  checked
+                />
+                <label class="form-check-label" for="includeCharts">
+                  Include visualization charts in report
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-custom"
+              onclick="downloadReport()"
+            >
+              <i class="fas fa-download me-1"></i>Generate Report
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <canvas id="monthlyTrendChart"></canvas>
+<canvas id="mostUsedFacilitiesChart"></canvas>
+<canvas id="topOrgsChart"></canvas>
+<canvas id="eventTypeChart"></canvas>
+<canvas id="usageHoursChart"></canvas>
+<canvas id="eventTypeUsageChart"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script type="module" src="./dashboard-script.js"></script>
   </body>
 </html>
