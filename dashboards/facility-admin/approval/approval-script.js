@@ -85,6 +85,7 @@ function getCurrentReservationId() {
 document.addEventListener("DOMContentLoaded", () => {
   loadReservations();
   setupEventListeners();
+  checkAllPendingReservations();
 });
 
 // Load reservation list
@@ -304,7 +305,7 @@ async function handleViewButtonClick(event) {
     showError("Reservation not found");
     return;
   }
-
+  await autoApproveIfOverdue(record);
   await displayReservationDetails(record);
 }
 
@@ -694,5 +695,57 @@ async function debugReservationData(reservationId) {
   } catch (error) {
     console.error("Failed to fetch reservation:", error);
     return null;
+  }
+}
+async function autoApproveIfOverdue(reservation) {
+  const createdTime = new Date(reservation.created);
+  const now = new Date();
+  const diffInMs = now - createdTime;
+  const daysPending = diffInMs / (1000 * 60 * 60 * 24);
+
+  if (
+    daysPending > 3 &&
+    reservation.administrativeOfficerApprove === "Under Review"
+  ) {
+    const facilityIDs = reservation.facilityID ? [reservation.facilityID] : [];
+
+    const approvals = facilityIDs.map((facilityId) => ({
+      facilityId,
+      status: "approved",
+      reason: "",
+    }));
+
+    const updateData = {
+      administrativeOfficerApprove: "Approved",
+      approvalDetails: JSON.stringify({
+        approvals,
+        timestamp: now.toISOString(),
+        approvedBy: "system_auto_approval",
+      }),
+    };
+
+    try {
+      await pb.collection("reservation").update(reservation.id, updateData);
+      console.log(`Auto-approved reservation ${reservation.id} after 3 days`);
+      currentApprovals.set(reservation.id, {
+        approvals,
+        timestamp: now.toISOString(),
+        approvedBy: "system_auto_approval",
+        dbStatus: "Approved",
+      });
+    } catch (error) {
+      console.error(`Auto-approval failed for ${reservation.id}:`, error);
+    }
+  }
+}
+async function checkAllPendingReservations() {
+  const result = await pb.collection("reservation").getFullList({
+    filter: 'administrativeOfficerApprove = "Under Review"',
+    requestKey: null, // disables auto-cancel group
+    $autoCancel: false, // disables auto-cancel behavior (older SDKs)
+  });
+
+  for (const res of result) {
+    await autoApproveIfOverdue(res);
   }
 }
