@@ -25,7 +25,7 @@ body {
   font-size: var(--normal-font-size);
   transition: 0.5s;
   background-color: white;
-  color: #fff;
+  color: #333;
 }
 
 a {
@@ -35,6 +35,8 @@ a {
 .main-content {
   margin-top: calc(var(--header-height) + 2rem);
   padding: 20px;
+  flex: 1;
+  background-color: white;
 }
 
 .status-container {
@@ -45,7 +47,7 @@ a {
   align-items: center;
   padding: 20px;
   background: white;
-  border: 2px solid black;
+  border: 2px solid #6e131d;
   border-radius: 8px;
   width: fit-content;
   margin: 30px auto;
@@ -175,6 +177,85 @@ a {
   height: 100vh;
 }
 
+/* Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: #fff;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+th {
+  background: #d66e3f;
+  color: white;
+}
+
+/* Custom header styling - this overrides the th styles above */
+#custom-header th {
+  background-color: #6e131d !important;
+  color: white !important;
+}
+
+/* Button Styling - Override Bootstrap styles */
+.btn {
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 14px;
+  margin: 2px;
+}
+
+.btn-remove {
+  background: #800000 !important;
+  color: white !important;
+  border-color: #800000 !important;
+}
+
+.btn-remove:hover {
+  background: #800000 !important;
+  color: white !important;
+  border-color: #800000 !important;
+}
+
+.btn-edit {
+  background: #ffdf00 !important;
+  color: black !important;
+  border-color: #ffdf00 !important;
+}
+
+.btn-edit:hover {
+  background: gold !important;
+  color: black !important;
+  border-color: gold !important;
+}
+
+/* Add Property Button */
+.add-property,
+.btn-primary {
+  background: #6e131d !important;
+  color: white !important;
+  padding: 10px 20px;
+  border: none !important;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.add-property:hover,
+.btn-primary:hover {
+  background: #5a0f17 !important;
+  color: white !important;
+  border-color: #5a0f17 !important;
+}
+
 @media screen and (min-width: 768px) {
   body {
     margin: calc(var(--header-height) + 1rem) 0 0 0;
@@ -207,49 +288,4 @@ a {
   .body-pd {
     padding-left: calc(var(--nav-width) + 188px);
   }
-}
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-  background-color: white;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  background: #fff;
-}
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
-}
-th {
-  background: #d66e3f;
-  color: white;
-}
-.btn {
-  padding: 5px 10px;
-  border: none;
-  cursor: pointer;
-  border-radius: 3px;
-}
-.btn-remove {
-  background: red;
-  color: white;
-}
-.btn-edit {
-  background: yellow;
-  color: black;
-}
-.add-property {
-  background: blue;
-  color: white;
-  padding: 10px;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  margin-bottom: 10px;
 }

@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manage Account</title>
-        <link rel="stylesheet" href="./manage-accounts-styles.css" />
-   <link
+    <title>Overview of Calendar Activities</title>
+    <link rel="stylesheet" href="./home-styles.css" />
+    <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
@@ -17,16 +17,19 @@
       href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"
       rel="stylesheet"
     />
-
     <link
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <link rel="icon" type="image/x-icon" href="/path/to/favicon.ico" />
-<script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-...redacted..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
     <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    
+    <style>
+      
+    </style>
   </head>
   <body id="body-pd">
     <i class='bx bx-bullhorn' style='font-size: 2rem; color: red;'></i> Testing Icon
@@ -51,7 +54,7 @@
            <div class="nav_list">
             <a
               href="/dashboards/property-admin/home.html"
-              class="nav_link"
+              class="nav_link active"
             >
               <i class="bx bx-home nav_icon"></i>
               <span class="nav_name">Home</span>
@@ -64,13 +67,13 @@
               <span class="nav_name">Reservation History</span>
             </a>
                         <a
-              href="/dashboards/property-admin/approval/approval.html"
-              class="nav_link"
+              href="/dashboards/property-admin/approval/approval.html "
+              class="nav_link "
             >
               <i class="bx bx-check nav_icon"></i>
               <span class="nav_name">Approval</span>
             </a>
-             </a>
+             
                         <a
               href="/dashboards/property-admin/dashboard/dashboard.html"
               class="nav_link "
@@ -88,7 +91,7 @@
             </a>
             <a
               href="/dashboards/property-admin/manage-accounts/manage-accounts.html"
-              class="nav_link active"
+              class="nav_link "
             >
           <i class='bx  bx-user'  style='color:#ffffff'></i>               
           <span class="nav_name">Manage Account</span>
@@ -112,56 +115,84 @@
     </div>
 
     <div class="main-content">
-      <h1>Manage Account</h1>
-      <button class="create-account-btn">Create Account</button>
+      <h1>Overview of Calendar Activities</h1>
 
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Student Number</th>
-              <th>Last Name</th>
-              <th>First Name</th>
-              <th>Email</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>2022-19536-TG-0</td>
-              <td>Reyes</td>
-              <td>Paul</td>
-              <td>paulreyes@gmail.com</td>
-              <td>
-                <button class="btn btn-remove">Remove</button>
-                <button class="btn btn-edit">Edit</button>
-              </td>
-            </tr>
-            <tr>
-              <td>2022-19454-TG-0</td>
-              <td>Bergado</td>
-              <td>Shamma</td>
-              <td>shamma@gmail.com</td>
-              <td>
-                <button class="btn btn-remove">Remove</button>
-                <button class="btn btn-edit">Edit</button>
-              </td>
-            </tr>
-            <tr>
-              <td>2022-19384-TG-0</td>
-              <td>Barrantes</td>
-              <td>Sofia</td>
-              <td>sofiasofia@gmail.com</td>
-              <td>
-                <button class="btn btn-remove">Remove</button>
-                <button class="btn btn-edit">Edit</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="calendar-header">
+        <div class="status-buttons">
+          <button class="pending" onclick="filterEvents('pending')">
+            Pending Reservation
+          </button>
+          <button class="ongoing" onclick="filterEvents('rejected')">
+            Rejected Reservation
+          </button>
+       <button class="scheduled" onclick="filterEvents('approved')">
+  Scheduled
+</button>
+
+          <button class="btn btn-primary" onclick="showAllEvents()">
+            Show All
+          </button>
+        </div>
+        <button
+          class="date-display"
+          onclick="goToToday()"
+          id="current-date"
+        ></button>
       </div>
-    </div>
-  </body>
-    <script src="manage-account-script.js"></script>
 
+      <div class="calendar-container">
+        <div class="calendar-nav">
+          <button onclick="previousMonth()">&lt;</button>
+          <h2 id="month-year"></h2>
+          <button onclick="nextMonth()">&gt;</button>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="calendar-header-day">Sun</div>
+          <div class="calendar-header-day">Mon</div>
+          <div class="calendar-header-day">Tue</div>
+          <div class="calendar-header-day">Wed</div>
+          <div class="calendar-header-day">Thu</div>
+          <div class="calendar-header-day">Fri</div>
+          <div class="calendar-header-day">Sat</div>
+        </div>
+        <div class="calendar-grid" id="calendar-days"></div>
+      </div>
+      <div class="calendar-container">
+  <div id="calendar"></div>
+</div>
+
+    </div>
+<!-- Read-Only View Modal -->
+<div id="viewReservationModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeViewModal()">&times;</span>
+    <h2 id="view-modal-title">Reservation Details</h2>
+    <p><strong>Title:</strong> <span id="view-title"></span></p>
+    <p><strong>Date:</strong> <span id="view-date"></span></p>
+    <p><strong>Time:</strong> <span id="view-time"></span></p>
+    <p><strong>Location:</strong> <span id="view-location"></span></p>
+    <p><strong>Status:</strong> <span id="view-status"></span></p>
+    <p><strong>Description:</strong> <span id="view-description"></span></p>
+    <div class="modal-actions">
+      <button src="./approval/approval.html">View reservation details</button>
+    </div>
+  </div>
+</div>
+<!-- Add this inside <body> -->
+<div class="modal" id="announcementModal">
+  <div class="modal-content">
+    <span class="close" id="modalCloseBtn">&times;</span>
+    <h5 id="announcementTitle"></h5>
+    <p id="announcementContent"></p>
+    <small id="announcementDate" style="color: gray;"></small>
+  </div>
+</div>
+
+<!-- Calendar container (somewhere inside your main content) -->
+
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="./home-script.js"></script>
+  </body>
 </html>

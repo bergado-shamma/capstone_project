@@ -208,12 +208,6 @@ a {
     padding-left: calc(var(--nav-width) + 188px);
   }
 }
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-  background-color: white;
-}
 .reservation-container {
   background-color: #ddd;
   padding: 20px;

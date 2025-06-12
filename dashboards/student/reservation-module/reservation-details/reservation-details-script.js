@@ -102,59 +102,354 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Property Assets Table
+  // Property Assets Table - Enhanced version with Facility Properties
   const assetsData = sessionStorage.getItem("addedAssets");
+  const facilityPropertiesData = sessionStorage.getItem("facilityProperties");
   let selectedAssets = [];
+  let facilityProperties = [];
 
   try {
     selectedAssets = assetsData ? JSON.parse(assetsData) : [];
+    facilityProperties = facilityPropertiesData
+      ? JSON.parse(facilityPropertiesData)
+      : [];
+    console.log("Loaded assets from session storage:", selectedAssets);
+    console.log(
+      "Loaded facility properties from session storage:",
+      facilityProperties
+    );
   } catch (error) {
     console.error("Error parsing session storage data:", error);
+    selectedAssets = [];
+    facilityProperties = [];
   }
 
   const tableBody = document.querySelector("#property-reservation-table tbody");
   if (tableBody) {
     tableBody.innerHTML = "";
 
-    selectedAssets.forEach((asset, index) => {
-      const row = document.createElement("tr");
+    // Check if we have any properties to display
+    if (selectedAssets.length === 0 && facilityProperties.length === 0) {
+      const noDataRow = document.createElement("tr");
+      const noDataCell = document.createElement("td");
+      noDataCell.colSpan = 4; // Updated colspan for new column
+      noDataCell.textContent = "No properties available";
+      noDataCell.style.textAlign = "center";
+      noDataCell.style.color = "#666";
+      noDataRow.appendChild(noDataCell);
+      tableBody.appendChild(noDataRow);
+    } else {
+      // First, add facility properties (with disabled buttons)
+      facilityProperties.forEach((property, index) => {
+        const row = document.createElement("tr");
+        row.style.backgroundColor = "#f8f9fa"; // Light gray background to distinguish
 
-      const quantityCell = document.createElement("td");
-      const input = document.createElement("input");
-      input.type = "number";
-      input.min = "1";
-      input.value = asset.quantity;
-      input.classList.add("form-control");
-      input.setAttribute("data-index", index);
-      quantityCell.appendChild(input);
+        // Property Type Cell
+        const typeCell = document.createElement("td");
+        const typeBadge = document.createElement("span");
+        typeBadge.className = "badge bg-secondary";
+        typeBadge.textContent = "Included";
+        typeBadge.title = "This property comes with the facility";
+        typeCell.appendChild(typeBadge);
 
-      const propertyCell = document.createElement("td");
-      propertyCell.textContent = asset.name;
+        // Property Name Cell
+        const propertyCell = document.createElement("td");
+        propertyCell.innerHTML = `<strong>${
+          property.name || "Unknown Property"
+        }</strong>`;
+        propertyCell.style.color = "#495057";
 
-      const modifyCell = document.createElement("td");
-      const btn = document.createElement("button");
-      btn.textContent = "Update";
-      btn.className = "btn btn-sm btn-primary";
-      btn.addEventListener("click", function () {
-        const newQuantity = input.value;
-        if (newQuantity < 1) {
-          alert("Quantity must be at least 1.");
-          input.value = selectedAssets[index].quantity;
-          return;
-        }
-        selectedAssets[index].quantity = parseInt(newQuantity);
-        sessionStorage.setItem("addedAssets", JSON.stringify(selectedAssets));
-        alert("Quantity updated.");
+        // Quantity Cell (fixed quantity, disabled input)
+        const quantityCell = document.createElement("td");
+        const quantitySpan = document.createElement("span");
+        quantitySpan.textContent = property.quantity || 1;
+        quantitySpan.className = "badge bg-light text-dark";
+        quantitySpan.style.fontSize = "14px";
+        quantityCell.appendChild(quantitySpan);
+
+        // Modify Button Cell (disabled)
+        const modifyCell = document.createElement("td");
+        const disabledBtn = document.createElement("button");
+        disabledBtn.textContent = "Included";
+        disabledBtn.className = "btn btn-sm btn-outline-secondary";
+        disabledBtn.disabled = true;
+        disabledBtn.title =
+          "This property is included with the facility and cannot be modified";
+        modifyCell.appendChild(disabledBtn);
+
+        // Append cells to row
+        row.appendChild(typeCell);
+        row.appendChild(propertyCell);
+        row.appendChild(quantityCell);
+        row.appendChild(modifyCell);
+
+        tableBody.appendChild(row);
       });
-      modifyCell.appendChild(btn);
 
-      row.appendChild(quantityCell);
-      row.appendChild(propertyCell);
-      row.appendChild(modifyCell);
+      // Then, add selected assets (with active buttons)
+      selectedAssets.forEach((asset, index) => {
+        const row = document.createElement("tr");
 
-      tableBody.appendChild(row);
-    });
+        // Property Type Cell
+        const typeCell = document.createElement("td");
+        const typeBadge = document.createElement("span");
+        typeBadge.className = "badge bg-primary";
+        typeBadge.textContent = "Selected";
+        typeBadge.title = "This property was selected by you";
+        typeCell.appendChild(typeBadge);
+
+        // Property Name Cell
+        const propertyCell = document.createElement("td");
+        propertyCell.textContent = asset.name || "Unknown Property";
+
+        // Quantity Cell with Input
+        const quantityCell = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "1";
+        input.max = asset.availability || 999; // Use availability if available
+        input.value = asset.quantity || 1;
+        input.classList.add("form-control");
+        input.setAttribute("data-index", index);
+        input.style.width = "80px";
+
+        // Add real-time validation
+        input.addEventListener("input", function () {
+          const value = parseInt(this.value);
+          const maxAvailable = asset.availability || 999;
+
+          if (value < 1) {
+            this.style.borderColor = "red";
+            this.title = "Quantity must be at least 1";
+          } else if (value > maxAvailable) {
+            this.style.borderColor = "red";
+            this.title = `Maximum available: ${maxAvailable}`;
+          } else {
+            this.style.borderColor = "";
+            this.title = "";
+          }
+        });
+
+        quantityCell.appendChild(input);
+
+        // Modify/Update Button Cell
+        const modifyCell = document.createElement("td");
+        const updateBtn = document.createElement("button");
+        updateBtn.textContent = "Update";
+        updateBtn.className = "btn btn-sm btn-primary me-2";
+        updateBtn.addEventListener("click", function () {
+          updateAssetQuantity(index, input.value, asset);
+        });
+
+        // Remove Button
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.className = "btn btn-sm btn-danger";
+        removeBtn.addEventListener("click", function () {
+          removeAsset(index);
+        });
+
+        modifyCell.appendChild(updateBtn);
+        modifyCell.appendChild(removeBtn);
+
+        // Append cells to row
+        row.appendChild(typeCell);
+        row.appendChild(propertyCell);
+        row.appendChild(quantityCell);
+        row.appendChild(modifyCell);
+
+        tableBody.appendChild(row);
+      });
+    }
   }
+
+  // Update table header to include the new column
+  const tableHeader = document.querySelector(
+    "#property-reservation-table thead tr"
+  );
+  if (tableHeader && tableHeader.children.length === 3) {
+    // Add Type column header if it doesn't exist
+    const typeHeader = document.createElement("th");
+    typeHeader.textContent = "Type";
+    tableHeader.insertBefore(typeHeader, tableHeader.firstChild);
+  }
+
+  // Function to update asset quantity
+  function updateAssetQuantity(index, newQuantity, asset) {
+    const quantity = parseInt(newQuantity);
+    const maxAvailable = asset.availability || 999;
+
+    if (isNaN(quantity) || quantity < 1) {
+      alert("Please enter a valid quantity (minimum 1).");
+      return;
+    }
+
+    if (quantity > maxAvailable) {
+      alert(`Maximum available quantity is ${maxAvailable}.`);
+      return;
+    }
+
+    // Update the asset quantity
+    selectedAssets[index].quantity = quantity;
+
+    // Save back to session storage
+    try {
+      sessionStorage.setItem("addedAssets", JSON.stringify(selectedAssets));
+      console.log("Updated assets in session storage:", selectedAssets);
+
+      // Show success message
+      showNotification("Quantity updated successfully!", "success");
+    } catch (error) {
+      console.error("Error saving to session storage:", error);
+      alert("Error updating quantity. Please try again.");
+    }
+  }
+
+  // Function to remove asset
+  function removeAsset(index) {
+    if (
+      confirm(
+        "Are you sure you want to remove this property from your reservation?"
+      )
+    ) {
+      selectedAssets.splice(index, 1);
+
+      // Save back to session storage
+      try {
+        sessionStorage.setItem("addedAssets", JSON.stringify(selectedAssets));
+        console.log("Asset removed. Updated session storage:", selectedAssets);
+
+        // Refresh the table
+        refreshPropertyTable();
+
+        showNotification("Property removed successfully!", "info");
+      } catch (error) {
+        console.error("Error saving to session storage:", error);
+        alert("Error removing property. Please try again.");
+      }
+    }
+  }
+
+  // Function to refresh the table
+  function refreshPropertyTable() {
+    const assetsData = sessionStorage.getItem("addedAssets");
+    const facilityPropertiesData = sessionStorage.getItem("facilityProperties");
+    let updatedAssets = [];
+    let updatedFacilityProperties = [];
+
+    try {
+      updatedAssets = assetsData ? JSON.parse(assetsData) : [];
+      updatedFacilityProperties = facilityPropertiesData
+        ? JSON.parse(facilityPropertiesData)
+        : [];
+    } catch (error) {
+      console.error("Error parsing session storage data:", error);
+    }
+
+    selectedAssets = updatedAssets;
+    facilityProperties = updatedFacilityProperties;
+
+    // Re-populate the table (call the main table population logic)
+    location.reload(); // Simple approach - you can make this more elegant
+  }
+
+  // Function to show notifications
+  function showNotification(message, type = "info") {
+    // Create notification element
+    const notification = document.createElement("div");
+    notification.className = `alert alert-${
+      type === "success" ? "success" : type === "error" ? "danger" : "info"
+    } alert-dismissible fade show`;
+    notification.style.position = "fixed";
+    notification.style.top = "20px";
+    notification.style.right = "20px";
+    notification.style.zIndex = "9999";
+    notification.style.minWidth = "300px";
+
+    notification.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 3000);
+  }
+
+  // Function to validate all quantities before form submission
+  function validateAllQuantities() {
+    const inputs = document.querySelectorAll(
+      "#property-reservation-table tbody input[type='number']"
+    );
+    let isValid = true;
+
+    inputs.forEach((input, index) => {
+      const value = parseInt(input.value);
+      const asset = selectedAssets[index];
+      const maxAvailable = asset?.availability || 999;
+
+      if (isNaN(value) || value < 1 || value > maxAvailable) {
+        isValid = false;
+        input.style.borderColor = "red";
+      }
+    });
+
+    return isValid;
+  }
+
+  // Function to get summary of all properties for reservation
+  function getReservationSummary() {
+    const summary = {
+      facilityProperties: facilityProperties.map((prop) => ({
+        name: prop.name,
+        quantity: prop.quantity || 1,
+        type: "included",
+      })),
+      selectedAssets: selectedAssets.map((asset) => ({
+        name: asset.name,
+        quantity: asset.quantity,
+        type: "selected",
+      })),
+      totalItems: facilityProperties.length + selectedAssets.length,
+    };
+
+    return summary;
+  }
+
+  // Add event listener for form validation before submission
+  document.addEventListener("DOMContentLoaded", function () {
+    const confirmBtn = document.getElementById("confirm-btn");
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", function (e) {
+        if (!validateAllQuantities()) {
+          e.preventDefault();
+          alert("Please correct the quantity values before proceeding.");
+          return false;
+        }
+
+        // Allow reservation even if only facility properties exist
+        const summary = getReservationSummary();
+        if (summary.totalItems === 0) {
+          e.preventDefault();
+          alert("No properties available for this reservation.");
+          return false;
+        }
+
+        // Store complete reservation summary
+        sessionStorage.setItem("reservationSummary", JSON.stringify(summary));
+      });
+    }
+  });
+
+  // Export data for use in other parts of the application
+  window.selectedAssets = selectedAssets;
+  window.facilityProperties = facilityProperties;
+  window.getReservationSummary = getReservationSummary;
 
   // LOI Preview and Validation
   const fileInput = document.getElementById("loi-upload");
@@ -240,20 +535,17 @@ document.addEventListener("DOMContentLoaded", function () {
           document.getElementById("organization_name")?.value || "";
       }
 
-      // Validation
       if (!updatedEventData.event_name || !facilityID) {
         alert("Event name and facility must be selected.");
         return;
       }
 
-      // Get user ID - ensure it's available
       const userId = pb.authStore.model?.id || "";
       if (!userId) {
         alert("User authentication required. Please login and try again.");
         return;
       }
 
-      // Handle Event Creation/Update
       let eventID = sessionStorage.getItem("eventID");
       if (!eventID || eventID.length !== 15) {
         const nextEventId = await generateNextId("event", "EV-");
@@ -271,12 +563,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       }
 
-      // 🔧 FIXED: FormData construction
       const formData = new FormData();
-      function toISOStringSafe(dateStr) {
+      const toISOStringSafe = (dateStr) => {
         const date = new Date(dateStr);
         return isNaN(date.getTime()) ? null : date.toISOString();
-      }
+      };
 
       const startTime = toISOStringSafe(updatedEventData.time_start);
       const endTime = toISOStringSafe(updatedEventData.time_end);
@@ -289,44 +580,68 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Core required fields
       formData.append("facilityID", facilityID);
       formData.append("eventID", eventID);
       formData.append("purpose", updatedEventData.event_description);
       formData.append("participants", updatedEventData.event_capacity);
-
       formData.append("startTime", startTime);
       formData.append("endTime", endTime);
-
       formData.append("personInCharge", updatedEventData.person_in_charge);
-      formData.append("eventType", updatedEventData.event_type.toLowerCase()); // 🔧 FIX: lowercase to match schema options
-      if (updatedEventData.time_prep) {
-        const prepTime = new Date(updatedEventData.time_prep).toISOString();
-        formData.append("preperationTime", prepTime);
-      }
+      formData.append("eventType", updatedEventData.event_type.toLowerCase());
+      formData.append("preperationTime", prepTime);
       formData.append("eventName", updatedEventData.event_name);
-
-      // 🔧 NEW: Add status field (automatically set)
       formData.append("status", "pending");
-
-      // 🔧 UPDATED: User ID (ensure it's properly added)
       formData.append("userID", userId);
-      formData.append("user_id", userId); // Adding both formats for compatibility
+      formData.append("user_id", userId);
 
-      // 🔧 FIXED: Property IDs handling
       const addedAssets = JSON.parse(
         sessionStorage.getItem("addedAssets") || "[]"
       );
-      const propertyIds = addedAssets
-        .map((asset) => asset.id || asset.property_id || asset.propertyId)
-        .filter(Boolean);
+      const facilityProperties = JSON.parse(
+        sessionStorage.getItem("facilityProperties") || "[]"
+      );
 
-      if (propertyIds.length > 0) {
-        // Try sending each property ID separately for multiple relation
-        propertyIds.forEach((id) => formData.append("propertyID", id));
-      }
+      // Create a map to preserve quantities from addedAssets
+      const assetMap = {};
 
-      // Academic fields
+      // First add `addedAssets` (user-selected, editable quantities)
+      addedAssets.forEach((asset) => {
+        if (asset.id) {
+          const quantity = parseInt(asset.availableQty);
+          assetMap[asset.id] = {
+            ...asset,
+            quantity: isNaN(quantity) ? 1 : quantity,
+          };
+        }
+      });
+
+      // Then add `facilityProperties` (default facility items), only if not already included
+      facilityProperties.forEach((asset) => {
+        if (asset.id && !assetMap[asset.id]) {
+          const quantity = parseInt(asset.quantity);
+          assetMap[asset.id] = {
+            ...asset,
+            quantity: isNaN(quantity) ? 1 : quantity,
+          };
+        }
+      });
+
+      const allAssets = Object.values(assetMap);
+
+      const propertyQuantityMap = {};
+      const propertyIds = [];
+
+      allAssets.forEach((asset) => {
+        if (asset.id) {
+          propertyIds.push(asset.id); // still needed for backward compatibility / related filtering
+          propertyQuantityMap[asset.id] = asset.quantity || 1;
+        }
+      });
+
+      // Append to FormData
+      propertyIds.forEach((id) => formData.append("propertyID", id)); // if required by your schema
+      formData.append("propertyQuantity", JSON.stringify(propertyQuantityMap));
+
       if (updatedEventData.event_type === "Academic") {
         formData.append("SubjectCode", updatedEventData.subject_code || "");
         formData.append(
@@ -339,7 +654,6 @@ document.addEventListener("DOMContentLoaded", function () {
         );
       }
 
-      // Organizational fields
       if (updatedEventData.event_type === "Organization") {
         formData.append(
           "OrganizationAdviser",
@@ -351,7 +665,6 @@ document.addEventListener("DOMContentLoaded", function () {
         );
       }
 
-      // File upload
       if (fileInput && fileInput.files.length > 0) {
         formData.append("file", fileInput.files[0]);
       } else {
@@ -364,13 +677,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      // 🔧 DEBUG: Log FormData contents before sending
       console.log("FormData contents:");
       for (let [key, value] of formData.entries()) {
         console.log(key, value);
       }
 
-      // Submit reservation
       const reservationRecord = await pb
         .collection("reservation")
         .create(formData);
@@ -378,13 +689,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
       alert("Reservation submitted successfully!");
       sessionStorage.clear();
-      window.location.href = "/student/reservation-success.html";
+      window.location.href =
+        "/student/reservation-module/reservation-details/reservation-details.html";
     } catch (error) {
       console.error("Detailed error:", error);
-
-      // 🔧 ENHANCED: Better error handling
       if (error.response && error.response.data) {
-        console.log("PocketBase error details:", error.response.data);
         const errorDetails = JSON.stringify(error.response.data, null, 2);
         alert(`Validation Error: ${errorDetails}`);
       } else {
@@ -395,7 +704,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
-
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.querySelector(".reservation-details");
   const eventType = document.getElementById("event_type");

@@ -22,12 +22,11 @@
   transform: translateX(-50%);
   font-weight: bold;
   color: #000000;
- font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 2.5rem;
   letter-spacing: 1.5px;
-  text-transform: uppercase; 
+  text-transform: uppercase;
 }
-
 
 body {
   position: relative;
@@ -38,8 +37,8 @@ body {
   transition: 0.5s;
   background-color: white;
   color: #000000;
-   -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -141,6 +140,7 @@ a {
   height: auto;
   display: inline-block;
   vertical-align: middle;
+  margin-left: 2.3px;
 }
 
 .nav_logo-name {
@@ -221,155 +221,313 @@ a {
     padding-left: calc(var(--nav-width) + 188px);
   }
 }
-.content {
+
+.main-content {
   flex: 1;
   padding: 20px;
+  background-color: white;
 }
-
-.status-container {
+.calendar-header {
   display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  background: white;
-  border: 2px solid black;
+  padding: 10px;
+  border-bottom: 2px solid #ddd;
+}
+.status-buttons {
+  display: flex;
+  gap: 10px;
+}
+.status-buttons button {
+  padding: 8px 15px;
+  border: none;
+  cursor: pointer;
   border-radius: 5px;
-  width: fit-content;
-  margin: 20px auto;
-}
-
-.status-box {
-  padding: 10px 62px;
-  border-radius: 25px;
   font-weight: bold;
-  text-align: center;
-  font-size: 14px;
-  color: black;
-  margin: 0 10px;
 }
-
 .pending {
   background-color: yellow;
 }
-
 .ongoing {
   background-color: blue;
   color: white;
 }
-
 .scheduled {
   background-color: green;
   color: white;
 }
-
-/* 🟡🟢🔵 Legend styles */
-.status-legend {
-  margin-top: 20px;
-  font-family: Arial, sans-serif;
-}
-
-.status-legend strong {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 16px;
-  color: #333;
-  text-align: center;
-}
-
-.status-container {
-  display: flex;
+.calendar {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
   gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+  padding: 20px;
 }
-
-.status-box {
-  display: inline-block;
-  padding: 5px 10px;
-  font-size: 14px;
+.day {
+  min-height: 100px;
+  border: 1px solid #ddd;
+  padding: 5px;
+  position: relative;
+}
+.event {
+  font-size: 12px;
+  padding: 5px;
+  border-radius: 5px;
+  color: white;
+  margin-top: 5px;
+}
+.event.yellow {
+  background-color: yellow;
+  color: black;
+}
+.event.blue {
+  background-color: blue;
+}
+.calendar-event {
+  background-color: #0056b3;
+  color: white;
+  padding: 2px 4px;
+  margin-top: 4px;
   border-radius: 4px;
-  color: #000;
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  pointer-events: none;
-  cursor: default;
+  font-size: 0.7rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.event.scheduled {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-left: 3px solid #3b82f6;
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.status-box.pending {
-  background-color: #ddff00;
-  border-color: #000000;
+.status-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.status-box.Approved {
-  background-color: #00660e;
-  border-color: #000000;
+.status-buttons button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.pending {
+  background-color: #fbbf24;
+  color: white;
+}
+
+.ongoing {
+  background-color: #10b981;
+  color: white;
+}
+
+.scheduled {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.date-display {
+  background-color: #e5e7eb;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.calendar-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .status-box.Rejected {
-  background-color: #FF0000;
+  background-color: #ff0000;
   border-color: #000000;
 }
 .status-box.Cancelled {
   background-color: #bfbfbf;
   border-color: #000000;
 }
-.calendar-header {
+.calendar-nav {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
-  gap: 10px;
+  padding: 1rem 2rem;
+  background-color: #1e3a8a;
+  color: white;
 }
 
-#addEventBtn {
-  background-color: #781c1c;
-  color: white;
-  padding: 8px 15px;
+.calendar-nav button {
+  background: none;
   border: none;
+  color: white;
+  font-size: 1.5rem;
   cursor: pointer;
-  font-size: 16px;
-  border-radius: 5px;
+  padding: 0.5rem;
+  border-radius: 50%;
   transition: background-color 0.3s;
 }
 
-#addEventBtn:hover {
-  background-color: #5a1414;
+.calendar-nav button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
-.dropdown {
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-header-day {
+  padding: 1rem;
+  text-align: center;
+  font-weight: bold;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.calendar-day {
+  min-height: 120px;
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.calendar-day:hover {
+  background-color: #f9fafb;
+}
+
+.calendar-day.other-month {
+  color: #9ca3af;
+  background-color: #f9fafb;
+}
+
+.calendar-day.today {
+  background-color: #dbeafe;
+}
+
+.day-number {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.event {
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.25rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.event:hover {
+  opacity: 0.8;
+}
+
+.event.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-left: 3px solid #fbbf24;
+}
+
+.event.ongoing {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-left: 3px solid #10b981;
+}
+
+.event.scheduled {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-left: 3px solid #3b82f6;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 15% auto;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
   position: relative;
 }
 
-#dropdownBtn {
-  background: none;
-  border: none;
-  font-size: 20px;
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
   cursor: pointer;
-  color: #333;
-}
-
-.dropdown-menu {
-  display: none;
   position: absolute;
-  background-color: white;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  list-style: none;
-  padding: 10px;
-  margin: 0;
+  right: 1rem;
+  top: 1rem;
+}
+
+.close:hover {
+  color: black;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
   border-radius: 5px;
-  right: 0;
-  top: 30px;
+  font-size: 1rem;
 }
 
-.dropdown-menu li {
-  padding: 8px;
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 5px;
   cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
 }
 
-.dropdown-menu li:hover {
-  background-color: #000000;
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
 }
 
 .calendar-container {
@@ -389,140 +547,3 @@ a {
   font-weight: bold;
   margin-bottom: -1px;
 }
-#calendar {
-  max-width: 1000px;
-  margin: 40px auto;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  min-height: 600px;
-}
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-.notification-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  display: inline-block;
-  z-index: 1000;
-}
-
-.notification-button {
-  background: none;
-  border: none;
-  font-size: 24px;
-  position: relative;
-  cursor: pointer;
-}
-
-.badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: red;
-  color: white;
-  border-radius: 50%;
-  padding: 3px 7px;
-  font-size: 12px;
-}
-
-.notification-box {
-  position: absolute;
-  top: 40px;
-  right: 0;
-  width: 250px;
-  background: white;
-  border: 1px solid #ccc;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  padding: 10px;
-  z-index: 100;
-}
-
-.notification-box ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.notification-box li {
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.notification-box li:last-child {
-  border-bottom: none;
-}
-
-.hidden {
-  display: none;
-}
-.notification-detail {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  width: 320px;
-  max-width: 90%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  z-index: 9999;
-  font-family: 'Segoe UI', sans-serif;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translate(-50%, -60%); }
-  to { opacity: 1; transform: translate(-50%, -50%); }
-}
-
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.detail-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #888;
-  transition: color 0.2s;
-}
-
-.close-btn:hover {
-  color: #e74c3c;
-}
-
-.detail-text {
-  font-size: 15px;
-  color: #555;
-  line-height: 1.4;
-}
-.event-summary {
-  background-color: #fef6e4; /* Soft contrast color */
-  border: 2px solid #6e131d; /* Strong contrast border */
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 30px;
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: #000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-

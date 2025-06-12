@@ -33,22 +33,7 @@ a {
 }
 
 .main-content {
-  margin-top: calc(var(--header-height) + 2rem);
-  padding: 20px;
-}
-
-.status-container {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  background: white;
-  border: 2px solid black;
-  border-radius: 8px;
-  width: fit-content;
-  margin: 30px auto;
+  margin-top: calc(var(--header-height) + 1.5rem);
 }
 
 .header {
@@ -208,49 +193,131 @@ a {
     padding-left: calc(var(--nav-width) + 188px);
   }
 }
-.main-content {
-  flex: 1;
-  padding: 20px;
-  background-color: white;
+.section-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
-.table-container {
+
+.view-btn {
+  background-color: #eee;
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.reservation-container {
+  display: flex;
+  gap: 20px;
   background-color: white;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
 }
-table {
+
+.facility-info {
+  width: 250px;
+  text-align: center;
+}
+
+.facility-info img {
   width: 100%;
-  border-collapse: collapse;
-}
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-th {
-  background-color: #d9534f;
-  color: white;
-}
-.btn {
-  padding: 5px 10px;
-  border: none;
-  cursor: pointer;
+  height: auto;
   border-radius: 5px;
+  object-fit: cover;
 }
-.btn-remove {
-  background-color: red;
-  color: white;
+
+.facility-details {
+  margin-top: 10px;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
-.btn-edit {
-  background-color: green;
-  color: white;
+
+.doc-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: #0645ad;
+  text-decoration: underline;
+  font-size: 14px;
 }
-.create-account-btn {
-  background-color: #ccc;
-  border: none;
+
+.approve-panel {
+  flex-grow: 1;
+  padding-left: 20px;
+  border-left: 2px solid #ddd;
+}
+
+.approve-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.approve-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.approve-header .date {
+  font-size: 14px;
+  color: #555;
+}
+
+.approve-panel p {
+  margin: 8px 0;
+}
+
+.buttons {
+  margin-top: 20px;
+}
+
+.approve-btn,
+.reject-btn {
   padding: 10px 20px;
+  border: none;
   border-radius: 5px;
+  color: white;
+  font-weight: bold;
   cursor: pointer;
-  float: right;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+.approve-panel p,
+.facility-details p {
+  border-bottom: 1px solid #ccc;
+  padding: 20px 0;
+  margin: 0;
+}
+
+.approve-btn {
+  background-color: #28a745;
+}
+
+.reject-btn {
+  background-color: #dc3545;
+}
+
+.prompt-card {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 25px;
+  border-radius: 5px;
+  font-size: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s, visibility 0.5s;
+  z-index: 9999;
+}
+
+.prompt-card.show {
+  opacity: 1;
+  visibility: visible;
 }
