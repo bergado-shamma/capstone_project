@@ -30,29 +30,16 @@
                     <span class="nav_logo-name">PFRS</span>
                 </a>
                 <div class="nav_list">
-                    <a href="./superadmin-home.html" class="nav_link">
-                        <i class='bx bx-grid-alt nav_icon'></i>
+                    <a href="./superadmin-home.html" class="nav_link"> <i class='bx bx-grid-alt nav_icon'></i>
                         <span class="nav_name">Dashboard</span>
                     </a>
-                    <a href="./manage-account.html" class="nav_link" id="manage-users-nav-link">
+                    <a href="./manage-account/manage-account.html" class="nav_link" id="manage-users-nav-link">
                         <i class='bx bx-user nav_icon'></i>
                         <span class="nav_name">Manage Accounts</span>
                     </a>
-                    <a href="./statistic.html" class="nav_link active">
+                    <a href="./statistic-board/statistic.html" class="nav_link">
                         <i class='bx bx-bar-chart-alt-2 nav_icon'></i>
                         <span class="nav_name">Statistics</span>
-                    </a>
-                    <a href="./calendar.html" class="nav_link">
-                        <i class='bx bx-calendar nav_icon'></i>
-                        <span class="nav_name">Manage Calendar</span>
-                    </a>
-                    <a href="./manage-reservations.html" class="nav_link">
-                        <i class='bx bx-bookmark nav_icon'></i>
-                        <span class="nav_name">Manage Reservations</span>
-                    </a>
-                    <a href="./approval-logs.html" class="nav_link">
-                        <i class='bx bx-clipboard nav_icon'></i>
-                        <span class="nav_name">Approval Logs</span>
                     </a>
                 </div>
             </div>
@@ -63,59 +50,68 @@
         </nav>
     </div>
 
-    <main class="height-100 bg-light">
-        <section class="statistics-section" id="stats-content">
-            <p id="loading-stats" class="message">Loading statistics...</p>
-            <p id="error-stats" class="message error-message hidden"></p>
-            <p id="permission-error-stats" class="message error-message hidden">
-                You do not have superadmin privileges. Please log in with a superadmin account.
-            </p>
+    <main class="l-main">
+        <section class="statistics-section">
+            <h2 class="section-title">Overview Statistics</h2>
 
-            <div class="card-group">
-                <div class="stat-card">
-                    <h3>Total Events Recorded</h3>
-                    <p id="total-events-count">--</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Total Registered Users</h3>
-                    <p id="total-users-count">--</p>
-                </div>
+            <div class="messages hidden" id="loading-stats">
+                <p>Loading statistics...</p>
+            </div>
+            <div class="messages error hidden" id="error-stats"></div>
+            <div class="messages error hidden" id="permission-error-stats">
+                <p>You do not have permission to view this page. Please log in as a super-admin.</p>
             </div>
 
-            <div class="chart-grid">
-                <div class="chart-container">
-                    <h3>Users by Role</h3>
-                    <canvas id="usersByRoleChart"></canvas>
+            <div id="stats-content">
+                <div class="stat-cards-grid">
+                    <div class="stat-card">
+                        <h3>Total Events</h3>
+                        <p id="total-events-count">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Users</h3>
+                        <p id="total-users-count">0</p>
+                    </div>
                 </div>
 
-                <div class="chart-container">
-                    <h3>Users by Organization</h3>
-                    <canvas id="usersByOrganizationChart"></canvas>
+                <div class="chart-group solo-chart">
+                    <div class="chart-container">
+                        <h3>Users by Role</h3>
+                        <canvas id="usersByRoleChart"></canvas>
+                    </div>
                 </div>
 
-                <div class="chart-container">
-                    <h3>Users by Course</h3>
-                    <canvas id="usersByCourseChart"></canvas>
+                <div class="chart-group grid-2-col">
+                    <div class="chart-container">
+                        <h3>Users by Organization</h3>
+                        <canvas id="usersByOrganizationChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Users by Course</h3>
+                        <canvas id="usersByCourseChart"></canvas>
+                    </div>
                 </div>
 
-                <div class="chart-container">
-                    <h3>Events by Organization</h3>
-                    <canvas id="eventsByOrganizationChart"></canvas>
+                <div class="chart-group grid-2-col">
+                    <div class="chart-container">
+                        <h3>Events by Organization</h3>
+                        <canvas id="eventsByOrganizationChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Events by Program</h3>
+                        <canvas id="eventsByProgramChart"></canvas>
+                    </div>
                 </div>
 
-                <div class="chart-container">
-                    <h3>Events by Program</h3>
-                    <canvas id="eventsByProgramChart"></canvas>
-                </div>
-
-                <div class="chart-container">
-                    <h3>Total Facility Reservations</h3>
-                    <canvas id="facilityReservationsChart"></canvas>
-                </div>
-
-                <div class="chart-container">
-                    <h3>Total Property Reservations</h3>
-                    <canvas id="propertyReservationsChart"></canvas>
+                <div class="chart-group grid-2-col">
+                    <div class="chart-container">
+                        <h3>Total Facility Reservations</h3>
+                        <canvas id="facilityReservationsChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Total Property Reservations</h3>
+                        <canvas id="propertyReservationsChart"></canvas>
+                    </div>
                 </div>
             </div>
         </section>

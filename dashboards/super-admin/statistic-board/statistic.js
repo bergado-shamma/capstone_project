@@ -1,3 +1,13 @@
+// Helper Function to Display Messages (Added by Code Interpreter)
+function displayMessage(element, message, type) {
+    element.textContent = message;
+    element.className = `alert alert-${type}`; // Basic styling for messages
+    element.classList.remove('hidden');
+    setTimeout(() => {
+        element.classList.add('hidden');
+    }, 5000); // Hide after 5 seconds
+}
+
 // External JS: statistic.js
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -30,6 +40,23 @@ document.addEventListener("DOMContentLoaded", function() {
     let facilityReservationsChartInstance;
     let propertyReservationsChartInstance;
 
+    // Helper function to fetch all records from a collection with pagination
+    async function fetchAllRecords(collectionName, queryParams = {}) {
+        let allRecords = [];
+        let page = 1;
+        let perPage = 200; // Max allowed by PocketBase is 500, but 200 is generally safe
+
+        while (true) {
+            const result = await pb.collection(collectionName).getList(page, perPage, queryParams);
+            allRecords = allRecords.concat(result.items);
+            if (result.totalPages === page) {
+                break; // No more pages
+            }
+            page++;
+        }
+        return allRecords;
+    }
+
 
     // --- Sidebar/Navbar Toggle (Existing Functionality) ---
     if (headerToggle && navBar && bodypd && header) {
@@ -51,18 +78,9 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     linkColor.forEach(l => l.addEventListener('click', colorLink));
 
-    // --- Helper Function to Display Messages ---
-    function displayMessage(element, message, type) {
-        element.textContent = message;
-        element.classList.remove('hidden', 'success-message', 'error-message');
-        if (type) {
-            element.classList.add(`${type}-message`);
-        }
-    }
-
     // --- Chart Rendering Functions ---
     function getRandomColor() {
-        const letters = '0123456789ABCDEF';
+        const letters = '0123446789ABCDEF';
         let color = '#';
         for (let i = 0; i < 6; i++) {
             color += letters[Math.floor(Math.random() * 16)];
@@ -130,7 +148,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
+                        // MODIFIED: Move legend to 'right' for pie/doughnut charts
+                        position: (type === 'pie' || type === 'doughnut') ? 'right' : 'top',
+                        labels: {
+                            // Optional: Adjust font size of legend labels if needed
+                            // font: {
+                            //      size: 12
+                            // }
+                        }
                     },
                     title: {
                         display: true,
@@ -149,7 +174,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         font: {
                             weight: 'bold'
                         },
-                        display: type === 'pie' || type === 'doughnut' ? true : false, // Only show labels on pie/doughnut by default
+                        display: type === 'pie' || type === 'doughnut' ? true : false,
                     }
                 },
                 scales: {
@@ -198,6 +223,19 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    // Function to highlight active navigation link (MOVED INSIDE DOMContentLoaded)
+    function highlightActiveLink() {
+        const navLinks = document.querySelectorAll('.nav_link');
+        const currentPath = window.location.pathname;
+
+        navLinks.forEach(link => {
+            link.classList.remove('active'); // Remove active from all links first
+            // Check if the link's href matches the current path, allowing for different base directories
+            if (currentPath.includes(link.getAttribute('href').replace('./', ''))) {
+                 link.classList.add('active');
+            }
+        });
+    }
 
     // --- Data Fetching and Processing Functions ---
     async function fetchAndRenderAllStats() {
@@ -215,18 +253,26 @@ document.addEventListener("DOMContentLoaded", function() {
         permissionErrorStats.classList.add('hidden');
         statsContent.classList.remove('hidden');
 
-
         try {
             // Fetch all necessary data in parallel
-            const [allUsers, allEvents, allReservations] = await Promise.all([
-                pb.collection('_superusers').getFullList(),
-                pb.collection('events').getFullList(),
-                pb.collection('reservations').getFullList(),
+            const [allUsers, allReservation, allFacility, allProperty, fetchedEvent] = await Promise.all([
+                fetchAllRecords('users'), // Changed from getFullList
+                fetchAllRecords('reservation', { expand: 'facilityID,propertyID' }), // Changed from getFullList
+                fetchAllRecords('facility'), // Changed from getFullList
+                fetchAllRecords('property'), // Changed from getFullList
+                fetchAllRecords('event'), // Changed from getFullList
             ]);
+
+            // --- DEBUGGING LOGS ---
+            console.log("--- DEBUGGING DATA ---");
+            console.log("Fetched allReservation:", allReservation);
+            // --- END DEBUGGING LOGS ---
+
 
             // Total Counts
             totalUsersCount.textContent = allUsers.length;
-            totalEventsCount.textContent = allEvents.length;
+            totalEventsCount.textContent = fetchedEvent.length;
+
 
             // Users by Role
             const roles = {};
@@ -235,57 +281,110 @@ document.addEventListener("DOMContentLoaded", function() {
             });
             renderChart('usersByRoleChart', 'pie', Object.keys(roles), Object.values(roles), 'Users by Role', true);
 
-            // Users by Organization
+            // Allowed organizations and courses for filtering
+            const allowedOrganizations = ['AECES', 'PSME-PUPTSU', 'JPMAP', 'JMA', 'PASOA', 'CS', 'PSYCHOLOGY SOCIETY', 'MS', 'BYP', 'REC', 'PUPUKAW', 'ERG', 'IRock', 'CSC'];
+            const allowedCourses = ['BSBA-HRM', 'BSBA-MM', 'BSA', 'BSED-MT', 'BSED-EDEN', 'BSME', 'BSECE', 'BSPSYCH', 'BSOA', 'BSIT', 'DOMT', 'DIT'];
+
+
+            // Users by Organization (Includes 'N/A' if the field is empty)
             const organizations = {};
             allUsers.forEach(user => {
-                const org = user.organization || 'N/A';
-                organizations[org] = (organizations[org] || 0) + 1;
+                const org = user.organization ?? 'N/A'; // Use nullish coalescing for empty strings/nulls
+                if (allowedOrganizations.includes(org) || org === 'N/A') {
+                    organizations[org] = (organizations[org] || 0) + 1;
+                }
             });
             renderChart('usersByOrganizationChart', 'bar', Object.keys(organizations), Object.values(organizations), 'Users by Organization');
 
-            // Users by Course
+            // Users by Course (Includes 'N/A' if the field is empty)
             const courses = {};
             allUsers.forEach(user => {
-                const course = user.course || 'N/A';
-                courses[course] = (courses[course] || 0) + 1;
+                const course = user.course ?? 'N/A'; // Use nullish coalescing for empty strings/nulls
+                if (allowedCourses.includes(course) || course === 'N/A') {
+                    courses[course] = (courses[course] || 0) + 1;
+                }
             });
             renderChart('usersByCourseChart', 'bar', Object.keys(courses), Object.values(courses), 'Users by Course');
 
 
-            // Events by Organization
-            const eventOrganizations = {};
-            allEvents.forEach(event => {
-                const org = event.organization || 'N/A';
-                eventOrganizations[org] = (eventOrganizations[org] || 0) + 1;
+            // Events by Organization (Excludes 'N/A' and only includes specified organizations)
+            const reservationOrganizations = {};
+            allReservation.forEach(res => {
+                const org = res.OrganizationName; // Use 'OrganizationName' from the schema
+                // --- DEBUGGING LOG ---
+                console.log(`Reservation ID: ${res.id}, OrganizationName Field Value: '${org}'`);
+                // --- END DEBUGGING LOG ---
+                if (org && allowedOrganizations.includes(org)) { // Check if org exists and is in the allowed list
+                    reservationOrganizations[org] = (reservationOrganizations[org] || 0) + 1;
+                }
             });
-            renderChart('eventsByOrganizationChart', 'bar', Object.keys(eventOrganizations), Object.values(eventOrganizations), 'Events by Organization');
+            // --- DEBUGGING LOG ---
+            console.log("Final reservationOrganizations data for chart:", reservationOrganizations);
+            // --- END DEBUGGING LOG ---
+            renderChart('eventsByOrganizationChart', 'bar', Object.keys(reservationOrganizations), Object.values(reservationOrganizations), 'Reservations by Organization');
 
-            // Events by Program
-            const eventPrograms = {};
-            allEvents.forEach(event => {
-                const program = event.program || 'N/A'; // Assuming 'program' field in events
-                eventPrograms[program] = (eventPrograms[program] || 0) + 1;
+            // Events by Program (Excludes 'N/A' and only includes specified courses)
+            const reservationCourses = {};
+            allReservation.forEach(res => {
+                const course = res.course; // Correct field name from schema
+                // --- DEBUGGING LOG ---
+                console.log(`Reservation ID: ${res.id}, Course Field Value: '${course}'`);
+                // --- END DEBUGGING LOG ---
+                if (course && allowedCourses.includes(course)) { // Check if course exists and is in the allowed list
+                    reservationCourses[course] = (reservationCourses[course] || 0) + 1;
+                }
             });
-            renderChart('eventsByProgramChart', 'bar', Object.keys(eventPrograms), Object.values(eventPrograms), 'Events by Program');
+            // --- DEBUGGING LOG ---
+            console.log("Final reservationCourses data for chart:", reservationCourses);
+            // --- END DEBUGGING LOG ---
+            renderChart('eventsByProgramChart', 'bar', Object.keys(reservationCourses), Object.values(reservationCourses), 'Reservations by Course');
 
-            // Facility Reservations
+
+            // Facility Reservations (Adjusted logic to check for facilityID presence)
             const facilityCounts = {};
-            allReservations.filter(res => res.type === 'facility').forEach(res => { // Assuming a 'type' field and 'facilityName'
-                const facility = res.facilityName || 'Unknown Facility';
-                facilityCounts[facility] = (facilityCounts[facility] || 0) + 1;
+            allReservation.forEach(res => {
+                // If facilityID is present, consider it a facility reservation
+                if (res.facilityID) {
+                    const facilityName = res.expand?.facilityID?.name ?? 'Unknown Facility';
+                    facilityCounts[facilityName] = (facilityCounts[facilityName] || 0) + 1;
+                }
             });
             renderChart('facilityReservationsChart', 'doughnut', Object.keys(facilityCounts), Object.values(facilityCounts), 'Total Facility Reservations', true);
 
 
-            // Property Reservations
+            // Property Reservations (Counting by Quantity from propertyQuantity field, with fallback)
             const propertyCounts = {};
-            allReservations.filter(res => res.type === 'property').forEach(res => { // Assuming a 'type' field and 'propertyName'
-                const property = res.propertyName || 'Unknown Property';
-                propertyCounts[property] = (propertyCounts[property] || 0) + 1;
+            allReservation.forEach(res => {
+                try {
+                    // Try to parse propertyQuantity first if it's a string and non-empty
+                    if (res.propertyQuantity && typeof res.propertyQuantity === 'string' && res.propertyQuantity.trim() !== '') {
+                        const quantities = JSON.parse(res.propertyQuantity);
+
+                        // Iterate over each property ID and its quantity in the parsed object
+                        for (const propertyId in quantities) {
+                            if (quantities.hasOwnProperty(propertyId)) {
+                                const reservedQty = quantities[propertyId];
+
+                                // Find the property name from the pre-fetched allProperty list
+                                const property = allProperty.find(p => p.id === propertyId);
+                                const propertyName = property ? property.name : `Unknown Property (${propertyId})`;
+
+                                propertyCounts[propertyName] = (propertyCounts[propertyName] || 0) + reservedQty;
+                            }
+                        }
+                    } else if (res.propertyID) {
+                        // Fallback: If propertyQuantity is not valid JSON or is empty,
+                        // and propertyID relation is present, count 1 for the main property.
+                        const propertyName = res.expand?.propertyID?.name ?? 'Unknown Property';
+                        propertyCounts[propertyName] = (propertyCounts[propertyName] || 0) + 1;
+                    }
+
+                } catch (e) {
+                    console.error(`Error parsing propertyQuantity for reservation ${res.id}:`, e);
+                    // This reservation's propertyQuantity will be skipped if invalid JSON
+                }
             });
-            renderChart('propertyReservationsChart', 'doughnut', Object.keys(propertyCounts), Object.values(propertyCounts), 'Total Property Reservations', true);
-
-
+            renderChart('propertyReservationsChart', 'bar', Object.keys(propertyCounts), Object.values(propertyCounts), 'Total Property Reservations by Quantity', false);
         } catch (error) {
             console.error("Error fetching statistics:", error);
             displayMessage(errorStats, `Failed to load statistics: ${error.message || 'Unknown error'}. Please check PocketBase connection and collection rules.`, 'error');
@@ -298,7 +397,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Logout functionality
     logoutButton.addEventListener('click', () => {
         pb.authStore.clear();
-        window.location.href = '../login.html'; // Redirect to your login page
+        window.location.href = '../../../index.html'; // Redirect to your login page
     });
 
     // Initial load on page load
@@ -308,8 +407,11 @@ document.addEventListener("DOMContentLoaded", function() {
     pb.authStore.onChange(() => {
         // Re-check authorization if auth state changes
         if (!pb.authStore.isValid || pb.authStore.model.role !== 'super-admin') {
-            window.location.href = '../login.html'; // Redirect if not a valid superadmin
+            window.location.href = '../../../index.html'; // Redirect if not a valid superadmin
         }
     });
+
+    // Call the function to highlight the active link
+    highlightActiveLink();
 
 });
