@@ -3,11 +3,11 @@
     "enabled": true,
     "host": "smtp.gmail.com",
     "port": 587,
-    "username": "propertyandfacilityreservation@gmail.com",
-    "password": "bmzq ixtu owzn dkdu",
+    "username": "shabergado.22@gmail.com",
+    "password": "kjdl tvzj jwrb cvbi",
     "encryption": "tls",
     "auth": true,
     "senderName": "Property and Facility Reservation System of PUP Taguig Campus",
-    "senderAddress": "propertyandfacilityreservation@gmail.com"
+    "senderAddress": "shabergado.22@gmail.com"
   }
 }
