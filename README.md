@@ -1,4 +1,4 @@
-# [ReservIT: Property and Facility Reservation System of PUP Taguig Campus]([reservit.netlify.app/](https://reservit.netlify.app/index.html))
+# [ReservIT: Property and Facility Reservation System of PUP Taguig Campus](reservit.netlify.app/](https://reservit.netlify.app/index.html)
 
 **An online platform designed to streamline and automate the reservation of campus property and facilities at Polytechnic University of the Philippines Taguig Campus.**
 
