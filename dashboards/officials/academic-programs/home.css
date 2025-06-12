@@ -271,7 +271,7 @@ a {
   background-color: blue;
 }
 .calendar-event {
-  background-color: #0056b3;
+  background-color: #6e131d;
   color: white;
   padding: 2px 4px;
   margin-top: 4px;
@@ -316,7 +316,7 @@ a {
 }
 
 .ongoing {
-  background-color: #10b981;
+  background-color: red;
   color: white;
 }
 
@@ -345,7 +345,7 @@ a {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: #1e3a8a;
+  background-color: #6e131d;
   color: white;
 }
 

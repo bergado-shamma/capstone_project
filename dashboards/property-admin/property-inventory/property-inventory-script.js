@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initInventoryScript();
 });
 
-const pb = new PocketBase("http://127.0.0.1:8090");
+window.pb = new PocketBase("http://127.0.0.1:8090");
 
 function initInventoryScript() {
   const conditionSelect = document.getElementById("propertyCondition");

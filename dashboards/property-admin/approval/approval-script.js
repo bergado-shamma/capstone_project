@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // PocketBase initialization
-const pb = new PocketBase("http://127.0.0.1:8090");
+window.pb = new PocketBase("http://127.0.0.1:8090");
 let reservationCache = [];
 let currentReservationId = null;
 

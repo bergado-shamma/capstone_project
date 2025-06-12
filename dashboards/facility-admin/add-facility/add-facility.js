@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadProperties(); // Load available properties for dropdowns
 });
 
-const pb = new PocketBase("http://127.0.0.1:8090");
+window.pb = new PocketBase("http://127.0.0.1:8090");
 let currentFacility = null;
 let availableProperties = []; // Store all available properties
 let facilityProperties = []; // Store current facility's properties
@@ -43,10 +43,9 @@ async function loadFacilities() {
   container.innerHTML = "";
 
   try {
+    // Load all records without filter to see the actual data structure
     const records = await pb.collection("facility").getFullList({
       sort: "-created",
-      filter:
-        'status != "approved" && administrativeOfficerApprove != "approved" && status != "rejected" && status != "cancelled"', // Expand property relations to get property details
     });
 
     if (!records.length) {
@@ -54,12 +53,17 @@ async function loadFacilities() {
       return;
     }
 
+    // Log first record to see available fields
+    console.log("Sample facility record fields:", Object.keys(records[0]));
+    console.log("Full sample record:", records[0]);
+
     records.forEach((facility) => {
       const photoUrl = getFacilityPhotoUrl(facility);
       const card = createFacilityCard(facility, photoUrl);
       container.appendChild(card);
     });
   } catch (error) {
+    console.error("Complete error details:", error);
     showErrorMessage("Failed to load facilities: " + error.message);
   }
 }
@@ -508,3 +512,21 @@ async function submitNewFacility() {
 // Global functions for onclick events
 window.openModal = openModal;
 window.removePropertyRow = removePropertyRow;
+document.addEventListener("DOMContentLoaded", function () {
+  const pb = window.pb;
+  if (!pb) {
+    console.error(
+      "PocketBase client not initialized (window.pb is undefined)."
+    );
+    return;
+  }
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (logoutLink) {
+    logoutLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      pb.authStore.clear();
+      window.location.href = "/index.html"; // or your login page
+    });
+  }
+});

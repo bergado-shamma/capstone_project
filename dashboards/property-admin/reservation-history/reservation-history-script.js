@@ -1,7 +1,7 @@
 // Event listener for DOMContentLoaded
 
 //Initialize PocketBase with your URL
-const pb = new PocketBase("http://127.0.0.1:8090");
+window.pb = new PocketBase("http://127.0.0.1:8090");
 
 // Global variables
 let allReservations = [];

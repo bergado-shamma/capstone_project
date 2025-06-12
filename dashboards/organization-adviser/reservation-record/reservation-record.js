@@ -1,7 +1,7 @@
 // Event listener for DOMContentLoaded
 
 //Initialize PocketBase with your URL
-const pb = new PocketBase("http://127.0.0.1:8090");
+window.pb = new PocketBase("http://127.0.0.1:8090");
 
 // Global variables
 let allReservations = [];
@@ -290,7 +290,7 @@ async function displayReservations(reservations) {
     const eventType =
       reservation.expand?.eventID?.type?.toLowerCase?.() ||
       reservation.eventType?.toLowerCase?.();
-    return eventType === "organization";
+    return eventType === "academic";
   });
 
   if (academicReservations.length === 0) {
@@ -360,7 +360,7 @@ async function displayReservations(reservations) {
           <td><span class="status-badge status-${
             reservation.status?.toLowerCase() || "pending"
           }">${reservation.status || "Pending"}</span></td>
-          <td>${reservation.organizationAdviserApprove}</td>
+          <td>${reservation.headOfAcademicProgramsApprove}</td>
           <td>
             <div class="action-buttons">
               <button class="btn btn-sm btn-outline-primary" onclick="viewReservationDetails('${
@@ -1373,3 +1373,21 @@ function showNotification(message, type = "info") {
     }
   }, 5000);
 }
+document.addEventListener("DOMContentLoaded", function () {
+  const pb = window.pb;
+  if (!pb) {
+    console.error(
+      "PocketBase client not initialized (window.pb is undefined)."
+    );
+    return;
+  }
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (logoutLink) {
+    logoutLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      pb.authStore.clear();
+      window.location.href = "/index.html"; // or your login page
+    });
+  }
+});

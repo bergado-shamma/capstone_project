@@ -221,113 +221,6 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 1.5rem;
       }
-
-      .calendar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-      }
-
-      .month-nav {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-      }
-
-      .month-nav button {
-        background: var(--first-color);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background 0.3s;
-      }
-
-      .month-nav button:hover {
-        background: var(--first-color-light);
-      }
-
-      .month-nav h4 {
-        margin: 0;
-        min-width: 200px;
-        text-align: center;
-      }
-
-      .calendar-container {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 1px;
-        background: #dee2e6;
-        border-radius: 10px;
-        overflow: hidden;
-      }
-
-      .calendar-day-header {
-        background: var(--first-color);
-        color: white;
-        padding: 15px 5px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 0.9rem;
-      }
-
-      .calendar-day {
-        background: white;
-        padding: 10px 5px;
-        min-height: 100px;
-        position: relative;
-        font-size: 0.9rem;
-        border-bottom: 1px solid #f0f0f0;
-      }
-
-      .calendar-day.today {
-        background: #e3f2fd;
-      }
-
-      .calendar-day.other-month {
-        background: #f8f9fa;
-        color: #6c757d;
-      }
-
-      .calendar-event {
-        background: var(--first-color);
-        color: white;
-        padding: 2px 4px;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        margin: 2px 0;
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .calendar-event.approved {
-        background: #28a745;
-      }
-      .calendar-event.pending {
-        background: #ffc107;
-        color: #000;
-      }
-      .calendar-event.rejected {
-        background: #dc3545;
-      }
-
-      .chart-container {
-        position: relative;
-        height: 400px;
-        margin-bottom: 20px;
-      }
-
-      .chart-small {
-        height: 300px;
-      }
     </style>
   </head>
 
@@ -342,43 +235,80 @@
       <nav class="nav">
         <div>
           <a href="#" class="nav_logo">
-            <i class="bx bx-buildings nav_logo-icon"></i>
+            <img
+              src="/assets/puplogo.png"
+              alt="PFRS Logo"
+              class="nav_logo-icon"
+            />
             <span class="nav_logo-name">PFRS</span>
           </a>
+
           <div class="nav_list">
-            <a href="#" class="nav_link active">
+            <a href="/dashboards/property-admin/home.html" class="nav_link">
               <i class="bx bx-home nav_icon"></i>
               <span class="nav_name">Home</span>
             </a>
-            <a href="#" class="nav_link">
-              <i class="bx bx-plus-circle nav_icon"></i>
-              <span class="nav_name">Add Facility</span>
-            </a>
-            <a href="#" class="nav_link">
+            <a
+              href="/dashboards/property-admin/reservation-history/reservation-history.html"
+              class="nav_link"
+            >
               <i class="bx bx-calendar-event nav_icon"></i>
               <span class="nav_name">Reservation History</span>
             </a>
-            <a href="#" class="nav_link">
+            <a
+              href="/dashboards/property-admin/approval/approval.html"
+              class="nav_link"
+            >
               <i class="bx bx-check nav_icon"></i>
               <span class="nav_name">Approval</span>
             </a>
-            <a href="#" class="nav_link">
+            <a
+              href="/dashboards/property-admin/dashboard/dashboard.html"
+              class="nav_link active"
+            >
+              <i class="bx bx-grid-alt nav_icon"></i>
+              <span class="nav_name">Dashboard</span>
+            </a>
+            <a
+              href="/dashboards/property-admin/property-inventory/property-inventory.html"
+              class="nav_link"
+            >
+              <i class="bx bx-chair nav_icon"></i>
+              <span class="nav_name">Property Inventory</span>
+            </a>
+            <a
+              href="/dashboards/property-admin/manage-accounts/manage-accounts.html"
+              class="nav_link"
+            >
+              <i class="bx bx-user nav_icon"></i>
+              <span class="nav_name">Manage Account</span>
+            </a>
+            <a
+              href="/dashboards/property-admin/announcement/announcement.html"
+              class="nav_link"
+            >
               <i class="fas fa-bullhorn nav_icon"></i>
               <span class="nav_name">Announcement</span>
             </a>
-            <div class="logout">
-              <a href="#" class="nav_link">
-                <i class="bx bx-log-out nav_icon"></i>
-                <span class="nav_name">Sign Out</span>
-              </a>
-            </div>
+          </div>
+
+          <div class="logout">
+            <a href="#" class="nav_link">
+              <i class="bx bx-log-out nav_icon"></i>
+              <span class="nav_name">Sign Out</span>
+            </a>
           </div>
         </div>
       </nav>
     </div>
 
     <main class="container-fluid mt-4">
-      <h2 class="mb-4">Facility Admin Dashboard</h2>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Facility Admin Dashboard</h2>
+        <button class="btn btn-primary" onclick="generateReports()">
+          <i class="fas fa-download me-2"></i>Generate Report
+        </button>
+      </div>
 
       <!-- Summary Cards -->
       <div class="row mb-4" id="summaryCards">
@@ -386,7 +316,7 @@
           <div class="card text-white bg-primary mb-3 status-card">
             <div class="card-body">
               <h5>Total</h5>
-              <p class="card-text fs-3">47</p>
+              <p class="card-text fs-3" id="totalCount">0</p>
             </div>
           </div>
         </div>
@@ -394,7 +324,7 @@
           <div class="card text-white bg-warning mb-3 status-card">
             <div class="card-body">
               <h5>Pending</h5>
-              <p class="card-text fs-3">12</p>
+              <p class="card-text fs-3" id="pendingCount">0</p>
             </div>
           </div>
         </div>
@@ -402,7 +332,7 @@
           <div class="card text-white bg-success mb-3 status-card">
             <div class="card-body">
               <h5>Approved</h5>
-              <p class="card-text fs-3">28</p>
+              <p class="card-text fs-3" id="approvedCount">0</p>
             </div>
           </div>
         </div>
@@ -410,7 +340,7 @@
           <div class="card text-white bg-danger mb-3 status-card">
             <div class="card-body">
               <h5>Rejected/Cancelled</h5>
-              <p class="card-text fs-3">7</p>
+              <p class="card-text fs-3" id="rejectedCount">0</p>
             </div>
           </div>
         </div>
@@ -449,69 +379,18 @@
           </div>
         </div>
       </div>
-
-      <!-- Calendar -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <div class="calendar-header">
-            <h5>Reservation Calendar</h5>
-            <div class="month-nav">
-              <button onclick="changeMonth(-1)">
-                <i class="bx bx-chevron-left"></i>
-              </button>
-              <h4 id="currentMonth">June 2025</h4>
-              <button onclick="changeMonth(1)">
-                <i class="bx bx-chevron-right"></i>
-              </button>
-            </div>
-          </div>
-          <div class="calendar-container" id="calendarContainer">
-            <!-- Calendar will be generated here -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Reservations -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <h5>Recent Reservations</h5>
-          <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>Event</th>
-                <th>Facility</th>
-                <th>Organization</th>
-                <th>Start Time</th>
-                <th>Status</th>
-                <th>Person In Charge</th>
-              </tr>
-            </thead>
-            <tbody id="recentReservations">
-              <!-- Table content will be generated here -->
-            </tbody>
-          </table>
-          <div class="d-flex justify-content-end mt-3">
-            <button class="btn btn-primary" onclick="generateReports()">
-              Generate Reports
-            </button>
-          </div>
-        </div>
-      </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      // Sample data - replace with actual data from your backen
-
-      let currentDate = new Date(2025, 5, 1); // June 2025
-      let reservations = sampleReservations;
+      // Global variables
+      let reservations = [];
+      let facilities = [];
 
       // Initialize dashboard
       document.addEventListener("DOMContentLoaded", function () {
         initializeNavbar();
-        renderCalendar();
-        renderRecentReservations();
-        renderCharts();
+        loadData();
       });
 
       function initializeNavbar() {
@@ -530,138 +409,124 @@
         }
       }
 
-      function changeMonth(direction) {
-        currentDate.setMonth(currentDate.getMonth() + direction);
-        renderCalendar();
+      // Load data from collections
+      async function loadData() {
+        try {
+          await Promise.all([loadReservations(), loadFacilities()]);
+          updateDashboard();
+        } catch (error) {
+          console.error("Error loading data:", error);
+          // Use sample data if database connection fails
+          loadSampleData();
+          updateDashboard();
+        }
       }
 
-      function renderCalendar() {
-        const monthNames = [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
+      // Load reservations from database
+      async function loadReservations() {
+        try {
+          // Replace with your actual API endpoint
+          const response = await fetch("/api/reservations");
+          if (response.ok) {
+            reservations = await response.json();
+          } else {
+            throw new Error("Failed to load reservations");
+          }
+        } catch (error) {
+          console.error("Error loading reservations:", error);
+          throw error;
+        }
+      }
+
+      // Load facilities from database
+      async function loadFacilities() {
+        try {
+          // Replace with your actual API endpoint
+          const response = await fetch("/api/facilities");
+          if (response.ok) {
+            facilities = await response.json();
+          } else {
+            throw new Error("Failed to load facilities");
+          }
+        } catch (error) {
+          console.error("Error loading facilities:", error);
+          throw error;
+        }
+      }
+
+      // Sample data for demonstration
+      function loadSampleData() {
+        reservations = [
+          {
+            id: 1,
+            eventName: "Academic Conference",
+            facility: "Conference Hall A",
+            organization: "Computer Science Department",
+            startTime: "2025-06-15T09:00:00",
+            endTime: "2025-06-15T17:00:00",
+            status: "approved",
+            personInCharge: "Dr. Smith",
+            type: "academic",
+          },
+          {
+            id: 2,
+            eventName: "Student Seminar",
+            facility: "Seminar Room B",
+            organization: "Engineering Society",
+            startTime: "2025-06-16T14:00:00",
+            endTime: "2025-06-16T16:00:00",
+            status: "pending",
+            personInCharge: "John Doe",
+            type: "academic",
+          },
+          {
+            id: 3,
+            eventName: "Workshop",
+            facility: "Lab Room C",
+            organization: "Business Club",
+            startTime: "2025-06-17T10:00:00",
+            endTime: "2025-06-17T12:00:00",
+            status: "rejected",
+            personInCharge: "Jane Smith",
+            type: "non-academic",
+          },
         ];
 
-        document.getElementById("currentMonth").textContent = `${
-          monthNames[currentDate.getMonth()]
-        } ${currentDate.getFullYear()}`;
-
-        const firstDay = new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          1
-        );
-        const lastDay = new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth() + 1,
-          0
-        );
-        const today = new Date();
-
-        let calendarHTML = `
-          <div class="calendar-day-header">Sun</div>
-          <div class="calendar-day-header">Mon</div>
-          <div class="calendar-day-header">Tue</div>
-          <div class="calendar-day-header">Wed</div>
-          <div class="calendar-day-header">Thu</div>
-          <div class="calendar-day-header">Fri</div>
-          <div class="calendar-day-header">Sat</div>
-        `;
-
-        // Add empty cells for days before the first day of the month
-        for (let i = 0; i < firstDay.getDay(); i++) {
-          const prevMonthDay = new Date(
-            firstDay.getTime() - (firstDay.getDay() - i) * 24 * 60 * 60 * 1000
-          );
-          calendarHTML += `<div class="calendar-day other-month">${prevMonthDay.getDate()}</div>`;
-        }
-
-        // Add days of the current month
-        for (let day = 1; day <= lastDay.getDate(); day++) {
-          const currentDay = new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth(),
-            day
-          );
-          const isToday = currentDay.toDateString() === today.toDateString();
-
-          const dayEvents = reservations.filter((r) => {
-            const eventDate = new Date(r.startTime);
-            return (
-              eventDate.getDate() === day &&
-              eventDate.getMonth() === currentDate.getMonth() &&
-              eventDate.getFullYear() === currentDate.getFullYear()
-            );
-          });
-
-          let eventsHTML = "";
-          dayEvents.forEach((event) => {
-            eventsHTML += `<div class="calendar-event ${event.status}">${event.eventName}</div>`;
-          });
-
-          calendarHTML += `
-            <div class="calendar-day ${isToday ? "today" : ""}">
-              ${day}
-              ${eventsHTML}
-            </div>
-          `;
-        }
-
-        // Fill remaining cells
-        const totalCells =
-          Math.ceil((firstDay.getDay() + lastDay.getDate()) / 7) * 7;
-        const remainingCells =
-          totalCells - (firstDay.getDay() + lastDay.getDate());
-        for (let i = 1; i <= remainingCells; i++) {
-          calendarHTML += `<div class="calendar-day other-month">${i}</div>`;
-        }
-
-        document.getElementById("calendarContainer").innerHTML = calendarHTML;
+        facilities = [
+          {
+            id: 1,
+            name: "Conference Hall A",
+            capacity: 100,
+            type: "conference",
+          },
+          { id: 2, name: "Seminar Room B", capacity: 50, type: "seminar" },
+          { id: 3, name: "Lab Room C", capacity: 30, type: "laboratory" },
+        ];
       }
 
-      function renderRecentReservations() {
-        const tbody = document.getElementById("recentReservations");
-        const recentReservations = reservations.slice(0, 10);
-
-        tbody.innerHTML = recentReservations
-          .map(
-            (r) => `
-          <tr>
-            <td>${r.eventName}</td>
-            <td>${r.facility}</td>
-            <td>${r.organization}</td>
-            <td>${new Date(r.startTime).toLocaleString()}</td>
-            <td><span class="badge bg-${getStatusBadge(r.status)}">${
-              r.status
-            }</span></td>
-            <td>${r.personInCharge}</td>
-          </tr>
-        `
-          )
-          .join("");
+      // Update dashboard with loaded data
+      function updateDashboard() {
+        updateSummaryCards();
+        renderCharts();
       }
 
-      function getStatusBadge(status) {
-        switch (status) {
-          case "approved":
-            return "success";
-          case "pending":
-            return "warning";
-          case "rejected":
-          case "cancelled":
-            return "danger";
-          default:
-            return "secondary";
-        }
+      // Update summary cards
+      function updateSummaryCards() {
+        const total = reservations.length;
+        const pending = reservations.filter(
+          (r) => r.status === "pending"
+        ).length;
+        const approved = reservations.filter(
+          (r) => r.status === "approved"
+        ).length;
+        const rejected = reservations.filter(
+          (r) => r.status === "rejected" || r.status === "cancelled"
+        ).length;
+
+        document.getElementById("totalCount").textContent = total;
+        document.getElementById("pendingCount").textContent = pending;
+        document.getElementById("approvedCount").textContent = approved;
+        document.getElementById("rejectedCount").textContent = rejected;
       }
 
       function renderCharts() {
@@ -794,47 +659,91 @@
         });
       }
 
-      function generateReports() {
-        const headers = [
-          "ID",
-          "Event Name",
-          "Facility",
-          "Organization",
-          "Start Time",
-          "End Time",
-          "Status",
-          "Person In Charge",
-          "Type",
-        ];
-        // Convert the reservations data to CSV format
-        const csvRows = [];
-        csvRows.push(headers.join(",")); // Add headers
+      // Generate and download reports
+      async function generateReports() {
+        try {
+          // Ensure we have the latest data
+          await loadData();
 
-        for (const reservation of reservations) {
-          const values = [
-            reservation.id,
-            `"${reservation.eventName.replace(/"/g, '""')}"`, // Handle commas in event name
-            `"${reservation.facility.replace(/"/g, '""')}"`,
-            `"${reservation.organization.replace(/"/g, '""')}"`,
-            `"${new Date(reservation.startTime).toLocaleString()}"`,
-            `"${new Date(reservation.endTime).toLocaleString()}"`,
-            reservation.status,
-            `"${reservation.personInCharge.replace(/"/g, '""')}"`,
-            reservation.type,
-          ];
-          csvRows.push(values.join(","));
+          const timestamp = new Date().toISOString().split("T")[0];
+
+          // Create comprehensive report data
+          const reportData = reservations.map((reservation) => {
+            // Find corresponding facility details
+            const facility = facilities.find(
+              (f) => f.name === reservation.facility
+            );
+
+            return {
+              "Reservation ID": reservation.id,
+              "Event Name": reservation.eventName,
+              Facility: reservation.facility,
+              "Facility Capacity": facility ? facility.capacity : "N/A",
+              "Facility Type": facility ? facility.type : "N/A",
+              Organization: reservation.organization,
+              "Start Date & Time": new Date(
+                reservation.startTime
+              ).toLocaleString(),
+              "End Date & Time": new Date(reservation.endTime).toLocaleString(),
+              "Duration (Hours)":
+                Math.round(
+                  ((new Date(reservation.endTime) -
+                    new Date(reservation.startTime)) /
+                    (1000 * 60 * 60)) *
+                    100
+                ) / 100,
+              Status: reservation.status,
+              "Person In Charge": reservation.personInCharge,
+              "Event Type": reservation.type,
+              "Created Date": reservation.createdAt
+                ? new Date(reservation.createdAt).toLocaleString()
+                : "N/A",
+            };
+          });
+
+          // Convert to CSV
+          const headers = Object.keys(reportData[0] || {});
+          const csvRows = [];
+
+          // Add headers
+          csvRows.push(headers.join(","));
+
+          // Add data rows
+          reportData.forEach((row) => {
+            const values = headers.map((header) => {
+              const value = row[header];
+              // Handle values that might contain commas or quotes
+              return typeof value === "string" &&
+                (value.includes(",") || value.includes('"'))
+                ? `"${value.replace(/"/g, '""')}"`
+                : value;
+            });
+            csvRows.push(values.join(","));
+          });
+
+          // Create and download file
+          const csvString = csvRows.join("\n");
+          const blob = new Blob([csvString], {
+            type: "text/csv;charset=utf-8;",
+          });
+          const url = URL.createObjectURL(blob);
+
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `facility_reservations_report_${timestamp}.csv`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Clean up
+          URL.revokeObjectURL(url);
+
+          // Show success message
+          alert("Report generated successfully!");
+        } catch (error) {
+          console.error("Error generating report:", error);
+          alert("Error generating report. Please try again.");
         }
-
-        const csvString = csvRows.join("\n");
-        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "reservations_report.csv";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a); // Clean up the DOM
-        URL.revokeObjectURL(url); // Free up memory
       }
     </script>
   </body>

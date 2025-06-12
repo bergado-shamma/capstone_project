@@ -3,12 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Calendar Activities</title>
-
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css"
-    />
+    <title>Overview of Calendar Activities</title>
+    <link rel="stylesheet" href="./home-styles.css" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -22,21 +18,22 @@
       rel="stylesheet"
     />
     <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    />
-    <link
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <link rel="icon" type="image/x-icon" href="/path/to/favicon.ico" />
-    <link rel="stylesheet" href="./home-styles.css" />
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-...redacted..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
+    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    
+    <style>
+      
+    </style>
   </head>
+  <body id="body-pd">
+    <i class='bx bx-bullhorn' style='font-size: 2rem; color: red;'></i> Testing Icon
 
-<body id="body-pd">
     <header class="header" id="header">
       <div class="header_toggle">
         <i class="bx bx-menu" id="header-toggle"></i>
@@ -45,7 +42,7 @@
    <div class="l-navbar" id="nav-bar">
       <nav class="nav">
         <div>
-          <a class="nav_logo">
+          <a href="#" class="nav_logo">
             <img
               src="/assets/puplogo.png"
               alt="PFRS Logo"
@@ -56,26 +53,35 @@
 
            <div class="nav_list">
             <a
-              href="/dashboards/facility-admin/home.html"
+              href="./home.html"
               class="nav_link active"
             >
               <i class="bx bx-home nav_icon"></i>
               <span class="nav_name">Home</span>
+            </a><a
+              href="/dashboards/facility-admin/add-facility/add-facility.html"
+              class="nav_link"
+            >
+              <i class="bx bx-plus-circle nav_icon" style="color: #ffffff"></i>
+              <span class="nav_name">Add Facility</span>
             </a>
             <a
-              href="/dashboards/facility-admin/reservation-history/reservation-history.html"
+              href="./reservation-history/reservation-history.html"
               class="nav_link"
             >
               <i class="bx  bx-calendar-event nav_icon"></i>
               <span class="nav_name">Reservation History</span>
             </a>
                         <a
-              href="/dashboards/facility-admin/approval/approval.html"
-              class="nav_link"
+              href="./approval/approval.html"
+              class="nav_link "
             >
               <i class="bx bx-check nav_icon"></i>
               <span class="nav_name">Approval</span>
             </a>
+             
+                
+                        
           <div class="logout">
             <a href="#" class="nav_link">
               <i class="bx bx-log-out nav_icon"></i>
@@ -86,87 +92,84 @@
       </nav>
     </div>
 
-
-    <main class="content">
+    <div class="main-content">
       <h1>Overview of Calendar Activities</h1>
-      <div class="status-container">
-        <div class="status-box pending">Pending Reservation</div>
-        <div class="status-box ongoing">On-going Reservation</div>
-        <div class="status-box scheduled">Scheduled</div>
-      </div>
 
       <div class="calendar-header">
-        <button id="addEventBtn">+ ADD EVENT</button>
-        <div class="dropdown">
-          <button id="dropdownBtn"><i class="fas fa-calendar-alt"></i></button>
-          <ul id="dropdownMenu" class="dropdown-menu">
-            <li data-view="dayGridMonth">Month</li>
-            <li data-view="timeGridWeek">Week</li>
-            <li data-view="timeGridDay">Day</li>
-          </ul>
+        <div class="status-buttons">
+          <button class="pending" onclick="filterEvents('pending')">
+            Pending Reservation
+          </button>
+          <button class="ongoing" onclick="filterEvents('rejected')">
+            Rejected Reservation
+          </button>
+       <button class="scheduled" onclick="filterEvents('approved')">
+  Scheduled
+</button>
+
+          <button class="btn btn-primary" onclick="showAllEvents()">
+            Show All
+          </button>
         </div>
+        <button
+          class="date-display"
+          onclick="goToToday()"
+          id="current-date"
+        ></button>
       </div>
 
       <div class="calendar-container">
-        <div id="currentMonth"></div>
-        <div id="calendar"></div>
-      </div>
-
-      <div id="eventModal" class="modal">
-        <div class="modal-content">
-          <span
-            class="close"
-            onclick="document.getElementById('eventModal').style.display='none'"
-            >&times;</span
-          >
-          <h2 id="eventTitle"></h2>
-          <p>
-            <strong>Person In-charge:</strong> <span id="personInCharge"></span>
-          </p>
-          <p>
-            <strong>Reservation Code:</strong>
-            <span id="reservationCode"></span>
-          </p>
-          <p><strong>Event Name:</strong> <span id="eventName"></span></p>
-          <p><strong>Event Type:</strong> <span id="eventType"></span></p>
-          <p><strong>Organization:</strong> <span id="organization"></span></p>
-          <p><strong>Time:</strong> <span id="eventTime"></span></p>
-          <p><strong>Properties:</strong> <span id="properties"></span></p>
-          <p><strong>Facility Name:</strong> <span id="facilityName"></span></p>
-          <p><strong>Capacity:</strong> <span id="capacity"></span></p>
-          <img id="eventImage" src="" alt="Event Image" />
+        <div class="calendar-nav">
+          <button onclick="previousMonth()">&lt;</button>
+          <h2 id="month-year"></h2>
+          <button onclick="nextMonth()">&gt;</button>
         </div>
-      </div>
 
-      <style>
-        .modal {
-          display: none;
-          position: fixed;
-          z-index: 1;
-          padding-top: 60px;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          overflow: auto;
-          background-color: rgba(0, 0, 0, 0.4);
-        }
-        .modal-content {
-          background-color: white;
-          margin: auto;
-          padding: 20px;
-          border: 1px solid #888;
-          width: 50%;
-        }
-        .close {
-          color: red;
-          float: right;
-          font-size: 28px;
-          font-weight: bold;
-          cursor: pointer;
-        }
-      </style>
-    </main>
+        <div class="calendar-grid">
+          <div class="calendar-header-day">Sun</div>
+          <div class="calendar-header-day">Mon</div>
+          <div class="calendar-header-day">Tue</div>
+          <div class="calendar-header-day">Wed</div>
+          <div class="calendar-header-day">Thu</div>
+          <div class="calendar-header-day">Fri</div>
+          <div class="calendar-header-day">Sat</div>
+        </div>
+        <div class="calendar-grid" id="calendar-days"></div>
+      </div>
+      <div class="calendar-container">
+  <div id="calendar"></div>
+</div>
+
+    </div>
+<!-- Read-Only View Modal -->
+<div id="viewReservationModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeViewModal()">&times;</span>
+    <h2 id="view-modal-title">Reservation Details</h2>
+    <p><strong>Title:</strong> <span id="view-title"></span></p>
+    <p><strong>Date:</strong> <span id="view-date"></span></p>
+    <p><strong>Time:</strong> <span id="view-time"></span></p>
+    <p><strong>Location:</strong> <span id="view-location"></span></p>
+    <p><strong>Status:</strong> <span id="view-status"></span></p>
+    <p><strong>Description:</strong> <span id="view-description"></span></p>
+    <div class="modal-actions">
+      <button src="./approval/approval.html">View reservation details</button>
+    </div>
+  </div>
+</div>
+<!-- Add this inside <body> -->
+<div class="modal" id="announcementModal">
+  <div class="modal-content">
+    <span class="close" id="modalCloseBtn">&times;</span>
+    <h5 id="announcementTitle"></h5>
+    <p id="announcementContent"></p>
+    <small id="announcementDate" style="color: gray;"></small>
+  </div>
+</div>
+
+<!-- Calendar container (somewhere inside your main content) -->
+
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="./home-script.js"></script>
   </body>
