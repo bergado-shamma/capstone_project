@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Accounts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="/assets/puplogo.png" />
+    <link rel="stylesheet" href="./manage-account-style.css">
+</head>
+
+<body id="body-pd">
+    <header class="header" id="header">
+        <div class="header_toggle">
+            <i class="bx bx-menu" id="header-toggle"></i>
+        </div>
+    </header>
+
+    <div class="l-navbar" id="nav-bar">
+        <nav class="nav">
+            <div>
+                <a href="#" class="nav_logo">
+                    <i class="bx bx-layer nav_logo-icon"></i>
+                    <span class="nav_logo-name">PUPIMS</span>
+                </a>
+                <div class="nav_list">
+                    <a href="../dashboard/dashboard.html" class="nav_link">
+                        <i class="bx bx-grid-alt nav_icon"></i>
+                        <span class="nav_name">Dashboard</span>
+                    </a>
+                    <a href="../account/manage-account.html" class="nav_link active">
+                        <i class="bx bx-user nav_icon"></i>
+                        <span class="nav_name">Account</span>
+                    </a>
+                </div>
+            </div>
+            <a href="#" class="nav_link" id="logout-button">
+                <i class="bx bx-log-out nav_icon"></i>
+                <span class="nav_name">SignOut</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="height-100 bg-light">
+        <main class="container py-4">
+            <div id="auth-buttons-manage" class="auth-buttons-container hidden">
+                <p>You must be logged in to manage accounts. Only Super-Admins can access this feature.</p>
+                <button onclick="window.location.href='../login.html'">Login</button>
+            </div>
+
+            <section id="user-management-section" class="mt-5 hidden">
+                <h2>Manage System Users</h2>
+                <p id="loading-users" class="message">Loading users...</p>
+                <p id="error-users" class="message error-message hidden"></p>
+
+                <div class="table-responsive">
+                    <table id="users-table" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Organization</th>
+                                <th>Course</th>
+                                <th>Student Number</th>
+                                <th>Verified</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <p id="no-users-message" class="message hidden">No users found.</p>
+            </section>
+
+        </main>
+
+        <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+        <script src="./manage-account-script.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

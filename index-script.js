@@ -1,6 +1,6 @@
 import PocketBase from 'https://esm.sh/pocketbase'
 
-const pb = new PocketBase('http://127.0.0.1:8090')
+const pb = new PocketBase('http://127.0.0.1:8090') // <<< IMPORTANT: ENSURE THIS IS YOUR POCKETBASE URL
 
 function showAlert (message, type = 'danger') {
   const alertContainer = document.getElementById('alert-floating')
@@ -16,9 +16,15 @@ function showAlert (message, type = 'danger') {
     // Find the alert element dynamically within the container
     const currentAlert = alertContainer.querySelector('.alert')
     if (currentAlert) {
-      const alertBootstrapInstance =
-        bootstrap.Alert.getOrCreateInstance(currentAlert)
-      alertBootstrapInstance?.close()
+      // Ensure bootstrap is loaded and Alert is available
+      if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+        const alertBootstrapInstance =
+          bootstrap.Alert.getOrCreateInstance(currentAlert)
+        alertBootstrapInstance?.close()
+      } else {
+        // Fallback if bootstrap is not loaded, just remove the alert manually
+        currentAlert.remove();
+      }
     }
     alertContainer.classList.remove('visible')
   }, 10000)
@@ -64,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const authData = await pb
-        .collection('users')
+        .collection('users') // Assuming your main user collection is named 'users'
         .authWithPassword(email, password)
 
       if (rememberCheckbox.checked) {
@@ -82,14 +88,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setTimeout(() => {
         switch (role) {
-          case 'super-admin':
-            window.location.href = './dashboards/super-admin/home.html' // Assuming home.html for super-admin
+          case 'super-admin': // Added case for super-admin
+            window.location.href = './dashboards/super-admin/superadmin-home.html'
             break
           case 'facility-admin':
             window.location.href = './dashboards/facility-admin/home.html'
             break
           case 'property-admin':
             window.location.href = './dashboards/property-admin/home.html'
+            break
+          case 'staff':
+            // Consider updating this URL if it's not the correct home page for staff
+            window.location.href = './dashboards/staff/home.html' // Assuming a home.html for staff
             break
           case 'student':
             window.location.href = './dashboards/student/student-home.html'
@@ -146,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      await pb.collection('users').requestPasswordReset(email)
+      await pb.collection('users').requestPasswordReset(email) // Assuming your main user collection is named 'users'
       showAlert('Reset link sent! Please check your email.', 'success')
       resetPopup.classList.remove('active')
     } catch (err) {
