@@ -679,6 +679,67 @@ document.addEventListener("DOMContentLoaded", function () {
           formData.append("file", file);
         }
       }
+      // Conflict Check for overlapping reservation times
+      const conflictFilter = `
+  facilityID="${facilityID}"
+  && (
+    (startTime <= "${endTime}" && endTime >= "${startTime}")
+    || (startTime <= "${prepTime}" && endTime >= "${prepTime}")
+    || (preperationTime <= "${endTime}" && preperationTime >= "${prepTime}")
+  )
+`;
+
+      const existingReservations = await pb
+        .collection("reservation")
+        .getFullList({ filter: conflictFilter });
+
+      let hasApprovedConflict = false;
+      let hasPendingConflict = false;
+
+      existingReservations.forEach((res) => {
+        if (res.id === eventID) return; // skip the same reservation (if editing)
+
+        // Fallbacks for missing fields
+        const resStart = new Date(
+          res.preperationTime || res.startTime || res.endTime
+        );
+        const resEnd = new Date(
+          res.endTime || res.startTime || res.preperationTime
+        );
+
+        const reqStart = new Date(prepTime);
+        const reqEnd = new Date(endTime);
+
+        if (isNaN(resStart.getTime()) || isNaN(resEnd.getTime())) {
+          // If even after fallback the dates are invalid, treat it as conflict
+          hasPendingConflict = true;
+          return;
+        }
+
+        const overlap = reqStart < resEnd && reqEnd > resStart;
+
+        if (overlap) {
+          if (res.status === "approved") {
+            hasApprovedConflict = true;
+          } else if (res.status === "pending") {
+            hasPendingConflict = true;
+          }
+        }
+      });
+
+      if (hasApprovedConflict) {
+        alert(
+          "The selected time conflicts with an **approved** reservation. Please select another schedule."
+        );
+        return;
+      }
+
+      if (hasPendingConflict) {
+        const proceed = confirm(
+          "This time slot overlaps with a **pending** reservation. Do you want to proceed anyway?"
+        );
+        if (!proceed) return;
+      }
 
       console.log("FormData contents:");
       for (let [key, value] of formData.entries()) {
