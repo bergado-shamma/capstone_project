@@ -48,24 +48,21 @@
             <span class="nav_logo-name">PFRS</span>
           </a>
 
-          <div class="nav_list">
+           <div class="nav_list">
             <a
-              href="../dashboard/student/student-home.html"
+              href="/dashboards/student/student-home.html"
               class="nav_link active"
             >
               <i class="bx bx-home nav_icon"></i>
               <span class="nav_name">Home</span>
             </a>
-            <a href="reservation-history" class="nav_link">
+            <a
+              href="/dashboards/student/reservation-history/reservation-history.html"
+              class="nav_link"
+            >
               <i class="bx bx-calendar-event nav_icon"></i>
               <span class="nav_name">Reservation Record</span>
             </a>
-            <a href="#" class="nav_link">
-              <i class="bx bx-user nav_icon"></i>
-              <span class="nav_name">Users</span>
-            </a>
-          </div>
-
           <div class="logout">
             <a href="#" class="nav_link">
               <i class="bx bx-log-out nav_icon"></i>
@@ -76,7 +73,7 @@
       </nav>
     </div>
 
-    <div class="card-container">
+  
       <div class="progress-bar-container">
         <div class="progress-step active" data-step="1">
           <div class="step-circle">1</div>
@@ -90,16 +87,14 @@
           <div class="step-circle">3</div>
           <span>Reservation Details</span>
         </div>
-        <div class="progress-step" data-step="4">
-          <div class="step-circle">4</div>
-          <span>Review & Submit</span>
-        </div>
       </div>
+       <div class="card-container">
       <h2 class="mt-5">CHOOSE FACILITY</h2>
       <div class="container mt-4">
         <div class="row facilities" id="facilityGrid"></div>
       </div>
     </div>
+     
     <div
       class="modal fade"
       id="facilityModal"

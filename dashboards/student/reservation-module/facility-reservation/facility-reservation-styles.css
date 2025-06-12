@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
 
 :root {
-  --header-height: 3rem;
+  --header-height: 2rem;
   --nav-width: 68px;
   --first-color: #6e131d;
   --first-color-light: white;
@@ -33,6 +33,7 @@ a {
 }
 
 .progress-bar-container {
+  height: 135px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -279,10 +280,6 @@ a {
 
 .sidebar.collapsed .menu-text {
   display: none;
-}
-
-.logout {
-  margin-top: 250px;
 }
 
 .progress-bar {
