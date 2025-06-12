@@ -524,6 +524,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (updatedEventData.event_type === "Academic") {
         updatedEventData.subject_code =
           document.getElementById("subject_code")?.value || "";
+        updatedEventData.course =
+          document.getElementById("course")?.value || "";
         updatedEventData.subject_description =
           document.getElementById("subject_description")?.value || "";
         updatedEventData.faculty_in_charge =
@@ -643,6 +645,7 @@ document.addEventListener("DOMContentLoaded", function () {
       formData.append("propertyQuantity", JSON.stringify(propertyQuantityMap));
 
       if (updatedEventData.event_type === "Academic") {
+        formData.append("course", updatedEventData.course || "");
         formData.append("SubjectCode", updatedEventData.subject_code || "");
         formData.append(
           "SubjectDescription",
@@ -714,6 +717,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Academic Fields
   const facultyInput = document.getElementById("faculty_in_charge");
+  const courseInput = this.documentElement("course");
   const subjectCodeInput = document.getElementById("subject_code");
   const subjectDescriptionInput = document.getElementById(
     "subject_description"
@@ -759,6 +763,7 @@ document.addEventListener("DOMContentLoaded", function () {
   validateFields([
     orgNameInput,
     orgAdviserInput,
+    courseInput,
     facultyInput,
     subjectCodeInput,
     subjectDescriptionInput,
@@ -767,7 +772,12 @@ document.addEventListener("DOMContentLoaded", function () {
   // Validate fields when event type changes
   eventType.addEventListener("change", function () {
     if (eventType.value === "academic") {
-      validateFields([facultyInput, subjectCodeInput, subjectDescriptionInput]);
+      validateFields([
+        courseInput,
+        facultyInput,
+        subjectCodeInput,
+        subjectDescriptionInput,
+      ]);
     } else if (eventType.value === "organization") {
       validateFields([orgNameInput, orgAdviserInput]);
     }
@@ -779,7 +789,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const inputsToValidate =
       eventType.value === "academic"
-        ? [facultyInput, subjectCodeInput, subjectDescriptionInput]
+        ? [courseInput, facultyInput, subjectCodeInput, subjectDescriptionInput]
         : [orgNameInput, orgAdviserInput];
 
     inputsToValidate.forEach((input) => {

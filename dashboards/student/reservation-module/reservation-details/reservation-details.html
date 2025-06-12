@@ -216,12 +216,24 @@
             <label for="organization_name" class="form-label"
               ><strong>Organization Name:</strong></label
             >
-            <input
-              type="text"
-              id="organization_name"
-              class="form-control"
-              placeholder="Enter organization name"
-            />
+            <select id="organization_name" class="form-control">
+              <option value="" disabled selected>Select an organization</option>
+              <option value="AECES">AECES</option>
+              <option value="PSME-PUPTSU">PSME-PUPTSU</option>
+              <option value="JPMAP">JPMAP</option>
+              <option value="JMA">JMA</option>
+              <option value="PASOA">PASOA</option>
+              <option value="CS">CS</option>
+              <option value="PSYCHOLOGY SOCIETY">Psychology Society</option>
+              <option value="MS">MS</option>
+              <option value="BYP">BYP</option>
+              <option value="REC">REC</option>
+              <option value="PUPUKAW">PUPUKAW</option>
+              <option value="ERG">ERG</option>
+              <option value="IRock">IRock</option>
+              <option value="CSC">CSC</option>
+            </select>
+
             <label for="organization_adviser" class="form-label mt-2"
               ><strong>Organization Adviser:</strong></label
             >
@@ -234,7 +246,7 @@
           </div>
 
           <!-- Academic Fields -->
-          <div class="mb-2" id="course" style="display: none">
+          <div class="mb-2" id="acad-fields" style="display: none">
             <label for="course" class="form-label"
               ><strong>Course:</strong></label
             >
@@ -242,12 +254,27 @@
               <option value="" disabled selected>Select a course</option>
               <option value="BSIT">BS Information Technology</option>
               <option value="BSBA">
-                BS Business Administration Human reso
+                BS Business Administration - Human Resources
               </option>
+              <option value="BSBA-HRM">
+                BS Business Administration - Human Resource Management
+              </option>
+              <option value="BSBA-MM">
+                BS Business Administration - Marketing Management
+              </option>
+              <option value="BSA">BS Accountancy</option>
+              <option value="BSED-MT">BS Education - Mathematics</option>
+              <option value="BSED-EDEN">BS Education - English</option>
+              <option value="BSME">BS Mechanical Engineering</option>
               <option value="BSECE">
                 BS Electronics and Communications Engineering
               </option>
-              <!-- Add more course options as needed -->
+              <option value="BSPSYCH">BS Psychology</option>
+              <option value="BSOA">BS Office Administration</option>
+              <option value="DOMT">
+                Diploma in Office Management Technology
+              </option>
+              <option value="DIT">Diploma in Information Technology</option>
             </select>
           </div>
 
