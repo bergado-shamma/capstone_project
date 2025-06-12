@@ -1,0 +1,445 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+/* The 'Outfit' font import is removed as 'header-title' is not in the provided HTML. */
+
+
+:root {
+    --header-height: 3rem;
+    --nav-width: 68px;
+    --first-color: #6e131d;
+    --first-color-light: #f7f6fb; /* Lighter shade, almost white for links */
+    --white-color: #f7f6fb; /* White for header background */
+    --body-font: 'Nunito', sans-serif;
+    --normal-font-size: 1rem;
+    --z-fixed: 100;
+}
+
+*,
+::before,
+::after {
+    box-sizing: border-box;
+}
+
+body {
+    position: relative;
+    margin: var(--header-height) 0 0 0;
+    padding: 0 1rem;
+    font-family: var(--body-font);
+    font-size: var(--normal-font-size);
+    transition: .5s;
+    background-color: #f0f2f5; /* Light background consistent with superadmin-home */
+    /* Removed user-defined 'white' and 'black' body colors to revert to previous functional background */
+    -webkit-font-smoothing: antialiased; /* Kept for font rendering quality */
+    -moz-osx-font-smoothing: grayscale; /* Kept for font rendering quality */
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Removed .main-content rule as it's not present directly on <main> in the HTML,
+   and previous logic for body padding handles spacing. */
+
+/* Removed .status-container as it's not in the provided HTML. */
+
+
+/* Header Styles */
+.header {
+    width: 100%;
+    height: var(--header-height);
+    position: fixed; /* Keep header fixed */
+    top: 0;
+    left: 0; /* Default left position for header */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    background-color: var(--white-color);
+    z-index: var(--z-fixed);
+    transition: .5s; /* Smooth transition for header movement */
+}
+
+.header_toggle {
+    color: var(--first-color);
+    font-size: 1.75rem; /* Reverted to 1.75rem based on original functional CSS, user had 1.5rem */
+    cursor: pointer;
+}
+
+.header_img {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.header_img img {
+    width: 100%; /* Reverted to 100% to fit the 35x35 container, user had 40px */
+    height: 100%; /* Added to ensure consistent image sizing within its container */
+    object-fit: cover; /* Added to ensure image covers its area without distortion */
+}
+
+/* Sidebar (Navbar) Styles */
+.l-navbar {
+    position: fixed;
+    top: 0;
+    left: 0; /* Stays 0 for desktop, will be adjusted by media query for mobile */
+    width: var(--nav-width); /* Default collapsed width */
+    height: 100vh;
+    background-color: var(--first-color); /* Deep red */
+    padding: 0.5rem 1rem 0 0; /* Right padding */
+    transition: .5s;
+    z-index: var(--z-fixed);
+    overflow-y: auto; /* Scrollable if content overflows vertically */
+    overflow-x: hidden; /* Hide horizontal scrollbar/overflow */
+}
+
+.nav {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pushes logout to bottom */
+    padding-bottom: 1rem; /* Padding for the bottom logout link */
+    overflow: hidden; /* Added from previous version, crucial for text hiding */
+}
+
+.nav_logo {
+    /* The HTML doesn't have a .nav_logo element as a direct child of .nav.
+       It implies the logo is part of the first .nav_link or a separate div not shown.
+       Based on the previous HTML structure, the logo was a direct child of nav,
+       but in the provided HTML, it seems to be missing.
+       However, the styling here will be kept for consistency if the user re-adds it.
+       If the nav_logo element is not in the HTML, these rules will have no effect.
+    */
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem; /* Adjusted from user's 23px for consistency with other nav links */
+    height: var(--header-height); /* Ensured it has height for proper alignment */
+    padding-left: 0.5rem; /* Align icon with other links */
+    gap: 10px; /* User defined */
+    padding: 15px 10px; /* User defined, but reconsider if it conflicts with height */
+}
+
+.nav_logo-icon {
+    width: 35px; /* Reverted to 35px from user's 40px for consistency */
+    height: 35px; /* Explicit height for the image */
+    /* Removed inline-block, vertical-align, margin-left as flexbox handles alignment */
+}
+
+/* Enhanced styling for the logo text - to hide and show cleanly */
+.nav_logo-name {
+    color: var(--white-color);
+    font-weight: 700;
+    margin-left: 1rem; /* Kept, but gap on nav_logo would handle it if it were direct child */
+    opacity: 0; /* Hidden by default */
+    pointer-events: none; /* Prevents interaction when hidden */
+    white-space: nowrap; /* Prevent text from wrapping */
+    max-width: 0; /* Collapse width to hide text and its space */
+    overflow: hidden; /* Ensure text is clipped */
+    transition: opacity .3s, max-width .3s; /* Smooth transition for both */
+}
+
+.nav_list {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0; /* Remove default list padding */
+    list-style: none; /* Remove list bullets */
+}
+
+.nav_link {
+    position: relative;
+    color: var(--first-color-light);
+    margin-bottom: 1.5rem;
+    transition: .3s;
+    display: flex; /* Changed from grid to flex for simpler text hiding logic */
+    align-items: center;
+    gap: 1rem; /* Space between icon and text */
+    padding: 0.5rem 0 0.5rem 1.5rem; /* Left padding for icon alignment */
+}
+
+.nav_link:hover {
+    color: var(--white-color);
+}
+
+.nav_icon {
+    font-size: 1.25rem;
+    /* Removed margin-right as 'gap' on nav_link handles spacing */
+    color: var(--white-color); /* Ensure icons are white */
+}
+
+/* Enhanced styling for the link text - to hide and show cleanly */
+.nav_name {
+    opacity: 0; /* Hidden by default */
+    pointer-events: none; /* Prevents interaction when hidden */
+    white-space: nowrap; /* Prevent text from wrapping */
+    max-width: 0; /* Collapse width to hide text and its space */
+    overflow: hidden; /* Ensure text is clipped */
+    transition: opacity .3s, max-width .3s; /* Smooth transition for both */
+}
+
+/* Show Navbar when 'show' class is added */
+.l-navbar.show {
+    width: calc(var(--nav-width) + 156px); /* Expanded width */
+}
+
+.l-navbar.show .nav_logo-name {
+    opacity: 1;
+    pointer-events: auto;
+    max-width: 200px; /* Sufficient width for text when expanded */
+}
+
+.l-navbar.show .nav_name {
+    opacity: 1;
+    pointer-events: auto;
+    max-width: 200px; /* Sufficient width for text when expanded */
+}
+
+/* Body and Header padding when Navbar is shown */
+.body-pd {
+    padding-left: calc(var(--nav-width) + 1rem); /* Shift body right when collapsed */
+}
+
+.body-pd.show {
+    padding-left: calc(var(--nav-width) + 156px + 1rem); /* Shift body further right when expanded */
+}
+
+.header.show {
+    left: calc(var(--nav-width) + 156px); /* Shift header right when expanded */
+    width: calc(100% - (var(--nav-width) + 156px)); /* Adjust header width */
+}
+
+/* Active link styling */
+.active {
+    color: var(--white-color);
+    background-color: rgba(255, 255, 255, 0.2); /* Slight background for active link */
+    border-radius: 5px;
+}
+
+.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 2px;
+    height: 32px;
+    background-color: var(--white-color);
+}
+
+/* Removed .height-100 as it's not used in the provided HTML. */
+
+
+/* Main Content Area - now targeting main element with class l-main */
+.l-main { /* Changed from .main-content to .l-main as per HTML */
+    padding: 20px;
+    background-color: #f0f2f5; /* Reverted to original background color */
+    min-height: calc(100vh - var(--header-height));
+    margin-top: var(--header-height); /* Ensure content starts below header */
+}
+
+.statistics-section { /* Added wrapper for stats-grid to use main-content padding */
+    padding: 0; /* Removed padding here as .l-main handles it */
+}
+
+
+.stat-cards-grid { /* Renamed from .stats-grid in user's HTML */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    color: #333;
+}
+
+.stat-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.stat-card p {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--first-color);
+    margin: 0;
+}
+
+.chart-group {
+    margin-bottom: 30px;
+}
+
+/* Solo chart container (for a single chart taking full width) */
+.solo-chart {
+    display: flex; /* Use flex to center the single chart container */
+    justify-content: center;
+    align-items: flex-start; /* Align to the top if the chart is smaller */
+}
+
+.solo-chart .chart-container {
+    width: 100%; /* Take full width within its solo container */
+    max-width: 600px; /* Limit the solo chart's max width for better readability */
+}
+
+/* For groups with 2 columns */
+.grid-2-col {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 2 columns on larger screens */
+    gap: 25px;
+}
+
+
+/* Chart Container and Canvas Styling (Adjusted) */
+.chart-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 350px;
+    /* Ensure a minimum height for each chart container */
+    max-height: 600px;
+    /* Set a max height for each chart container */
+    overflow: hidden;
+    /* Hide any overflow within the container if content is too large */
+}
+
+.chart-container h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.chart-container canvas {
+    max-width: 100%;
+    height: auto;
+    flex-grow: 1; /* Allow canvas to grow and take available space */
+}
+
+/* Messages */
+.messages { /* Combined alert and messages */
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.messages.hidden {
+    display: none;
+}
+
+.messages.error { /* For the specific error message class */
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+
+/* Responsive adjustments */
+@media screen and (max-width: 767px) { /* Used 767px for mobile breakpoint as is common */
+    body {
+        margin-top: var(--header-height);
+        padding-left: 0; /* Remove default padding for small screens */
+    }
+
+    .header {
+        padding: 0 0.5rem;
+    }
+
+    .header_toggle {
+        font-size: 1.5rem; /* Kept 1.5rem for mobile toggle */
+    }
+
+    .l-navbar {
+        left: -100%; /* Hide sidebar completely off-screen by default */
+        width: 0; /* Ensure it takes no width */
+        padding-right: 0; /* Remove right padding when hidden */
+    }
+
+    .l-navbar.show {
+        left: 0; /* Show sidebar on screen */
+        width: calc(var(--nav-width) + 156px); /* Expanded width */
+        padding-right: 1rem; /* Restore right padding */
+    }
+
+    /* Shift body and header only when sidebar is shown */
+    .body-pd {
+        padding-left: 0; /* No padding shift by default on small screens */
+    }
+
+    .body-pd.show {
+        padding-left: calc(var(--nav-width) + 156px + 1rem);
+    }
+
+    .header.show {
+        left: calc(var(--nav-width) + 156px);
+        width: calc(100% - (var(--nav-width) + 156px));
+    }
+
+    /* Re-apply transitions for consistency on smaller screens */
+    .nav_logo-name, .nav_name {
+        transition: opacity .3s ease, max-width .3s ease;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    body {
+        /* Adjusted margin and padding to match sidebar default collapsed width on desktop */
+        margin: var(--header-height) 0 0 0; /* Reverted to default margin from var */
+        padding-left: calc(var(--nav-width) + 1rem); /* Starts with padding for collapsed sidebar */
+    }
+
+    .header {
+        height: var(--header-height); /* Reverted to default height */
+        padding: 0 1rem 0 calc(var(--nav-width) + 1rem); /* Starts with padding for collapsed sidebar */
+    }
+
+    .header_img {
+        width: 35px; /* Reverted to default size */
+        height: 35px; /* Reverted to default size */
+    }
+
+    .header_img img {
+        width: 100%; /* Reverted to default size */
+    }
+
+    .l-navbar {
+        left: 0; /* Always visible on desktop, starts collapsed */
+        padding: 0.5rem 1rem 0 0; /* Reverted to default padding */
+    }
+
+    .show {
+        width: calc(var(--nav-width) + 156px); /* Expanded width */
+    }
+
+    .body-pd { /* This rule now applies when sidebar is closed (default desktop) */
+        padding-left: calc(var(--nav-width) + 1rem);
+    }
+
+    .body-pd.show { /* This rule applies when sidebar is expanded */
+        padding-left: calc(var(--nav-width) + 156px + 1rem);
+    }
+
+    .header.show {
+        left: calc(var(--nav-width) + 156px);
+        width: calc(100% - (var(--nav-width) + 156px));
+    }
+
+    /* Ensure text expands correctly on desktop when sidebar shows */
+    .l-navbar.show .nav_logo-name,
+    .l-navbar.show .nav_name {
+        max-width: 200px;
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
