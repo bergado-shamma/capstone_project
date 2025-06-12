@@ -24,8 +24,7 @@ const logoutButton = document.getElementById('logout-button'); // Get logout but
 
 // These should match your PocketBase user schema's 'select' options
 const organizations = ["CSC", "AECES", "CS", "JMA", "JPIA", "JPMAP", "JPSME", "PASOA", "MS", "PUPUKAW", "ERG"];
-const courses = ["BSIT", "BSCS", "BSEMC", "BSIS"];
-
+const courses = ["BSECE", "BSME", "BSBAHRM", "BSBAMM", "BSIT", "BSED-MATH", "BSED-ENGLISH", "BSOA", "DIT", "DOMT"]; // Updated based on schema
 
 // Helper function to display messages
 function displayMessage(element, message, type) {
@@ -34,6 +33,10 @@ function displayMessage(element, message, type) {
     if (type) {
         element.classList.add(`${type}-message`);
     }
+    // Automatically hide the message after a few seconds
+    setTimeout(() => {
+        element.classList.add('hidden');
+    }, 5000);
 }
 
 // Function to populate select options
@@ -50,61 +53,65 @@ function populateSelect(selectElement, optionsArray, selectedValue) {
     });
 }
 
-// Function to get query parameters from URL
+// Get query parameters from URL
 function getQueryParams() {
     const params = {};
     window.location.search.substring(1).split('&').forEach(param => {
         const parts = param.split('=');
-        params[parts[0]] = decodeURIComponent(parts[1]);
+        if (parts.length === 2) {
+            params[parts[0]] = decodeURIComponent(parts[1]);
+        }
     });
     return params;
 }
 
-// Function to load user details for editing
+// Load user details for editing
 async function loadUserDetails(userId) {
     loadingUserMessage.classList.remove('hidden');
     errorUserMessage.classList.add('hidden');
-    editFormContainer.classList.add('hidden'); // Hide form until data is loaded
-    permissionErrorEdit.classList.add('hidden');
+    editFormContainer.classList.add('hidden');
+    permissionErrorEdit.classList.add('hidden'); // Hide permission error
 
-    // Check for super-admin privileges
+    // Check if the current user is a super-admin
     if (!pb.authStore.isValid || pb.authStore.model.role !== 'super-admin') {
-        permissionErrorEdit.classList.remove('hidden');
         loadingUserMessage.classList.add('hidden');
-        return;
+        permissionErrorEdit.classList.remove('hidden'); // Show permission error
+        displayMessage(permissionErrorEdit, 'You do not have permission to edit user accounts.', 'error');
+        return; // Stop execution if not authorized
     }
 
-
     try {
-        const user = await pb.collection('_superusers').getOne(userId);
+        const record = await pb.collection('users').getOne(userId); // Changed to 'users' collection
 
-        userIdInput.value = user.id;
-        editEmailInput.value = user.email || '';
-        editNameInput.value = user.name || '';
-        editRoleSelect.value = user.role || 'user'; // Default to 'user' if not set
-        populateSelect(editOrganizationSelect, organizations, user.organization);
-        populateSelect(editCourseSelect, courses, user.course);
-        editStudentNumberInput.value = user.student_number || '';
-        editVerifiedCheckbox.checked = user.verified;
+        userIdInput.value = record.id;
+        editEmailInput.value = record.email;
+        editNameInput.value = record.name || '';
+        editStudentNumberInput.value = record.student_number || '';
+        editVerifiedCheckbox.checked = record.verified;
 
-        editFormContainer.classList.remove('hidden'); // Show the form
+        // Populate role, organization, and course selects
+        populateSelect(editRoleSelect, ["property-admin", "facility-admin", "staff", "student", "super-admin"], record.role);
+        populateSelect(editOrganizationSelect, organizations, record.organization);
+        populateSelect(editCourseSelect, courses, record.course);
+
+        editFormContainer.classList.remove('hidden');
+        loadingUserMessage.classList.add('hidden');
     } catch (error) {
         console.error('Error loading user details:', error);
-        displayMessage(errorUserMessage, `Failed to load user details: ${error.message || 'User not found or permission denied.'}`, 'error');
-        editFormContainer.classList.add('hidden');
-    } finally {
+        displayMessage(errorUserMessage, `Failed to load user details: ${error.message || 'Unknown error'}`, 'error');
         loadingUserMessage.classList.add('hidden');
     }
 }
 
-// Event listener for form submission (Update User)
-document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
+// Handle form submission for updating user
+editFormContainer.addEventListener('submit', async (event) => {
+    event.preventDefault();
     updateStatusMessage.classList.add('hidden');
     errorUserMessage.classList.add('hidden');
 
     const userId = userIdInput.value;
     const data = {
+        email: editEmailInput.value,
         name: editNameInput.value,
         role: editRoleSelect.value,
         organization: editOrganizationSelect.value,
@@ -113,15 +120,22 @@ document.getElementById('edit-user-form').addEventListener('submit', async (e) =
         verified: editVerifiedCheckbox.checked,
     };
 
+    // Remove empty string fields to prevent PocketBase from setting them to empty string if not required
+    for (const key in data) {
+        if (data[key] === '') {
+            delete data[key];
+        }
+    }
+
     try {
-        await pb.collection('_superusers').update(userId, data);
+        const record = await pb.collection('users').update(userId, data); // Changed to 'users' collection
         displayMessage(updateStatusMessage, 'User updated successfully!', 'success');
+        console.log('User updated:', record);
     } catch (error) {
         console.error('Error updating user:', error);
-        displayMessage(errorUserMessage, `Failed to update user: ${error.message || 'Unknown error'}. Please check your input and PocketBase rules.`, 'error');
+        displayMessage(updateStatusMessage, `Failed to update user: ${error.message || 'Unknown error'}`, 'error');
     }
 });
-
 
 // Logout functionality
 logoutButton.addEventListener('click', () => {
@@ -129,7 +143,7 @@ logoutButton.addEventListener('click', () => {
     window.location.href = '../login.html'; // Redirect to your login page
 });
 
-// Initial load: Get user ID from URL and load details
+// Initial load and load details
 document.addEventListener('DOMContentLoaded', () => {
     const params = getQueryParams();
     const userId = params.id;

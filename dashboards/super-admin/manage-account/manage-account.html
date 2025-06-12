@@ -19,100 +19,41 @@
         <div class="header_toggle">
             <i class="bx bx-menu" id="header-toggle"></i>
         </div>
-        <h1>Manage Accounts</h1>
-        <div class="header_img">
-            <img src="/assets/puplogo.png" alt="">
-        </div>
     </header>
 
     <div class="l-navbar" id="nav-bar">
         <nav class="nav">
             <div>
                 <a href="#" class="nav_logo">
-                    <img src="/assets/puplogo.png" alt="PFRS Logo" class="nav_logo-icon" />
-                    <span class="nav_logo-name">PFRS</span>
+                    <i class="bx bx-layer nav_logo-icon"></i>
+                    <span class="nav_logo-name">PUPIMS</span>
                 </a>
                 <div class="nav_list">
-                    <a href="./superadmin-home.html" class="nav_link">
-                        <i class='bx bx-grid-alt nav_icon'></i>
+                    <a href="../dashboard/dashboard.html" class="nav_link">
+                        <i class="bx bx-grid-alt nav_icon"></i>
                         <span class="nav_name">Dashboard</span>
                     </a>
-                    <a href="./manage-account.html" class="nav_link active" id="manage-users-nav-link">
-                        <i class='bx bx-user nav_icon'></i>
-                        <span class="nav_name">Manage Accounts</span>
-                    </a>
-                    <a href="./statistic.html" class="nav_link">
-                        <i class='bx bx-bar-chart-alt-2 nav_icon'></i>
-                        <span class="nav_name">Statistics</span>
-                    </a>
-                    <a href="./calendar.html" class="nav_link">
-                        <i class='bx bx-calendar nav_icon'></i>
-                        <span class="nav_name">Manage Calendar</span>
-                    </a>
-                    <a href="./manage-reservations.html" class="nav_link">
-                        <i class='bx bx-bookmark nav_icon'></i>
-                        <span class="nav_name">Manage Reservations</span>
-                    </a>
-                    <a href="./approval-logs.html" class="nav_link">
-                        <i class='bx bx-clipboard nav_icon'></i>
-                        <span class="nav_name">Approval Logs</span>
+                    <a href="../account/manage-account.html" class="nav_link active">
+                        <i class="bx bx-user nav_icon"></i>
+                        <span class="nav_name">Account</span>
                     </a>
                 </div>
             </div>
             <a href="#" class="nav_link" id="logout-button">
-                <i class='bx bx-log-out nav_icon'></i>
+                <i class="bx bx-log-out nav_icon"></i>
                 <span class="nav_name">SignOut</span>
             </a>
         </nav>
     </div>
 
-    <main class="height-100 bg-light">
-        <section class="account-section" id="account-section">
-            <p id="loading-profile" class="message">Loading profile...</p>
-            <p id="error-profile" class="message error-message hidden"></p>
-
-            <div id="profile-form-container">
-                <h2>My Profile</h2>
-                <form id="profile-form">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name">
-                    </div>
-                    <div class="mb-3">
-                        <label for="role" class="form-label">Role</label>
-                        <input type="text" class="form-control" id="role" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="organization" class="form-label">Organization</label>
-                        <select class="form-select" id="organization">
-                            <option value="">Select Organization</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="course" class="form-label">Course</label>
-                        <select class="form-select" id="course">
-                            <option value="">Select Course</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="student_number" class="form-label">Student Number</label>
-                        <input type="text" class="form-control" id="student_number">
-                    </div>
-                    <p id="save-status" class="message hidden"></p>
-                    <button type="submit" class="btn btn-primary">Save Profile</button>
-                </form>
-            </div>
-
+    <div class="height-100 bg-light">
+        <main class="container py-4">
             <div id="auth-buttons-manage" class="auth-buttons-container hidden">
-                <p>You must be logged in to manage your account.</p>
+                <p>You must be logged in to manage accounts. Only Super-Admins can access this feature.</p>
                 <button onclick="window.location.href='../login.html'">Login</button>
             </div>
 
-            <section id="user-management-section" class="hidden">
+            <section id="user-management-section" class="mt-5 hidden">
                 <h2>Manage System Users</h2>
                 <p id="loading-users" class="message">Loading users...</p>
                 <p id="error-users" class="message error-message hidden"></p>
@@ -133,7 +74,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
                 <p id="no-users-message" class="message hidden">No users found.</p>

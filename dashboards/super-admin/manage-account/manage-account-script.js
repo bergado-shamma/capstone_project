@@ -1,19 +1,11 @@
 const pb = new PocketBase('http://127.0.0.1:8090'); // IMPORTANT: Replace with your PocketBase URL
 
-const profileForm = document.getElementById('profile-form');
-const emailInput = document.getElementById('email');
-const nameInput = document.getElementById('name');
-const roleInput = document.getElementById('role');
-const organizationSelect = document.getElementById('organization');
-const courseSelect = document.getElementById('course');
-const studentNumberInput = document.getElementById('student_number');
-const saveStatusMessage = document.getElementById('save-status');
-const loadingMessage = document.getElementById('loading-profile');
-const errorMessage = document.getElementById('error-profile');
+// Removed profile form related elements
 const authButtonsManage = document.getElementById('auth-buttons-manage');
 const logoutButton = document.getElementById('logout-button');
+const saveStatusMessage = document.getElementById('save-status'); // Keep this for user deletion success message
 
-// New elements for user management
+// Elements for user management
 const userManagementSection = document.getElementById('user-management-section');
 const usersTableBody = document.querySelector('#users-table tbody');
 const loadingUsersMessage = document.getElementById('loading-users');
@@ -41,7 +33,7 @@ function displayMessage(element, message, type) {
     }
 }
 
-// Function to populate select options
+// Function to populate select options (still needed for edit-user.html)
 function populateSelect(selectElement, optionsArray, selectedValue) {
     selectElement.innerHTML = '<option value="">Select an option</option>'; // Default empty option
     optionsArray.forEach(option => {
@@ -55,71 +47,6 @@ function populateSelect(selectElement, optionsArray, selectedValue) {
     });
 }
 
-// Function to load the currently logged-in user's profile
-async function loadUserProfile() {
-    loadingMessage.classList.remove('hidden');
-    errorMessage.classList.add('hidden');
-    saveStatusMessage.classList.add('hidden');
-
-    try {
-        if (pb.authStore.isValid) {
-            const user = pb.authStore.model;
-            emailInput.value = user.email || '';
-            nameInput.value = user.name || '';
-            roleInput.value = user.role || '';
-            populateSelect(organizationSelect, organizations, user.organization);
-            populateSelect(courseSelect, courses, user.course);
-            studentNumberInput.value = user.student_number || '';
-
-            profileForm.classList.remove('hidden');
-            authButtonsManage.classList.add('hidden');
-        } else {
-            profileForm.classList.add('hidden');
-            authButtonsManage.classList.remove('hidden');
-        }
-    } catch (error) {
-        console.error('Error loading user profile:', error);
-        displayMessage(errorMessage, `Failed to load profile: ${error.message || 'Unknown error'}`, 'error');
-        profileForm.classList.add('hidden');
-        authButtonsManage.classList.remove('hidden');
-    } finally {
-        loadingMessage.classList.add('hidden');
-    }
-}
-
-// Function to update the currently logged-in user's profile
-profileForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    saveStatusMessage.classList.add('hidden');
-    errorMessage.classList.add('hidden');
-
-    if (!pb.authStore.isValid) {
-        displayMessage(saveStatusMessage, 'You must be logged in to save changes.', 'error');
-        return;
-    }
-
-    const userId = pb.authStore.model.id;
-    const data = {
-        name: nameInput.value,
-        organization: organizationSelect.value,
-        course: courseSelect.value,
-        student_number: studentNumberInput.value,
-        // email and role are typically not editable by the user themselves in this form
-    };
-
-    try {
-        await pb.collection('_superusers').update(userId, data);
-        displayMessage(saveStatusMessage, 'Profile updated successfully!', 'success');
-        // Reload user profile to reflect any changes if needed
-        await pb.authStore.refetch(); // Refetch to update local authStore model
-        loadUserProfile(); // Reload form with updated data
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        displayMessage(errorMessage, `Failed to update profile: ${error.message || 'Unknown error'}. Please check your input.`, 'error');
-    }
-});
-
-
 // Function to load all users for superadmin
 async function loadAllUsers() {
     loadingUsersMessage.classList.remove('hidden');
@@ -128,8 +55,8 @@ async function loadAllUsers() {
     usersTableBody.innerHTML = ''; // Clear previous data
 
     try {
-        // Fetch all users from the '_superusers' collection
-        const records = await pb.collection('_superusers').getFullList({
+        // Fetch all users from the 'users' collection
+        const records = await pb.collection('users').getFullList({
             sort: 'email', // Sort users by email
         });
 
@@ -171,7 +98,8 @@ async function loadAllUsers() {
                 deleteButton.addEventListener('click', async () => {
                     if (confirm(`Are you sure you want to delete user: ${user.name || user.email}?`)) {
                         try {
-                            await pb.collection('_superusers').delete(user.id);
+                            // Delete user from 'users' collection
+                            await pb.collection('users').delete(user.id);
                             displayMessage(saveStatusMessage, `User ${user.email} deleted successfully.`, 'success');
                             loadAllUsers(); // Reload the table after deletion
                         } catch (deleteError) {
@@ -207,31 +135,31 @@ pb.authStore.onChange(() => {
     if (pb.authStore.isValid) {
         logoutButton.classList.remove('hidden'); // Show logout button
         authButtonsManage.classList.add('hidden'); // Hide login buttons
-        profileForm.classList.remove('hidden'); // Show profile form for any logged-in user
+        // Removed profileForm.classList.remove('hidden');
 
         // Show/hide "Manage Users" nav link and section based on role
         if (isSuperAdmin) {
-            manageUsersNavLink.style.display = 'block'; // Show "Manage Users" link
+            // manageUsersNavLink.style.display = 'block'; // Show "Manage Users" link (This element is not in the HTML provided)
             userManagementSection.classList.remove('hidden'); // Show user management table
             loadAllUsers(); // Load all users for super admin
         } else {
-            manageUsersNavLink.style.display = 'none'; // Hide for non-super admins
+            // manageUsersNavLink.style.display = 'none'; // Hide for non-super admins
             userManagementSection.classList.add('hidden'); // Hide user management section
         }
     } else {
         logoutButton.classList.add('hidden'); // Hide logout button if not logged in
         authButtonsManage.classList.remove('hidden'); // Show login/signup options
-        profileForm.classList.add('hidden'); // Hide profile form
-        loadingMessage.classList.add('hidden'); // Hide loading
-        errorMessage.classList.add('hidden'); // Hide error
-        manageUsersNavLink.style.display = 'none'; // Hide "Manage Users" link
+        // Removed profileForm.classList.add('hidden');
+        loadingUsersMessage.classList.add('hidden'); // Hide loading
+        errorUsersMessage.classList.add('hidden'); // Hide error
+        // manageUsersNavLink.style.display = 'none'; // Hide "Manage Users" link
         userManagementSection.classList.add('hidden'); // Hide user management section
     }
 });
 
-// Initial load for user profile and user management based on auth status
+// Initial load for user management based on auth status
 document.addEventListener('DOMContentLoaded', () => {
-    loadUserProfile();
+    // Removed loadUserProfile();
     pb.authStore.onChange(); // Trigger the change listener immediately on DOMContentLoaded
 });
 
