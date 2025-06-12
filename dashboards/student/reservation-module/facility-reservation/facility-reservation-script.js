@@ -1,7 +1,6 @@
 import PocketBase from "https://esm.sh/pocketbase";
 
-const pb = new PocketBase("http://127.0.0.1:8090"); // Update with your PocketBase instance URL
-const facilityContainer = document.querySelector(".facilities");
+const pb = new PocketBase("http://127.0.0.1:8090");
 const modal = document.getElementById("facilityModal");
 const modalTitle = document.getElementById("modalTitle");
 const modalBody = document.getElementById("modalBody");
@@ -19,7 +18,6 @@ async function loadFacilities() {
 
     records.forEach((facility) => {
       const imgUrl = pb.files.getURL(facility, facility.facilityPhoto);
-
       const col = document.createElement("div");
       col.className = "col-md-3 mb-4";
 
@@ -39,24 +37,111 @@ async function loadFacilities() {
         </div>
       `;
 
-      card.addEventListener("click", () => {
+      card.addEventListener("click", async () => {
         modalTitle.textContent = facility.name;
         modalBody.innerHTML = `
           <img src="${imgUrl}" class="img-fluid mb-3" alt="${facility.name}" />
           <p><strong>Description:</strong> ${facility.description || "N/A"}</p>
           <p><strong>Location:</strong> ${facility.location || "N/A"}</p>
           <p><strong>Max Capacity:</strong> ${facility.maxCapacity}</p>
+          <div id="propertyList" class="mt-3">
+            <strong>Equipment/Properties:</strong>
+            <div>Loading...</div>
+          </div>
         `;
 
-        reserveBtn.disabled = false;
-        reserveBtn.onclick = () => {
-          sessionStorage.setItem("facilityID", facility.id); // Store facility ID here
-          sessionStorage.setItem("selectedFacility", facility.name);
-          sessionStorage.setItem("max_capacity", facility.maxCapacity);
-          sessionStorage.setItem("facilityImage", imgUrl);
-          window.location.href =
-            "../property-reservation/property-reservation.html";
-        };
+        try {
+          let properties = [];
+
+          if (facility.propertyID && facility.propertyID.length > 0) {
+            const filterString = facility.propertyID
+              .map((id) => `id = "${id}"`)
+              .join(" || ");
+            properties = await pb
+              .collection("property")
+              .getFullList({ filter: filterString });
+          }
+
+          let quantityArr = [];
+          if (typeof facility.quantity === "string") {
+            try {
+              quantityArr = JSON.parse(facility.quantity);
+            } catch (e) {
+              console.warn("Invalid quantity JSON", facility.quantity);
+            }
+          } else if (Array.isArray(facility.quantity)) {
+            quantityArr = facility.quantity;
+          }
+
+          const propertyList = document.getElementById("propertyList");
+
+          if (properties.length > 0) {
+            propertyList.innerHTML = `
+              <strong>Equipment/Properties:</strong>
+              <ul class="list-group mt-2">
+                ${properties
+                  .map((p, i) => {
+                    const qty = quantityArr[i] ?? "N/A";
+                    return `
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${p.name}
+                        <span class="badge bg-primary rounded-pill">${qty}</span>
+                      </li>
+                    `;
+                  })
+                  .join("")}
+              </ul>
+            `;
+
+            // Save facility + equipment data to sessionStorage
+            reserveBtn.disabled = false;
+            reserveBtn.onclick = () => {
+              sessionStorage.setItem("facilityID", facility.id);
+              sessionStorage.setItem("selectedFacility", facility.name);
+              sessionStorage.setItem("max_capacity", facility.maxCapacity);
+              sessionStorage.setItem("facilityImage", imgUrl);
+
+              // Store property name and quantity as array
+              const propertyData = properties.map((p, i) => ({
+                id: p.id, // <-- include the property ID
+                name: p.name,
+                quantity: quantityArr[i] ?? "N/A",
+              }));
+              sessionStorage.setItem(
+                "facilityProperties",
+                JSON.stringify(propertyData)
+              );
+
+              sessionStorage.setItem(
+                "facilityProperties",
+                JSON.stringify(propertyData)
+              );
+
+              window.location.href =
+                "../property-reservation/property-reservation.html";
+            };
+          } else {
+            propertyList.innerHTML = `
+              <strong>Equipment/Properties:</strong>
+              <p>No equipment assigned to this facility.</p>
+            `;
+            reserveBtn.disabled = false;
+            reserveBtn.onclick = () => {
+              sessionStorage.setItem("facilityID", facility.id);
+              sessionStorage.setItem("selectedFacility", facility.name);
+              sessionStorage.setItem("max_capacity", facility.maxCapacity);
+              sessionStorage.setItem("facilityImage", imgUrl);
+              sessionStorage.removeItem("facilityProperties");
+              window.location.href =
+                "../property-reservation/property-reservation.html";
+            };
+          }
+        } catch (err) {
+          console.error("Failed to fetch related properties:", err);
+          document.getElementById(
+            "propertyList"
+          ).innerHTML = `<p class="text-danger">Failed to load equipment list.</p>`;
+        }
 
         const modalInstance = new bootstrap.Modal(modal);
         modalInstance.show();
