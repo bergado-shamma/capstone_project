@@ -20,7 +20,6 @@
     <link rel="stylesheet" href="./reservation-details-styles.css" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.8.4/pocketbase.min.js"></script>
-    <!-- Bootstrap CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -63,7 +62,7 @@
             </a>
           </div>
 
-          <div class="logout">
+          <div class="logout" id="logoutLink">
             <a href="#" class="nav_link">
               <i class="bx bx-log-out nav_icon"></i>
               <span class="nav_name">Sign Out</span>
@@ -115,8 +114,7 @@
           >
           <span id="loi-filename" class="ms-2 text-muted"></span>
 
-          <!-- Your confirm button -->
-        </div>
+          </div>
 
         <div class="reservation-details flex-fill border p-3 rounded">
           <h3>Reservation Details</h3>
@@ -208,30 +206,42 @@
             <select id="event_type" class="form-select">
               <option value="academic">Academic</option>
               <option value="organization">Organization</option>
+              <option value="university">University Activity</option>
+              <option value="outside">Outsider Event</option>
             </select>
           </div>
 
-          <!-- Organization Fields -->
           <div class="mb-2" id="org_fields" style="display: none">
             <label for="organization_name" class="form-label"
               ><strong>Organization Name:</strong></label
             >
             <select id="organization_name" class="form-control">
               <option value="" disabled selected>Select an organization</option>
-              <option value="AECES">AECES</option>
-              <option value="PSME-PUPTSU">PSME-PUPTSU</option>
-              <option value="JPMAP">JPMAP</option>
-              <option value="JMA">JMA</option>
-              <option value="PASOA">PASOA</option>
-              <option value="CS">CS</option>
-              <option value="PSYCHOLOGY SOCIETY">Psychology Society</option>
-              <option value="MS">MS</option>
-              <option value="BYP">BYP</option>
-              <option value="REC">REC</option>
-              <option value="PUPUKAW">PUPUKAW</option>
-              <option value="ERG">ERG</option>
+              <option value="AECES">
+                ASSOCIATION OF ELECTRONICS ENGINEERING STUDENTS
+              </option>
+              <option value="PSME-PUPTSU">
+                PHILIPPINE SOCIETY OF MECHANICAL ENGINEERS
+              </option>
+              <option value="JPMAP">
+                JUNIOR PEOPLE MANAGEMENT ASSOCIATION OF THE PHILIPPINES
+              </option>
+              <option value="JMA">JUNIOR MARKETING ASSOCIATION</option>
+              <option value="PASOA">
+                PHILIPPINE ASSOCIATION OF STUDENTS IN OFFICE ADMINISTRATION
+              </option>
+              <option value="CS">COMPUTER SOCIETY</option>
+              <option value="PSYCHOLOGY SOCIETY">PSYCHOLOGY SOCIETY</option>
+              <option value="MS">MENTORS SOCIETY</option>
+              <option value="BYP">BAYANIHAN YOUTH FOR PEACE</option>
+              <option value="REC">RADIO ENGINEERING CIRCLE</option>
+              <option value="PUPUKAW">
+                POLITEKNIKONG UNIBERSIDAD NG PHILIPPINAS UGAT NG KAMALAYANG
+                AKTIBO SA WIKA
+              </option>
+              <option value="ERG">EMERGENCY RESPONSE GROUP</option>
               <option value="IRock">IRock</option>
-              <option value="CSC">CSC</option>
+              <option value="CSC">CENTRAL STUDENT COUNCIL</option>
             </select>
 
             <label for="organization_adviser" class="form-label mt-2"
@@ -243,39 +253,6 @@
               class="form-control"
               placeholder="Enter organization adviser"
             />
-          </div>
-
-          <!-- Academic Fields -->
-          <div class="mb-2" id="acad-fields" style="display: none">
-            <label for="course" class="form-label"
-              ><strong>Course:</strong></label
-            >
-            <select id="course" class="form-control">
-              <option value="" disabled selected>Select a course</option>
-              <option value="BSIT">BS Information Technology</option>
-              <option value="BSBA">
-                BS Business Administration - Human Resources
-              </option>
-              <option value="BSBA-HRM">
-                BS Business Administration - Human Resource Management
-              </option>
-              <option value="BSBA-MM">
-                BS Business Administration - Marketing Management
-              </option>
-              <option value="BSA">BS Accountancy</option>
-              <option value="BSED-MT">BS Education - Mathematics</option>
-              <option value="BSED-EDEN">BS Education - English</option>
-              <option value="BSME">BS Mechanical Engineering</option>
-              <option value="BSECE">
-                BS Electronics and Communications Engineering
-              </option>
-              <option value="BSPSYCH">BS Psychology</option>
-              <option value="BSOA">BS Office Administration</option>
-              <option value="DOMT">
-                Diploma in Office Management Technology
-              </option>
-              <option value="DIT">Diploma in Information Technology</option>
-            </select>
           </div>
 
           <div class="mb-2" id="acad_fields" style="display: none">
@@ -306,6 +283,33 @@
               class="form-control"
               placeholder="Enter Subject Description"
             />
+            <label for="course" class="form-label mt-2"
+              ><strong>Course:</strong></label
+            >
+            <select id="course" class="form-control">
+              <option value="" disabled selected>Select a course</option>
+              <option value="BSIT">BS Information Technology</option>
+              </option>
+              <option value="BSBA-HRM">
+                BS Business Administration - Human Resource Management
+              </option>
+              <option value="BSBA-MM">
+                BS Business Administration - Marketing Management
+              </option>
+              <option value="BSA">BS Accountancy</option>
+              <option value="BSED-MT">BS Education - Mathematics</option>
+              <option value="BSED-EDEN">BS Education - English</option>
+              <option value="BSME">BS Mechanical Engineering</option>
+              <option value="BSECE">
+                BS Electronics and Communications Engineering
+              </option>
+              <option value="BSPSYCH">BS Psychology</option>
+              <option value="BSOA">BS Office Administration</option>
+              <option value="DOMT">
+                Diploma in Office Management Technology
+              </option>
+              <option value="DIT">Diploma in Information Technology</option>
+            </select>
           </div>
 
           <h3 class="mt-4">Property Reservation</h3>
@@ -321,8 +325,7 @@
               </tr>
             </thead>
             <tbody>
-              <!-- Populated dynamically -->
-            </tbody>
+              </tbody>
           </table>
         </div>
       </div>
@@ -335,7 +338,110 @@
         </button>
       </div>
     </div>
-    <!-- Modal -->
+
+    <div
+      class="modal fade"
+      id="priorityModal"
+      tabindex="-1"
+      aria-labelledby="priorityModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="priorityModalLabel">
+              <i class="fas fa-exclamation-triangle me-2"></i> University Event
+              Priority Policy
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              <strong class="text-danger">IMPORTANT NOTICE:</strong> By
+              proceeding with this reservation, you acknowledge and accept the
+              following terms:
+            </p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Cancellation Risk</h6>
+                <ul>
+                  <li>
+                    University events can override your reservation at any time
+                  </li>
+                  <li>Emergency university meetings override all bookings</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h6>Manual Checking is required</h6>
+                <ul>
+                  <li>
+                    Your reservation status will be 'pending' initially.
+                  </li>
+                  <li>
+                    You must check your dashboard daily for status updates.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <h6>Your Responsibilities</h6>
+            <ul>
+              <li>
+                <strong class="text-primary">Check daily:</strong> Visit your
+                dashboard every day leading up to your event to monitor your
+                reservation status.
+              </li>
+              <li>
+                <strong class="text-primary">Have backup plans:</strong> Always
+                prepare alternative venues or schedules in case your reservation
+                is overridden or denied.
+              </li>
+              <li>
+                <strong class="text-primary">Submit early:</strong> Earlier
+                submissions have slightly better priority, but are not
+                guaranteed.
+              </li>
+              <li>
+                <strong class="text-primary">Monitor status:</strong> Approved
+                status can change to cancelled if higher priority events arise.
+              </li>
+            </ul>
+
+            <div class="form-check mt-3">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="acknowledgemeTerm"
+              />
+              <label class="form-check-label" for="acknowledgemeTerm">
+                I understand and accept these terms. I will check my reservation
+                status daily.
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel Reservation
+            </button>
+            <button type="button" class="btn btn-primary" id="proceedWithReservation">
+              I Understand - Proceed with Reservation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div
       class="modal fade"
       id="confirmModal"
@@ -352,7 +458,7 @@
             <button
               type="button"
               class="btn-close"
-              data-bs-dismiss="alert"
+              data-bs-dismiss="modal"
               aria-label="Close"
             ></button>
           </div>
@@ -373,7 +479,6 @@
       </div>
     </div>
 
-    <!-- Inline Script to handle Event Type field toggling -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
 
