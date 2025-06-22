@@ -514,12 +514,27 @@ a {
 }
 
 .btn-primary {
-  background-color: #3b82f6;
+  background-color: #6e131d !important;
+  font-weight: bold;
   color: white;
+  border: none;
+  padding: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .btn-primary:hover {
-  background-color: #2563eb;
+  background-color: #5a0f17 !important;
+}
+
+/* Enhanced big-button class */
+.big-button {
+  font-size: 20px !important;
+  padding: 8px 15px;
+  font-weight: bold !important;
+  min-width: 50px !important;
+  min-height: 60px !important;
+  margin-bottom: 2rem !important;
 }
 
 .btn-danger {
@@ -529,8 +544,12 @@ a {
 
 .btn-danger:hover {
   background-color: #b91c1c;
-} /* Add these CSS rules to your existing stylesheet */
-
+}
+.showAll {
+  background: #0056b3;
+  color: white;
+  font-weight: bold;
+}
 .event.approved {
   background-color: #d1fae5;
   color: #065f46;

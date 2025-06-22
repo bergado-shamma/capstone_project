@@ -90,13 +90,43 @@ document.addEventListener("DOMContentLoaded", () => {
 // Load reservation list
 async function loadReservations() {
   try {
+    // First, let's check ALL records to see what we're working with
+    const allRecords = await pb.collection("reservation").getFullList({
+      sort: "-created",
+    });
+    console.log("=== DEBUGGING INFO ===");
+    console.log("Total records in database:", allRecords.length);
+
+    const academicRecords = allRecords.filter(
+      (r) => r.eventType === "academic"
+    );
+    console.log("Total academic records:", academicRecords.length);
+    console.log("Academic records breakdown:");
+    academicRecords.forEach((r) => {
+      console.log(
+        `- ID: ${r.id}, Status: ${r.status}, EventType: ${r.eventType}`
+      );
+    });
+
+    const approvedAcademic = academicRecords.filter(
+      (r) => r.status === "approved"
+    );
+    console.log("Approved academic records:", approvedAcademic.length);
+
+    const nonApprovedAcademic = academicRecords.filter(
+      (r) => r.status !== "approved"
+    );
+    console.log("Non-approved academic records:", nonApprovedAcademic.length);
+    console.log("=== END DEBUGGING ===");
+
+    // Now get the filtered records
     const records = await pb.collection("reservation").getFullList({
       sort: "-created",
-      // Filter for only organization event types
+      // Show academic reservations that need attention (not approved)
       filter: 'eventType = "academic" && status != "approved"',
     });
 
-    console.log("Loaded organization reservations:", records.length);
+    console.log("Loaded academic reservations:", records.length);
     // Debug: Check if any records have propertyCustodianApproval
     const recordsWithApproval = records.filter(
       (r) => r.headOfAcademicProgramsApprove

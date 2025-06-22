@@ -1,7 +1,7 @@
 // Event listener for DOMContentLoaded
 
 //Initialize PocketBase with your URL
-const pb = new PocketBase("http://127.0.0.1:8090");
+window.pb = new PocketBase("http://127.0.0.1:8090");
 
 // Global variables
 let allReservations = [];
@@ -26,6 +26,743 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   // });
 });
+// Make viewReservationDetails globally accessible
+window.viewReservationDetails = async function (reservationId) {
+  const modal = new bootstrap.Modal(
+    document.getElementById("reservationModal")
+  );
+  const modalBody = document.getElementById("modalBody");
+
+  modalBody.innerHTML = `
+    <div class="loading-modal text-center">
+      <i class="fas fa-spinner fa-spin"></i> Loading details...
+    </div>
+  `;
+
+  modal.show();
+
+  try {
+    const reservation = await pb
+      .collection("reservation")
+      .getOne(reservationId, {
+        expand: "userID,facilityID,propertyID,eventID",
+      });
+
+    console.log("Reservation data:", reservation);
+    console.log("Property ID field:", reservation.propertyID);
+    console.log("Property Quantity field:", reservation.propertyQuantity);
+
+    modalBody.innerHTML = await generateDetailedView(reservation);
+  } catch (error) {
+    console.error("Error loading reservation details:", error);
+    modalBody.innerHTML = `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        Failed to load reservation details. Please try again.
+        <small class="d-block mt-2">Error: ${error.message}</small>
+      </div>
+    `;
+  }
+};
+// Enhanced status update function with better error handling and validation
+async function checkAndUpdateReservationStatus(reservation) {
+  const eventType = reservation.eventType?.toLowerCase() || "";
+  const approvalSteps = getApprovalStepsForEventType(eventType);
+
+  const allApproved = approvalSteps.every(
+    (step) => getStepStatus(reservation, step.field) === "approved"
+  );
+
+  const anyRejected = approvalSteps.some(
+    (step) => getStepStatus(reservation, step.field) === "rejected"
+  );
+
+  let updatedReservation = { ...reservation };
+
+  try {
+    if (allApproved && reservation.status !== "approved") {
+      updatedReservation = await pb
+        .collection("reservation")
+        .update(reservation.id, {
+          status: "approved",
+        });
+      showNotification("Reservation has been fully approved!", "success");
+    } else if (anyRejected && reservation.status !== "rejected") {
+      updatedReservation = await pb
+        .collection("reservation")
+        .update(reservation.id, {
+          status: "rejected",
+        });
+      showNotification("Reservation has been rejected.", "error");
+    }
+  } catch (error) {
+    console.error("Error updating reservation status:", error);
+    updatedReservation = reservation;
+  }
+
+  return updatedReservation;
+}
+
+// Alternative minimal update approach if the above still fails
+async function safeUpdateReservationStatus(reservation) {
+  const eventType = reservation.eventType?.toLowerCase() || "";
+  const approvalSteps = getApprovalStepsForEventType(eventType);
+
+  // Check if all required approvals are completed
+  const allApproved = approvalSteps.every(
+    (step) => getStepStatus(reservation, step.field) === "approved"
+  );
+
+  // Check if any approval is rejected
+  const anyRejected = approvalSteps.some(
+    (step) => getStepStatus(reservation, step.field) === "rejected"
+  );
+
+  let updatedReservation = { ...reservation };
+
+  try {
+    let newStatus = null;
+
+    // Determine new status
+    if (allApproved && reservation.status !== "approved") {
+      newStatus = "approved";
+    } else if (anyRejected && reservation.status !== "rejected") {
+      newStatus = "rejected";
+    } else if (
+      hasApprovalInProgress(reservation, approvalSteps) &&
+      reservation.status === "pending"
+    ) {
+      newStatus = "under-review";
+    }
+
+    if (newStatus) {
+      try {
+        // Minimal update - only update the status field
+        updatedReservation = await pb
+          .collection("reservation")
+          .update(reservation.id, {
+            status: newStatus,
+          });
+
+        console.log(`Reservation status successfully updated to ${newStatus}`);
+
+        if (newStatus === "approved") {
+          showNotification("Reservation has been fully approved!", "success");
+        } else if (newStatus === "rejected") {
+          showNotification("Reservation has been rejected.", "error");
+        }
+      } catch (updateError) {
+        console.error("Safe update also failed:", updateError);
+        updatedReservation = reservation;
+      }
+    }
+  } catch (error) {
+    console.error("Error in safeUpdateReservationStatus:", error);
+    updatedReservation = reservation;
+  }
+
+  return updatedReservation;
+}
+
+// Updated loadReservations function with better error handling
+
+// Debug function to check reservation schema
+async function debugReservationSchema() {
+  try {
+    // Get collections info to see the schema
+    const collections = await pb.collections.getFullList();
+    const reservationCollection = collections.find(
+      (c) => c.name === "reservation"
+    );
+
+    if (reservationCollection) {
+      console.log(
+        "Reservation collection schema:",
+        reservationCollection.schema
+      );
+
+      // Log field names and types
+      reservationCollection.schema.forEach((field) => {
+        console.log(
+          `Field: ${field.name}, Type: ${field.type}, Required: ${field.required}`
+        );
+      });
+    }
+  } catch (error) {
+    console.error("Error getting collection schema:", error);
+  }
+}
+
+// Call this function once to debug your schema
+// debugReservationSchema();
+// Make sure this function is globally accessible
+window.viewApprovalStatus = async function (reservationId) {
+  // Create modal if it doesn't exist
+  if (!document.getElementById("approvalStatusModal")) {
+    document.body.insertAdjacentHTML("beforeend", approvalStatusModalHTML);
+    document.head.insertAdjacentHTML("beforeend", approvalStatusCSS);
+  }
+
+  const modal = new bootstrap.Modal(
+    document.getElementById("approvalStatusModal")
+  );
+  const modalBody = document.getElementById("approvalModalBody");
+
+  modalBody.innerHTML = `
+    <div class="loading-approval">
+      <i class="fas fa-spinner fa-spin fa-2x"></i>
+      <p class="mt-3">Loading approval status...</p>
+    </div>
+  `;
+
+  modal.show();
+
+  try {
+    // Fetch the reservation details
+    const reservation = await pb
+      .collection("reservation")
+      .getOne(reservationId, {
+        expand: "userID,facilityID,eventID",
+      });
+
+    // Check and update status if needed (but don't auto-update to avoid 400 errors)
+    const updatedReservation = await checkAndUpdateReservationStatus(
+      reservation
+    );
+
+    // Generate the approval status view with updated data
+    modalBody.innerHTML = await generateApprovalStatusView(updatedReservation);
+
+    // Only refresh if status was actually updated
+    if (updatedReservation.status !== reservation.status) {
+      await loadReservations();
+    }
+  } catch (error) {
+    console.error("Error loading approval status:", error);
+    modalBody.innerHTML = `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        Failed to load approval status. Please try again.
+        <small class="d-block mt-2">Error: ${error.message}</small>
+      </div>
+    `;
+  }
+};
+// Option 1: Load only current user's reservations (CURRENT BEHAVIOR)
+async function loadUserReservations() {
+  showLoading(true);
+  hideError();
+
+  try {
+    console.log("Loading reservations for user:", currentUser?.id);
+
+    const allItems = [];
+    let page = 1;
+    const perPage = 50;
+    let hasMoreData = true;
+
+    while (hasMoreData) {
+      const records = await pb
+        .collection("reservation")
+        .getList(page, perPage, {
+          filter: `userID = "${currentUser?.id}"`,
+          sort: "-created",
+          expand: "facilityID,propertyID,eventID",
+        });
+
+      allItems.push(...records.items);
+
+      if (
+        records.items.length < perPage ||
+        records.page >= records.totalPages
+      ) {
+        hasMoreData = false;
+      } else {
+        page++;
+      }
+    }
+
+    console.log(`Loaded ${allItems.length} reservations for current user`);
+
+    // Process reservations
+    const updatedReservations = [];
+    for (const reservation of allItems) {
+      try {
+        const updatedReservation = await checkAndUpdateReservationStatus(
+          reservation
+        );
+        updatedReservations.push(updatedReservation);
+      } catch (error) {
+        console.error(
+          `Error checking status for reservation ${reservation.id}:`,
+          error
+        );
+        updatedReservations.push(reservation);
+      }
+    }
+
+    allReservations = updatedReservations;
+    displayReservations(allReservations);
+  } catch (error) {
+    console.error("Error loading reservations:", error);
+    showError("Failed to load reservations. Please try again.");
+    displayReservations([]);
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Option 2: Load ALL reservations (for admin view)
+async function loadAllReservations() {
+  showLoading(true);
+  hideError();
+
+  try {
+    console.log("Loading ALL reservations...");
+
+    const allItems = [];
+    let page = 1;
+    const perPage = 50;
+    let hasMoreData = true;
+
+    while (hasMoreData) {
+      const records = await pb
+        .collection("reservation")
+        .getList(page, perPage, {
+          sort: "-created",
+          expand: "facilityID,propertyID,eventID,userID", // Added userID to expand
+        });
+
+      allItems.push(...records.items);
+
+      if (
+        records.items.length < perPage ||
+        records.page >= records.totalPages
+      ) {
+        hasMoreData = false;
+      } else {
+        page++;
+      }
+    }
+
+    console.log(`Loaded ${allItems.length} total reservations`);
+
+    // Process reservations
+    const updatedReservations = [];
+    for (const reservation of allItems) {
+      try {
+        const updatedReservation = await checkAndUpdateReservationStatus(
+          reservation
+        );
+        updatedReservations.push(updatedReservation);
+      } catch (error) {
+        console.error(
+          `Error checking status for reservation ${reservation.id}:`,
+          error
+        );
+        updatedReservations.push(reservation);
+      }
+    }
+
+    allReservations = updatedReservations;
+    displayReservations(allReservations);
+  } catch (error) {
+    console.error("Error loading reservations:", error);
+    showError("Failed to load reservations. Please try again.");
+    displayReservations([]);
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Option 3: Load reservations with user selection/filtering
+async function loadReservationsWithOptions(filterByCurrentUser = true) {
+  showLoading(true);
+  hideError();
+
+  try {
+    const allItems = [];
+    let page = 1;
+    const perPage = 50;
+    let hasMoreData = true;
+
+    // Build filter based on option
+    const filter = filterByCurrentUser ? `userID = "${currentUser?.id}"` : "";
+    const expand = filterByCurrentUser
+      ? "facilityID,propertyID,eventID"
+      : "facilityID,propertyID,eventID,userID";
+
+    console.log(`Loading reservations with filter: ${filter || "none"}`);
+
+    while (hasMoreData) {
+      const requestOptions = {
+        sort: "-created",
+        expand: expand,
+      };
+
+      // Only add filter if we're filtering by user
+      if (filter) {
+        requestOptions.filter = filter;
+      }
+
+      const records = await pb
+        .collection("reservation")
+        .getList(page, perPage, requestOptions);
+
+      allItems.push(...records.items);
+
+      if (
+        records.items.length < perPage ||
+        records.page >= records.totalPages
+      ) {
+        hasMoreData = false;
+      } else {
+        page++;
+      }
+    }
+
+    console.log(`Loaded ${allItems.length} reservations`);
+
+    // Process reservations
+    const updatedReservations = [];
+    for (const reservation of allItems) {
+      try {
+        const updatedReservation = await checkAndUpdateReservationStatus(
+          reservation
+        );
+        updatedReservations.push(updatedReservation);
+      } catch (error) {
+        console.error(
+          `Error checking status for reservation ${reservation.id}:`,
+          error
+        );
+        updatedReservations.push(reservation);
+      }
+    }
+
+    allReservations = updatedReservations;
+    displayReservations(allReservations);
+  } catch (error) {
+    console.error("Error loading reservations:", error);
+    showError("Failed to load reservations. Please try again.");
+    displayReservations([]);
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Main function - ADMIN VERSION (shows all reservations)
+async function loadReservations() {
+  // For admin: Load all reservations
+  return await loadAllReservations();
+}
+
+// Helper function to verify which users have reservations
+async function checkAllUsers() {
+  try {
+    const records = await pb.collection("reservation").getList(1, 100, {
+      sort: "-created",
+    });
+
+    const userIds = [...new Set(records.items.map((r) => r.userID))];
+    console.log("All user IDs with reservations:", userIds);
+    console.log("Current user ID:", currentUser?.id);
+    console.log(
+      "Current user has reservations:",
+      userIds.includes(currentUser?.id)
+    );
+
+    // Count per user
+    const userCounts = {};
+    records.items.forEach((r) => {
+      userCounts[r.userID] = (userCounts[r.userID] || 0) + 1;
+    });
+    console.log("Reservations per user:", userCounts);
+  } catch (error) {
+    console.error("Error checking users:", error);
+  }
+}
+// Helper function to get step status with improved validation
+function getStepStatus(reservation, fieldName) {
+  const value = reservation[fieldName];
+
+  if (value === true || value === "approved" || value === "Approved") {
+    return "approved";
+  } else if (value === false || value === "rejected" || value === "Rejected") {
+    return "rejected";
+  } else if (
+    value === "under-review" ||
+    value === "Under Review" ||
+    value === "pending-review" ||
+    value === "Under-Review"
+  ) {
+    return "under-review";
+  } else {
+    return "pending";
+  }
+}
+
+// Helper function to calculate overall status
+function calculateOverallStatus(reservation, steps) {
+  const statuses = steps.map((step) => getStepStatus(reservation, step.field));
+
+  if (statuses.some((status) => status === "rejected")) {
+    return "rejected";
+  } else if (statuses.every((status) => status === "approved")) {
+    return "approved";
+  } else if (statuses.some((status) => status === "under-review")) {
+    return "under-review";
+  } else {
+    return "pending";
+  }
+}
+
+// Helper function to get status icon
+function getStatusIcon(status) {
+  switch (status.toLowerCase()) {
+    case "approved":
+      return "fa-check-circle";
+    case "rejected":
+      return "fa-times-circle";
+    case "under-review":
+      return "fa-clock";
+    default:
+      return "fa-hourglass-half";
+  }
+}
+
+// Helper function to format step status text
+function formatStepStatus(status) {
+  switch (status) {
+    case "approved":
+      return "Approved";
+    case "rejected":
+      return "Rejected";
+    case "under-review":
+      return "Under Review";
+    case "pending":
+      return "Pending";
+    default:
+      return "Pending";
+  }
+}
+
+// Helper function to get step timestamp with better error handling
+function getStepTimestamp(reservation, fieldName, status) {
+  try {
+    // You might have timestamp fields like departmentHeadApprovalDate, etc.
+    const timestampField = fieldName + "Date";
+    const timestamp = reservation[timestampField];
+
+    if (timestamp && status !== "pending") {
+      return `
+        <div class="step-timestamp">
+          <i class="fas fa-calendar-alt"></i>
+          ${formatDateTime(timestamp)}
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.warn(`Error formatting timestamp for ${fieldName}:`, error);
+  }
+
+  return "";
+}
+
+// Check if any approval is in progress
+function hasApprovalInProgress(reservation, approvalSteps) {
+  return approvalSteps.some((step) => {
+    const status = getStepStatus(reservation, step.field);
+    return status === "under-review" || status === "approved";
+  });
+}
+
+// Generate approval status view with improved error handling
+async function generateApprovalStatusView(reservation) {
+  try {
+    const eventType = reservation.eventType?.toLowerCase() || "";
+    const approvalSteps = getApprovalStepsForEventType(eventType);
+
+    // Calculate overall status
+    const overallStatus = calculateOverallStatus(reservation, approvalSteps);
+
+    // Calculate progress percentage
+    const approvedCount = approvalSteps.filter(
+      (step) => getStepStatus(reservation, step.field) === "approved"
+    ).length;
+    const progressPercentage = Math.round(
+      (approvedCount / approvalSteps.length) * 100
+    );
+
+    // Check if reservation is approved to show PDF button
+    const isApproved = reservation.status === "approved";
+
+    // Generate the HTML with enhanced status display
+    let html = `
+      <div class="approval-summary">
+        <div class="summary-title">Overall Status</div>
+        <div class="summary-status ${overallStatus.toLowerCase()}">
+          <i class="fas ${getStatusIcon(overallStatus)}"></i>
+          ${overallStatus.toUpperCase()}
+        </div>
+        
+        ${
+          isApproved
+            ? `
+          <div class="approved-actions mt-3">
+            <button class="btn btn-success btn-lg" onclick="generateReservationPDF('${reservation.id}')">
+              <i class="fas fa-file-pdf"></i> Download Confirmation PDF
+            </button>
+            <small class="d-block mt-2 text-muted">
+              <i class="fas fa-info-circle"></i>
+              Present this document when using your reserved facility/property
+            </small>
+          </div>
+        `
+            : ""
+        }
+        
+        <div class="progress-container mt-3">
+          <div class="progress-label">Approval Progress: ${approvedCount}/${
+      approvalSteps.length
+    } completed</div>
+          <div class="progress">
+            <div class="progress-bar bg-success" role="progressbar" 
+                 style="width: ${progressPercentage}%" 
+                 aria-valuenow="${progressPercentage}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="100">
+              ${progressPercentage}%
+            </div>
+          </div>
+        </div>
+        
+        ${
+          reservation.approvalNotes
+            ? `
+          <div class="approval-notes mt-3">
+            <strong>Notes:</strong> ${escapeHtml(reservation.approvalNotes)}
+          </div>
+        `
+            : ""
+        }
+        
+        ${
+          reservation.lastStatusUpdate
+            ? `
+          <div class="last-update mt-2">
+            <small class="text-muted">
+              <i class="fas fa-clock"></i>
+              Last updated: ${formatDateTime(reservation.lastStatusUpdate)}
+            </small>
+          </div>
+        `
+            : ""
+        }
+      </div>
+
+      <div class="approval-steps-container">
+        ${approvalSteps
+          .map((step, index) => {
+            const stepStatus = getStepStatus(reservation, step.field);
+            const stepNumber = index + 1;
+
+            return `
+            <div class="approval-step ${stepStatus}">
+              <div class="step-number ${stepStatus}">
+                ${
+                  stepStatus === "approved"
+                    ? '<i class="fas fa-check"></i>'
+                    : stepStatus === "rejected"
+                    ? '<i class="fas fa-times"></i>'
+                    : stepStatus === "under-review"
+                    ? '<i class="fas fa-clock"></i>'
+                    : stepNumber.toString().padStart(2, "0")
+                }
+              </div>
+              <div class="step-content">
+                <div class="step-title">${escapeHtml(step.title)}</div>
+                <div class="step-description">${escapeHtml(
+                  step.description
+                )}</div>
+                <div class="step-status ${stepStatus}">
+                  ${formatStepStatus(stepStatus)}
+                </div>
+                ${getStepTimestamp(reservation, step.field, stepStatus)}
+              </div>
+            </div>
+          `;
+          })
+          .join("")}
+      </div>
+
+      <div class="mt-4">
+        <small class="text-muted">
+          <i class="fas fa-info-circle"></i>
+          Status updates are reflected in real-time. Contact the respective office for any concerns.
+        </small>
+      </div>
+    `;
+
+    return html;
+  } catch (error) {
+    console.error("Error generating approval status view:", error);
+    return `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        Error generating approval status view. Please try again.
+      </div>
+    `;
+  }
+}
+
+// Improved notification system
+function showNotification(message, type = "info", duration = 5000) {
+  let notificationContainer = document.getElementById("notification-container");
+  if (!notificationContainer) {
+    notificationContainer = document.createElement("div");
+    notificationContainer.id = "notification-container";
+    notificationContainer.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      max-width: 400px;
+    `;
+    document.body.appendChild(notificationContainer);
+  }
+
+  const notification = document.createElement("div");
+  notification.className = `alert alert-${
+    type === "success" ? "success" : type === "error" ? "danger" : "info"
+  } alert-dismissible fade show`;
+  notification.style.cssText = `
+    margin-bottom: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  `;
+
+  notification.innerHTML = `
+    <i class="fas ${
+      type === "success"
+        ? "fa-check-circle"
+        : type === "error"
+        ? "fa-exclamation-triangle"
+        : "fa-info-circle"
+    }"></i>
+    ${escapeHtml(message)}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+
+  notificationContainer.appendChild(notification);
+
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.remove();
+    }
+  }, duration);
+}
+
+// Check if any approval exists
 function hasAnyApproval(reservation) {
   const approvalFields = [
     "propertyCustodianApprove",
@@ -39,64 +776,201 @@ function hasAnyApproval(reservation) {
 
   return approvalFields.some(
     (field) =>
-      reservation[field] && reservation[field].toLowerCase() === "approved"
+      reservation[field] &&
+      (reservation[field] === true ||
+        reservation[field].toString().toLowerCase() === "approved")
   );
 }
 
-//* Function to initialize the app
+// Get approval steps based on event type
+function getApprovalStepsForEventType(eventType) {
+  let approvalSteps = [];
+
+  if (eventType === "academic") {
+    approvalSteps = [
+      {
+        id: "faculty_in_charge",
+        title: "Faculty In Charge",
+        description: "Initial review and professor approval",
+        field: "facultyInChargeApprove",
+      },
+      {
+        id: "head_academic_programs",
+        title: "Head of Academic Programs",
+        description:
+          "Will review the reservation to see if it truly benefits the students involved",
+        field: "headOfAcademicProgramsApprove",
+      },
+    ];
+  } else if (eventType === "organization") {
+    approvalSteps = [
+      {
+        id: "organization_adviser",
+        title: "Organization Adviser",
+        description: "Initial review by the organization adviser",
+        field: "organizationAdviserApprove",
+      },
+      {
+        id: "head_of_student_affairs",
+        title: "Head of Student Affairs",
+        description: "Review and approval by Head of Student Affairs",
+        field: "headOfStudentAffairsApprove",
+      },
+    ];
+  }
+
+  // Common steps for all event types
+  approvalSteps = approvalSteps.concat([
+    {
+      id: "campus_director",
+      title: "Campus Director",
+      description: "Approval of the Event",
+      field: "campusDirectorApprove",
+    },
+    {
+      id: "administrative_officer",
+      title: "Administrative Officer",
+      description: "Reviews the reserved facility to ensure it is available",
+      field: "administrativeOfficerApprove",
+    },
+    {
+      id: "property_custodian",
+      title: "Property Custodian",
+      description: "Reviews the reserved property",
+      field: "propertyCustodianApprove",
+    },
+  ]);
+
+  return approvalSteps;
+}
+
+// Fixed status update function with better validation
+
+// Utility function to escape HTML and prevent XSS
+function escapeHtml(text) {
+  if (!text) return "";
+  const map = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+  return text.toString().replace(/[&<>"']/g, function (m) {
+    return map[m];
+  });
+}
+
+// Initialize the app with better error handling
 async function initializeApp() {
   try {
     if (pb.authStore.isValid) {
       currentUser = pb.authStore.model;
       await loadReservations();
     } else {
-      showError("Please log in to view your reservations.");
+      showNotification("Please log in to view your reservations.", "error");
+      // Uncomment if you want to redirect to login
       // window.location.href = '/login.html';
     }
   } catch (error) {
     console.error("Initialization error:", error);
-    showError("Failed to initialize application. Please refresh the page.");
+    showNotification(
+      "Failed to initialize application. Please refresh the page.",
+      "error"
+    );
   }
 }
 
-// Load reservations for the current user
-async function loadReservations() {
-  showLoading(true);
-  hideError();
+// Display reservations function
+async function displayReservations(reservations) {
+  const tbody = document.getElementById("reservation-body");
 
-  try {
-    const records = await pb.collection("reservation").getList(1, 50, {
-      filter: `userID = "${currentUser?.id}"`,
-      sort: "-created",
-      expand: "facilityID,propertyID,eventID",
-    });
+  if (reservations.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="8" class="no-data">No reservations found</td></tr>';
+    return;
+  }
 
-    // Check each reservation for potential status updates
-    const updatedReservations = [];
-    for (const reservation of records.items) {
+  const allPropertyIds = [];
+  reservations.forEach((reservation) => {
+    if (reservation.propertyID) {
       try {
-        const updatedReservation = await checkAndUpdateReservationStatus(
-          reservation
-        );
-        updatedReservations.push(updatedReservation);
+        const parsedIds =
+          typeof reservation.propertyID === "string"
+            ? JSON.parse(reservation.propertyID)
+            : reservation.propertyID;
+        if (Array.isArray(parsedIds)) {
+          allPropertyIds.push(...parsedIds);
+        }
       } catch (error) {
-        console.error(
-          `Error checking status for reservation ${reservation.id}:`,
-          error
-        );
-        updatedReservations.push(reservation); // Use original if update fails
+        console.warn("Error parsing property IDs:", error);
       }
     }
+  });
 
-    allReservations = updatedReservations;
-    displayReservations(allReservations);
-  } catch (error) {
-    console.error("Error loading reservations:", error);
-    showError("Failed to load reservations. Please try again.");
-    displayReservations([]);
-  } finally {
-    showLoading(false);
+  await fetchPropertiesInBatches(allPropertyIds);
+
+  const processedReservations = [];
+  for (let i = 0; i < reservations.length; i++) {
+    const reservation = reservations[i];
+
+    const facilityName =
+      reservation.expand?.facilityID?.name ||
+      reservation.expand?.facilityID?.facilityName ||
+      "N/A";
+
+    const eventName =
+      reservation.expand?.eventID?.name ||
+      reservation.expand?.eventID?.eventName ||
+      reservation.eventName ||
+      "N/A";
+
+    // Use the updated function that includes quantities
+    const propertyInfo = await getPropertyNamesForTable(
+      reservation.propertyID,
+      reservation.propertyQuantity
+    );
+
+    processedReservations.push({
+      ...reservation,
+      index: i + 1,
+      facilityName,
+      eventName,
+      propertyInfo,
+    });
   }
+
+  tbody.innerHTML = processedReservations
+    .map((reservation) => {
+      return `
+        <tr>
+          <td>${reservation.index}</td>
+          <td>${escapeHtml(reservation.eventName)}</td>
+          <td>${escapeHtml(reservation.facilityName)}</td>
+          <td>${formatDateTime(reservation.startTime)}</td>
+          <td>${formatDateTime(reservation.endTime)}</td>
+          <td><span class="status-badge status-${
+            reservation.status?.toLowerCase() || "pending"
+          }">${escapeHtml(reservation.status || "Pending")}</span></td>
+          <td>${escapeHtml(reservation.campusDirectorApprove || "N/A")}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-sm btn-outline-primary" onclick="viewReservationDetails('${
+                reservation.id
+              }')">
+                <i class="fas fa-eye"></i> View
+              </button>
+              <button class="btn btn-sm btn-outline-info" onclick="viewApprovalStatus('${
+                reservation.id
+              }')">
+                <i class="fas fa-clipboard-check"></i> Approval Status
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
 }
 
 // Fetch property data in batches
@@ -282,92 +1156,6 @@ async function getPropertyNamesForTable(propertyIDs, quantities) {
 }
 
 // Function to display reservations
-async function displayReservations(reservations) {
-  const tbody = document.getElementById("reservation-body");
-
-  if (reservations.length === 0) {
-    tbody.innerHTML =
-      '<tr><td colspan="8" class="no-data">No reservations found</td></tr>';
-    return;
-  }
-
-  const allPropertyIds = [];
-  reservations.forEach((reservation) => {
-    if (reservation.propertyID) {
-      try {
-        const parsedIds =
-          typeof reservation.propertyID === "string"
-            ? JSON.parse(reservation.propertyID)
-            : reservation.propertyID;
-        if (Array.isArray(parsedIds)) {
-          allPropertyIds.push(...parsedIds);
-        }
-      } catch (error) {
-        console.warn("Error parsing property IDs:", error);
-      }
-    }
-  });
-
-  await fetchPropertiesInBatches(allPropertyIds);
-
-  const processedReservations = [];
-  for (let i = 0; i < reservations.length; i++) {
-    const reservation = reservations[i];
-
-    const facilityName =
-      reservation.expand?.facilityID?.name ||
-      reservation.expand?.facilityID?.facilityName ||
-      "N/A";
-
-    const eventName =
-      reservation.expand?.eventID?.name ||
-      reservation.expand?.eventID?.eventName ||
-      reservation.eventName ||
-      "N/A";
-
-    // Use the updated function that includes quantities
-    const propertyInfo = await getPropertyNamesForTable(
-      reservation.propertyID,
-      reservation.propertyQuantity
-    );
-
-    processedReservations.push({
-      ...reservation,
-      index: i + 1,
-      facilityName,
-      eventName,
-      propertyInfo,
-    });
-  }
-
-  tbody.innerHTML = processedReservations
-    .map((reservation) => {
-      return `
-        <tr>
-          <td>${reservation.index}</td>
-          <td>${reservation.eventName}</td>
-          <td>${reservation.facilityName}</td>
-          <td>${formatDateTime(reservation.startTime)}</td>
-          <td>${formatDateTime(reservation.endTime)}</td>
-          <td><span class="status-badge status-${
-            reservation.status?.toLowerCase() || "pending"
-          }">${reservation.status || "Pending"}</span></td>
-          <td>${reservation.campusDirectorApprove}</td>
-          <td>
-            <div class="action-buttons">
-              <button class="btn btn-sm btn-outline-primary" onclick="viewReservationDetails('${
-                reservation.id
-              }')">
-                <i class="fas fa-eye"></i> View
-              </button>
-              
-            </div>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
-}
 
 // Function to filter reservations
 function filterReservations(status) {
@@ -869,197 +1657,18 @@ setInterval(async () => {
   }
 }, 60000);
 // Increases to 60 seconds
-async function viewApprovalStatus(reservationId) {
-  // Create modal if it doesn't exist
-  if (!document.getElementById("approvalStatusModal")) {
-    document.body.insertAdjacentHTML("beforeend", approvalStatusModalHTML);
-    document.head.insertAdjacentHTML("beforeend", approvalStatusCSS);
-  }
 
-  const modal = new bootstrap.Modal(
-    document.getElementById("approvalStatusModal")
-  );
-  const modalBody = document.getElementById("approvalModalBody");
-
-  modalBody.innerHTML = `
-    <div class="loading-approval">
-      <i class="fas fa-spinner fa-spin fa-2x"></i>
-      <p class="mt-3">Loading approval status...</p>
-    </div>
-  `;
-
-  modal.show();
-
-  try {
-    // Fetch the reservation details
-    const reservation = await pb
-      .collection("reservation")
-      .getOne(reservationId, {
-        expand: "userID,facilityID,eventID",
-      });
-
-    // Check and update status if needed
-    const updatedReservation = await checkAndUpdateReservationStatus(
-      reservation
-    );
-
-    // Generate the approval status view with updated data
-    modalBody.innerHTML = await generateApprovalStatusView(updatedReservation);
-
-    // Refresh the main reservations list to reflect any changes
-    await loadReservations();
-  } catch (error) {
-    console.error("Error loading approval status:", error);
-    modalBody.innerHTML = `
-      <div class="alert alert-danger">
-        <i class="fas fa-exclamation-triangle"></i>
-        Failed to load approval status. Please try again.
-        <small class="d-block mt-2">Error: ${error.message}</small>
-      </div>
-    `;
-  }
-}
-function getApprovalStepsForEventType(eventType) {
-  let approvalSteps = [];
-
-  if (eventType === "academic") {
-    approvalSteps = [
-      {
-        id: "faculty_in_charge",
-        title: "Faculty In Charge",
-        description: "Initial review and professor approval",
-        field: "facultyInChargeApprove",
-      },
-      {
-        id: "head_academic_programs",
-        title: "Head of Academic Programs",
-        description:
-          "Will review the reservation to see if it truly benefits the students involved",
-        field: "headOfAcademicProgramsApprove",
-      },
-    ];
-  } else if (eventType === "organization") {
-    approvalSteps = [
-      {
-        id: "organization_adviser",
-        title: "Organization Adviser",
-        description: "Initial review by the organization adviser",
-        field: "organizationAdviserApprove",
-      },
-      {
-        id: "head_of_student_affairs",
-        title: "Head of Student Affairs",
-        description: "Review and approval by Head of Student Affairs",
-        field: "headOfStudentAffairsApprove",
-      },
-    ];
-  }
-
-  // Common steps for all event types
-  approvalSteps = approvalSteps.concat([
-    {
-      id: "campus_director",
-      title: "Campus Director",
-      description: "Approval of the Event",
-      field: "campusDirectorApprove",
-    },
-    {
-      id: "administrative_officer",
-      title: "Administrative Officer",
-      description: "Reviews the reserved facility to ensure it is available",
-      field: "administrativeOfficerApprove",
-    },
-    {
-      id: "property_custodian",
-      title: "Property Custodian",
-      description: "Reviews the reserved property",
-      field: "propertyCustodianApprove",
-    },
-  ]);
-
-  return approvalSteps;
-}
-
-async function checkAndUpdateReservationStatus(reservation) {
-  const eventType = reservation.eventType?.toLowerCase() || "";
-
-  // Define approval steps based on event type
-  const approvalSteps = getApprovalStepsForEventType(eventType);
-
-  // Check if all required approvals are completed
-  const allApproved = approvalSteps.every(
-    (step) => getStepStatus(reservation, step.field) === "approved"
-  );
-
-  // Check if any approval is rejected
-  const anyRejected = approvalSteps.some(
-    (step) => getStepStatus(reservation, step.field) === "rejected"
-  );
-
-  let updatedReservation = reservation;
-
-  try {
-    // Auto-approve if all steps are approved and current status is not already approved
-    if (allApproved && reservation.status !== "approved") {
-      console.log(
-        `All approvals completed for reservation ${reservation.id}. Auto-approving...`
-      );
-
-      updatedReservation = await pb
-        .collection("reservation")
-        .update(reservation.id, {
-          status: "approved",
-          approvalFinalizedAt: new Date().toISOString(),
-          lastStatusUpdate: new Date().toISOString(),
-        });
-
-      console.log("Reservation status auto-updated to approved.");
-
-      // Show success notification
-      showNotification("Reservation has been fully approved!", "success");
-    }
-    // Auto-reject if any approval is rejected and current status is not already rejected
-    else if (anyRejected && reservation.status !== "rejected") {
-      console.log(
-        `Approval rejected for reservation ${reservation.id}. Auto-rejecting...`
-      );
-
-      updatedReservation = await pb
-        .collection("reservation")
-        .update(reservation.id, {
-          status: "rejected",
-          rejectionFinalizedAt: new Date().toISOString(),
-          lastStatusUpdate: new Date().toISOString(),
-        });
-
-      console.log("Reservation status auto-updated to rejected.");
-
-      // Show rejection notification
-      showNotification("Reservation has been rejected.", "error");
-    }
-    // Update to under-review if some approvals are in progress
-    else if (
-      hasApprovalInProgress(reservation, approvalSteps) &&
-      reservation.status === "pending"
-    ) {
-      updatedReservation = await pb
-        .collection("reservation")
-        .update(reservation.id, {
-          status: "under-review",
-          lastStatusUpdate: new Date().toISOString(),
-        });
-
-      console.log("Reservation status updated to under-review.");
-    }
-  } catch (error) {
-    console.error("Error updating reservation status:", error);
-    showNotification(
-      "Error updating reservation status. Please contact support.",
-      "error"
-    );
-  }
-
-  return updatedReservation;
+function sanitizeReservationForUpdate(reservation) {
+  const {
+    id,
+    collectionId,
+    collectionName,
+    expand,
+    created,
+    updated,
+    ...sanitized
+  } = reservation;
+  return sanitized;
 }
 
 // Function to load pdfmake library
@@ -2082,268 +2691,6 @@ function formatTime(dateString) {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatDateTime(dateString) {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
-  return date.toLocaleString();
-}
-function getStepStatus(reservation, fieldName) {
-  const value = reservation[fieldName];
-
-  if (value === true || value === "approved" || value === "Approved") {
-    return "approved";
-  } else if (value === false || value === "rejected" || value === "Rejected") {
-    return "rejected";
-  } else if (
-    value === "under-review" ||
-    value === "Under Review" ||
-    value === "pending-review"
-  ) {
-    return "under-review";
-  } else {
-    return "pending";
-  }
-}
-
-// Helper function to calculate overall status
-function calculateOverallStatus(reservation, steps) {
-  const statuses = steps.map((step) => getStepStatus(reservation, step.field));
-
-  if (statuses.some((status) => status === "rejected")) {
-    return "rejected";
-  } else if (statuses.every((status) => status === "approved")) {
-    return "approved";
-  } else if (statuses.some((status) => status === "under-review")) {
-    return "under-review";
-  } else {
-    return "pending";
-  }
-}
-
-// Helper function to get status icon
-function getStatusIcon(status) {
-  switch (status.toLowerCase()) {
-    case "approved":
-      return "fa-check-circle";
-    case "rejected":
-      return "fa-times-circle";
-    case "under-review":
-      return "fa-clock";
-    default:
-      return "fa-hourglass-half";
-  }
-}
-
-// Helper function to format step status text
-function formatStepStatus(status) {
-  switch (status) {
-    case "approved":
-      return "Approved";
-    case "rejected":
-      return "Rejected";
-    case "under-review":
-      return "Under Review";
-    case "pending":
-      return "Pending";
-    default:
-      return "Pending";
-  }
-}
-
-// Helper function to get step timestamp
-function getStepTimestamp(reservation, fieldName, status) {
-  // You might have timestamp fields like departmentHeadApprovalDate, etc.
-  const timestampField = fieldName + "Date";
-  const timestamp = reservation[timestampField];
-
-  if (timestamp && status !== "pending") {
-    return `
-      <div class="step-timestamp">
-        <i class="fas fa-calendar-alt"></i>
-        ${formatDateTime(timestamp)}
-      </div>
-    `;
-  }
-
-  return "";
-}
-function hasApprovalInProgress(reservation, approvalSteps) {
-  return approvalSteps.some((step) => {
-    const status = getStepStatus(reservation, step.field);
-    return status === "under-review" || status === "approved";
-  });
-}
-async function generateApprovalStatusView(reservation) {
-  const eventType = reservation.eventType?.toLowerCase() || "";
-  const approvalSteps = getApprovalStepsForEventType(eventType);
-
-  // Calculate overall status
-  const overallStatus = calculateOverallStatus(reservation, approvalSteps);
-
-  // Calculate progress percentage
-  const approvedCount = approvalSteps.filter(
-    (step) => getStepStatus(reservation, step.field) === "approved"
-  ).length;
-  const progressPercentage = Math.round(
-    (approvedCount / approvalSteps.length) * 100
-  );
-
-  // Check if reservation is approved to show PDF button
-  const isApproved = reservation.status === "approved";
-
-  // Generate the HTML with enhanced status display
-  let html = `
-    <div class="approval-summary">
-      <div class="summary-title">Overall Status</div>
-      <div class="summary-status ${overallStatus.toLowerCase()}">
-        <i class="fas ${getStatusIcon(overallStatus)}"></i>
-        ${overallStatus.toUpperCase()}
-      </div>
-      
-      ${
-        isApproved
-          ? `
-        <div class="approved-actions mt-3">
-          <button class="btn btn-success btn-lg" onclick="generateReservationPDF('${reservation.id}')">
-            <i class="fas fa-file-pdf"></i> Download Confirmation PDF
-          </button>
-          <small class="d-block mt-2 text-muted">
-            <i class="fas fa-info-circle"></i>
-            Present this document when using your reserved facility/property
-          </small>
-        </div>
-      `
-          : ""
-      }
-      
-      <div class="progress-container mt-3">
-        <div class="progress-label">Approval Progress: ${approvedCount}/${
-    approvalSteps.length
-  } completed</div>
-        <div class="progress">
-          <div class="progress-bar bg-success" role="progressbar" 
-               style="width: ${progressPercentage}%" 
-               aria-valuenow="${progressPercentage}" 
-               aria-valuemin="0" 
-               aria-valuemax="100">
-            ${progressPercentage}%
-          </div>
-        </div>
-      </div>
-      
-      ${
-        reservation.approvalNotes
-          ? `
-        <div class="approval-notes mt-3">
-          <strong>Notes:</strong> ${reservation.approvalNotes}
-        </div>
-      `
-          : ""
-      }
-      
-      ${
-        reservation.lastStatusUpdate
-          ? `
-        <div class="last-update mt-2">
-          <small class="text-muted">
-            <i class="fas fa-clock"></i>
-            Last updated: ${formatDateTime(reservation.lastStatusUpdate)}
-          </small>
-        </div>
-      `
-          : ""
-      }
-    </div>
-
-    <div class="approval-steps-container">
-      ${approvalSteps
-        .map((step, index) => {
-          const stepStatus = getStepStatus(reservation, step.field);
-          const stepNumber = index + 1;
-
-          return `
-          <div class="approval-step ${stepStatus}">
-            <div class="step-number ${stepStatus}">
-              ${
-                stepStatus === "approved"
-                  ? '<i class="fas fa-check"></i>'
-                  : stepStatus === "rejected"
-                  ? '<i class="fas fa-times"></i>'
-                  : stepStatus === "under-review"
-                  ? '<i class="fas fa-clock"></i>'
-                  : stepNumber.toString().padStart(2, "0")
-              }
-            </div>
-            <div class="step-content">
-              <div class="step-title">${step.title}</div>
-              <div class="step-description">${step.description}</div>
-              <div class="step-status ${stepStatus}">
-                ${formatStepStatus(stepStatus)}
-              </div>
-              ${getStepTimestamp(reservation, step.field, stepStatus)}
-            </div>
-          </div>
-        `;
-        })
-        .join("")}
-    </div>
-
-    <div class="mt-4">
-      <small class="text-muted">
-        <i class="fas fa-info-circle"></i>
-        Status updates are reflected in real-time. Contact the respective office for any concerns.
-      </small>
-    </div>
-  `;
-
-  return html;
-}
-function showNotification(message, type = "info") {
-  // Create notification element if it doesn't exist
-  let notificationContainer = document.getElementById("notification-container");
-  if (!notificationContainer) {
-    notificationContainer = document.createElement("div");
-    notificationContainer.id = "notification-container";
-    notificationContainer.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 9999;
-    `;
-    document.body.appendChild(notificationContainer);
-  }
-
-  const notification = document.createElement("div");
-  notification.className = `alert alert-${
-    type === "success" ? "success" : type === "error" ? "danger" : "info"
-  } alert-dismissible fade show`;
-  notification.style.cssText = `
-    margin-bottom: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  `;
-
-  notification.innerHTML = `
-    <i class="fas ${
-      type === "success"
-        ? "fa-check-circle"
-        : type === "error"
-        ? "fa-exclamation-triangle"
-        : "fa-info-circle"
-    }"></i>
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  `;
-
-  notificationContainer.appendChild(notification);
-
-  // Auto-remove after 5 seconds
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.remove();
-    }
-  }, 5000);
 }
 document.addEventListener("DOMContentLoaded", function () {
   const pb = window.pb;
