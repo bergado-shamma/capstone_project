@@ -1,4 +1,6 @@
 // Global variables
+window.pb = new PocketBase("http://127.0.0.1:8090");
+
 let currentDate = new Date();
 let currentEditingId = null;
 let currentFilter = "all";
@@ -22,6 +24,12 @@ const monthNames = [
 // Sample reservation data - replace with your actual data source
 let reservations = [];
 
+// Define Philippine time zone options for consistent formatting
+const philippineTimeOptions = {
+  timeZone: "Asia/Manila", // IANA Time Zone Database name for Philippines
+  hour12: false, // Use 24-hour format for times if preferred
+};
+
 document.addEventListener("DOMContentLoaded", async function () {
   await fetchReservations(); // load reservations from PocketBase
   initializeApp();
@@ -30,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   setupEventListeners();
 });
 
-// Updated fetchReservations function with better date formatting
+// Updated fetchReservations function with better date formatting and time zone conversion
 async function fetchReservations() {
   try {
     const response = await fetch(
@@ -66,46 +74,47 @@ async function fetchReservations() {
       let startTime = "00:00";
       let endTime = "";
 
-      if (item.startTime) {
-        if (item.startTime.includes("T")) {
-          eventDate = item.startTime.split("T")[0];
-          startTime = item.startTime.split("T")[1]?.slice(0, 5) || "00:00";
-        } else if (item.startTime.includes(" ")) {
-          eventDate = item.startTime.split(" ")[0];
-          startTime = item.startTime.split(" ")[1]?.slice(0, 5) || "00:00";
-        } else if (item.startTime.includes(":")) {
-          startTime = item.startTime.slice(0, 5);
-        } else {
-          eventDate = item.startTime;
+      // Function to parse and format time to PST
+      const formatTimeInPST = (dateTimeString) => {
+        if (!dateTimeString) return "";
+        try {
+          const date = new Date(dateTimeString);
+          return new Intl.DateTimeFormat("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false, // Use 24-hour format
+            timeZone: "Asia/Manila",
+          }).format(date);
+        } catch (e) {
+          console.warn("Invalid date-time string:", dateTimeString, e);
+          return "";
         }
+      };
+
+      // Function to parse and format date to YYYY-MM-DD
+      const formatDate = (dateString) => {
+        if (!dateString) return "";
+        try {
+          const date = new Date(dateString);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        } catch (e) {
+          console.warn("Invalid date string:", dateString, e);
+          return "";
+        }
+      };
+
+      if (item.startTime) {
+        eventDate = formatDate(item.startTime); // Extract date from startTime
+        startTime = formatTimeInPST(item.startTime);
       } else if (item.date) {
-        eventDate = item.date;
+        eventDate = formatDate(item.date);
       }
 
       if (item.endTime) {
-        if (item.endTime.includes("T")) {
-          endTime = item.endTime.split("T")[1]?.slice(0, 5) || "";
-        } else if (item.endTime.includes(" ")) {
-          endTime = item.endTime.split(" ")[1]?.slice(0, 5) || "";
-        } else if (item.endTime.includes(":")) {
-          endTime = item.endTime.slice(0, 5);
-        }
-      }
-
-      if (eventDate) {
-        let dateParts;
-        if (eventDate.includes("-")) {
-          dateParts = eventDate.split("-");
-        } else if (eventDate.includes("/")) {
-          dateParts = eventDate.split("/");
-        }
-
-        if (dateParts && dateParts.length === 3) {
-          const year = dateParts[0];
-          const month = dateParts[1].padStart(2, "0");
-          const day = dateParts[2].padStart(2, "0");
-          eventDate = `${year}-${month}-${day}`;
-        }
+        endTime = formatTimeInPST(item.endTime);
       }
 
       let timeRange = startTime;
@@ -118,8 +127,8 @@ async function fetchReservations() {
         title: item.eventName || item.title || "No Title",
         date: eventDate,
         time: timeRange,
-        startTime: startTime,
-        endTime: endTime,
+        startTime: startTime, // Store formatted startTime for display/forms
+        endTime: endTime, // Store formatted endTime for display/forms
         location: facilityMap[item.facilityID] || "Unknown",
         facilityID: item.facilityID,
         status: item.status || "approved",
@@ -157,7 +166,7 @@ function renderCalendar() {
 
   const firstDay = new Date(currentYear, currentMonth, 1);
   const lastDay = new Date(currentYear, currentMonth + 1, 0);
-  const startDayOfWeek = firstDay.getDay();
+  const startDayOfWeek = firstDay.getDay(); // 0 for Sunday, 1 for Monday, etc.
   const totalDays = lastDay.getDate();
   const today = new Date();
 
@@ -195,7 +204,9 @@ function renderCalendar() {
       "0"
     )}-${String(day).padStart(2, "0")}`;
 
-    // Check if this is today
+    // Check if this is today (adjusted for PST, if currentDate is always PST)
+    // For today's highlighting, compare local date components, as currentDate is local.
+    // If you specifically need 'today in Manila', you'd use Intl.DateTimeFormat for 'Asia/Manila' on `new Date()`.
     if (
       day === today.getDate() &&
       currentMonth === today.getMonth() &&
@@ -256,7 +267,7 @@ function renderCalendar() {
       const facilityTimeDiv = document.createElement("div");
       facilityTimeDiv.style.fontSize = "0.65rem";
       facilityTimeDiv.style.opacity = "0.9";
-      facilityTimeDiv.textContent = `${event.location} • ${event.time}`;
+      facilityTimeDiv.textContent = `${event.location} • ${event.time}`; // `event.time` is already in PST
 
       eventContent.appendChild(titleDiv);
       eventContent.appendChild(facilityTimeDiv);
@@ -339,12 +350,14 @@ function setupEventListeners() {
   };
 }
 
+// Function to update the current date display in Philippine Time
 function updateCurrentDate() {
   const options = {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: "Asia/Manila", // Specify Philippine time zone
   };
   const currentDateElement = document.getElementById("current-date");
   if (currentDateElement) {
@@ -442,6 +455,7 @@ function addNewReservation(date) {
 
   document.getElementById("modal-title").textContent = "Add New Reservation";
   document.getElementById("reservation-date").value = date;
+  document.getElementById("reservation-time").value = ""; // Clear time for new reservation
   document.getElementById("delete-btn").style.display = "none";
   modal.style.display = "block";
 }
@@ -457,7 +471,7 @@ function editReservation(id) {
   document.getElementById("modal-title").textContent = "Edit Reservation";
   document.getElementById("reservation-title").value = reservation.title;
   document.getElementById("reservation-date").value = reservation.date;
-  document.getElementById("reservation-time").value = reservation.time;
+  document.getElementById("reservation-time").value = reservation.startTime; // Use stored startTime (PST)
   document.getElementById("reservation-location").value = reservation.location;
   document.getElementById("reservation-status").value = reservation.status;
   document.getElementById("reservation-description").value =
@@ -466,37 +480,84 @@ function editReservation(id) {
   modal.style.display = "block";
 }
 
-function saveReservation() {
-  const formData = {
-    title: document.getElementById("reservation-title").value,
-    date: document.getElementById("reservation-date").value,
-    time: document.getElementById("reservation-time").value,
-    location: document.getElementById("reservation-location").value,
-    status: document.getElementById("reservation-status").value,
-    description: document.getElementById("reservation-description").value,
-  };
+async function saveReservation() {
+  const title = document.getElementById("reservation-title").value;
+  const date = document.getElementById("reservation-date").value;
+  const time = document.getElementById("reservation-time").value; // This is in HH:MM format (PST assumed)
+  const location = document.getElementById("reservation-location").value;
+  const status = document.getElementById("reservation-status").value;
+  const description = document.getElementById("reservation-description").value;
 
-  if (currentEditingId) {
-    const index = reservations.findIndex((r) => r.id === currentEditingId);
-    if (index !== -1) {
-      reservations[index] = { ...reservations[index], ...formData };
-    }
-  } else {
-    const newReservation = {
-      id: Date.now(),
-      ...formData,
-    };
-    reservations.push(newReservation);
+  // Combine date and time to create a full datetime string for PocketBase (should be UTC)
+  // Assuming the user input time is in PST, we convert it to UTC for storage.
+  let startTimeForPB = null;
+  let endTimeForPB = null;
+
+  if (date && time) {
+    // Create a Date object in PST
+    const [hours, minutes] = time.split(":").map(Number);
+    const pstDate = new Date(date);
+    pstDate.setHours(hours, minutes, 0, 0); // Set time components in local time
+
+    // To convert this PST Date object to a UTC string suitable for PocketBase:
+    // This creates an ISO 8601 string in UTC based on the local time components.
+    // PocketBase expects UTC strings for datetime fields.
+    startTimeForPB = pstDate.toISOString();
+
+    // If you have an end time, calculate similarly or adjust from start time
+    // For simplicity, assuming end time is not explicitly entered for now,
+    // or you'll need another input field for it. If `time` is a range, you'd parse it.
+    // For now, let's assume `time` is just the start time.
+    // You'll need an `endTime` input if you want a separate end time.
+    // If you want to derive an end time (e.g., 1 hour after start time)
+    // const endTimeHours = hours + 1; // Example: 1 hour duration
+    // const pstEndDate = new Date(date);
+    // pstEndDate.setHours(endTimeHours, minutes, 0, 0);
+    // endTimeForPB = pstEndDate.toISOString();
   }
+
+  const formData = {
+    eventName: title, // Use eventName for PocketBase
+    date: date, // Keep date as YYYY-MM-DD
+    startTime: startTimeForPB, // This will be in UTC for PocketBase
+    // You'll need to fetch facilityID from facilityMap or similar
+    // For demonstration, let's assume 'location' maps to a facilityID
+    // This part requires a way to get facilityID from location name
+    // For now, it will be missing facilityID in the update/create payload,
+    // which might cause issues if facilityID is a required field in PocketBase.
+    // You'd typically have a dropdown for facilities that stores their IDs.
+    // facilityID: ???,
+    status: status,
+    purpose: description, // Use purpose for PocketBase
+    // Add other fields as necessary for PocketBase
+  };
 
   const modal = document.getElementById("reservationModal");
 
-  if (modal) {
-    modal.style.display = "none";
-  }
+  try {
+    if (currentEditingId) {
+      // Update existing record in PocketBase
+      const record = await window.pb
+        .collection("reservation")
+        .update(currentEditingId, formData);
+      console.log("Updated reservation in PocketBase:", record);
+    } else {
+      // Create new record in PocketBase
+      const record = await window.pb.collection("reservation").create(formData);
+      console.log("Created new reservation in PocketBase:", record);
+    }
 
-  resetForm();
-  renderCalendar();
+    if (modal) {
+      modal.style.display = "none";
+    }
+
+    resetForm();
+    await fetchReservations(); // Re-fetch all reservations to update the calendar
+    renderCalendar();
+  } catch (error) {
+    console.error("Error saving reservation to PocketBase:", error);
+    alert("Failed to save reservation. Check console for details.");
+  }
 }
 
 function resetForm() {
@@ -551,20 +612,6 @@ function closeViewModal() {
   }
   currentEditingId = null;
 }
-document.addEventListener("DOMContentLoaded", function () {
-  const toggle = document.getElementById("header-toggle"),
-    nav = document.getElementById("nav-bar"),
-    bodypd = document.getElementById("body-pd"),
-    headerpd = document.getElementById("header");
-
-  toggle.addEventListener("click", () => {
-    nav.classList.toggle("show");
-    toggle.classList.toggle("bx-x");
-    bodypd.classList.toggle("body-pd");
-    headerpd.classList.toggle("body-pd");
-  });
-  // });
-});
 document.addEventListener("DOMContentLoaded", function () {
   const pb = window.pb;
   if (!pb) {

@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // PocketBase initialization
 const pb = new PocketBase("http://127.0.0.1:8090");
+window.pb = new PocketBase("http://127.0.0.1:8090");
+
 let reservationCache = [];
 let currentReservationId = null;
 
@@ -98,6 +100,16 @@ async function loadReservations() {
     console.log("Loaded reservations:", records.length);
     reservationCache = records;
 
+    // Filter out reservations that have been approved or rejected
+    const filteredRecords = records.filter((rec) => {
+      // Show only reservations that are still pending review
+      return (
+        !rec.administrativeOfficerApprove ||
+        rec.administrativeOfficerApprove === "Under Review" ||
+        rec.administrativeOfficerApprove === "N/A"
+      );
+    });
+
     const tbody = document.querySelector("#reservationTable tbody");
     const noDataState = document.getElementById("noDataState");
     const recordCount = document.getElementById("recordCount");
@@ -109,16 +121,16 @@ async function loadReservations() {
 
     tbody.innerHTML = "";
 
-    if (records.length === 0) {
+    if (filteredRecords.length === 0) {
       noDataState.classList.remove("d-none");
       recordCount.textContent = "0";
       return;
     }
 
     noDataState.classList.add("d-none");
-    recordCount.textContent = records.length;
+    recordCount.textContent = filteredRecords.length;
 
-    records.forEach((rec) => {
+    filteredRecords.forEach((rec) => {
       const row = document.createElement("tr");
       const statusClass = getStatusClass(rec.status);
 
@@ -598,7 +610,7 @@ async function handleSaveApprovals() {
       dbStatus: administrativeOfficerApprove,
     });
 
-    // Reload reservation list to reflect new status
+    // Reload reservation list to reflect new status (this will filter out processed reservations)
     await loadReservations();
 
     showSuccess("Approval saved successfully.");
