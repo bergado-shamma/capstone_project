@@ -506,6 +506,396 @@ async function checkAndUpdateReservationStatus(reservation) {
 
   return updatedReservation;
 }
+async function getDetailedPropertyInfo(propertyIDs, propertyQuantity) {
+  if (!propertyIDs) return { summary: "No properties selected", details: [] };
+
+  try {
+    const parsedPropertyIDs =
+      typeof propertyIDs === "string" ? JSON.parse(propertyIDs) : propertyIDs;
+    const parsedQuantities =
+      typeof propertyQuantity === "string"
+        ? JSON.parse(propertyQuantity)
+        : propertyQuantity;
+
+    if (!Array.isArray(parsedPropertyIDs) || parsedPropertyIDs.length === 0) {
+      return { summary: "No properties selected", details: [] };
+    }
+
+    // Fix: Handle quantities as object with property IDs as keys
+    let safeQuantities = [];
+
+    if (Array.isArray(parsedQuantities)) {
+      // If it's an array, map by index
+      for (let i = 0; i < parsedPropertyIDs.length; i++) {
+        const qty = parsedQuantities[i];
+        const numQty = parseInt(qty) || 1;
+        safeQuantities.push(numQty > 0 ? numQty : 1);
+      }
+    } else if (parsedQuantities && typeof parsedQuantities === "object") {
+      // If it's an object, map by property ID
+      for (let i = 0; i < parsedPropertyIDs.length; i++) {
+        const propertyId = parsedPropertyIDs[i];
+        const qty = parsedQuantities[propertyId];
+        const numQty = parseInt(qty) || 1;
+        safeQuantities.push(numQty > 0 ? numQty : 1);
+      }
+    } else {
+      // If quantities is null/undefined, fill with 1s
+      safeQuantities = new Array(parsedPropertyIDs.length).fill(1);
+    }
+
+    const propertyData = await fetchPropertiesInBatches(parsedPropertyIDs);
+    const propertyDetails = [];
+    let totalItems = 0;
+
+    for (let i = 0; i < parsedPropertyIDs.length; i++) {
+      const propertyId = parsedPropertyIDs[i];
+      const quantity = safeQuantities[i];
+      const property = propertyData.get(propertyId);
+
+      totalItems += quantity;
+
+      if (property) {
+        propertyDetails.push({
+          name: property.name,
+          quantity: quantity,
+          id: propertyId,
+        });
+      } else {
+        propertyDetails.push({
+          name: `Property ID: ${propertyId}`,
+          quantity: quantity,
+          id: propertyId,
+        });
+      }
+    }
+
+    // Fix: Better summary calculation
+    const uniqueItems = propertyDetails.length;
+    const summary =
+      uniqueItems === 1
+        ? `${propertyDetails[0].name} (Qty: ${propertyDetails[0].quantity})`
+        : `${uniqueItems} different items (Total: ${totalItems} items)`;
+
+    // Debug logging to help identify issues
+    console.log("Debug Info:", {
+      propertyIDs: parsedPropertyIDs,
+      quantities: parsedQuantities,
+      safeQuantities: safeQuantities,
+      totalItems: totalItems,
+      uniqueItems: uniqueItems,
+    });
+
+    return { summary, details: propertyDetails };
+  } catch (error) {
+    console.error("Error parsing detailed property information:", error);
+    console.error("PropertyIDs:", propertyIDs);
+    console.error("PropertyQuantity:", propertyQuantity);
+    return {
+      summary: "Error loading property information",
+      details: [],
+    };
+  }
+}
+async function generateDetailedView(reservation) {
+  const facilityName =
+    reservation.expand?.facilityID?.name ||
+    reservation.expand?.facilityID?.facilityName ||
+    "N/A";
+
+  const eventName =
+    reservation.expand?.eventID?.name ||
+    reservation.expand?.eventID?.eventName ||
+    reservation.eventName ||
+    "N/A";
+
+  const userName =
+    reservation.expand?.userID?.name ||
+    reservation.expand?.userID?.username ||
+    reservation.expand?.userID?.firstName +
+      " " +
+      reservation.expand?.userID?.lastName ||
+    "N/A";
+
+  const propertyInfo = await getDetailedPropertyInfo(
+    reservation.propertyID,
+    reservation.propertyQuantity
+  );
+
+  const isOrganizationEvent =
+    reservation.eventType?.toLowerCase() === "organization";
+
+  return `
+    <div class="reservation-details">
+      <!-- Basic Information Section -->
+      <div class="detail-section">
+        <h6 class="section-title">Basic Information</h6>
+
+          <div class="detail-item">
+            <span class="detail-label">Requester</span>
+            <span class="detail-value">${userName}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Status</span>
+            <span class="detail-value">
+              <span class="status-badge status-${
+                reservation.status?.toLowerCase() || "pending"
+              } status-in-modal">
+                ${reservation.status || "Pending"}
+              </span>
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Created</span>
+            <span class="detail-value">${formatDateTime(
+              reservation.created
+            )}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event Details Section -->
+      <div class="detail-section">
+        <h6 class="section-title">Event Details</h6>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Event Name</span>
+            <span class="detail-value">${eventName}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Event Type</span>
+            <span class="detail-value">${reservation.eventType || "N/A"}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Purpose</span>
+            <span class="detail-value">${reservation.purpose || "N/A"}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Participants</span>
+            <span class="detail-value">${
+              reservation.participants || "N/A"
+            }</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule Section -->
+      <div class="detail-section">
+        <h6 class="section-title">Schedule</h6>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Start Time</span>
+            <span class="detail-value">${formatDateTime(
+              reservation.startTime
+            )}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">End Time</span>
+            <span class="detail-value">${formatDateTime(
+              reservation.endTime
+            )}</span>
+          </div>
+          ${
+            reservation.preparationTime
+              ? `
+          <div class="detail-item">
+            <span class="detail-label">Preparation Time</span>
+            <span class="detail-value">${formatDateTime(
+              reservation.preparationTime
+            )}</span>
+          </div>
+          `
+              : ""
+          }
+        </div>
+      </div>
+
+      <!-- Facility & Property Section -->
+      <div class="detail-section">
+        <h6 class="section-title">Facility & Property</h6>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Facility</span>
+            <span class="detail-value">${facilityName}</span>
+          </div>
+          <div class="detail-item full-width">
+            <span class="detail-label">Property/Equipment Summary</span>
+            <span class="detail-value">${propertyInfo.summary}</span>
+          </div>
+          ${
+            propertyInfo.details.length > 0
+              ? `
+          <div class="detail-item full-width">
+            <span class="detail-label">Detailed Property List</span>
+            <div class="detail-value">
+              <div class="property-list">
+                ${propertyInfo.details
+                  .map(
+                    (item, index) => `
+                  <div class="property-item">
+                    <span class="property-index">${index + 1}.</span>
+                    <span class="property-name">${item.name}</span>
+                    <span class="property-quantity">Quantity: ${
+                      item.quantity
+                    }</span>
+                  </div>
+                `
+                  )
+                  .join("")}
+              </div>
+            </div>
+          </div>
+          `
+              : ""
+          }
+        </div>
+      </div>
+
+      <!-- Personnel Section -->
+      <div class="detail-section">
+        <h6 class="section-title">Personnel</h6>
+        <div class="detail-grid">
+          ${
+            reservation.personInCharge
+              ? `
+          <div class="detail-item">
+            <span class="detail-label">Person in Charge</span>
+            <span class="detail-value">${reservation.personInCharge}</span>
+          </div>
+          `
+              : ""
+          }
+          ${
+            reservation.facultyInCharge && !isOrganizationEvent
+              ? `
+          <div class="detail-item">
+            <span class="detail-label">Faculty in Charge</span>
+            <span class="detail-value">${reservation.facultyInCharge}</span>
+          </div>
+          `
+              : ""
+          }
+        </div>
+      </div>
+
+      <!-- Academic Information Section -->
+      ${
+        !isOrganizationEvent &&
+        (reservation.course ||
+          reservation.SubjectCode ||
+          reservation.SubjectDescription)
+          ? `
+      <div class="detail-section">
+        <h6 class="section-title">Academic Information</h6>
+        <div class="detail-grid">
+          ${
+            reservation.course
+              ? `
+          <div class="detail-item">
+            <span class="detail-label">Course</span>
+            <span class="detail-value">${reservation.course}</span>
+          </div>
+          `
+              : ""
+          }
+          ${
+            reservation.SubjectCode
+              ? `
+          <div class="detail-item">
+            <span class="detail-label">Subject Code</span>
+            <span class="detail-value">${reservation.SubjectCode}</span>
+          </div>
+          `
+              : ""
+          }
+          ${
+            reservation.SubjectDescription
+              ? `
+          <div class="detail-item">
+            <span class="detail-label">Subject Description</span>
+            <span class="detail-value">${reservation.SubjectDescription}</span>
+          </div>
+          `
+              : ""
+          }
+        </div>
+      </div>
+      `
+          : ""
+      }
+
+      <!-- Organization Section -->
+      ${
+        reservation.OrganizationName || reservation.OrganizationAdviser
+          ? `
+      <div class="detail-section">
+        <h6 class="section-title">Organization</h6>
+        <div class="detail-grid">
+          ${
+            reservation.OrganizationName
+              ? `
+          <div class="detail-item">
+            <span class="detail-label">Organization Name</span>
+            <span class="detail-value">${reservation.OrganizationName}</span>
+          </div>
+          `
+              : ""
+          }
+          ${
+            reservation.OrganizationAdviser
+              ? `
+          <div class="detail-item">
+            <span class="detail-label">Organization Adviser</span>
+            <span class="detail-value">${reservation.OrganizationAdviser}</span>
+          </div>
+          `
+              : ""
+          }
+        </div>
+      </div>
+      `
+          : ""
+      }
+    </div>
+  `;
+}
+async function viewReservationDetails(reservationId) {
+  const modal = new bootstrap.Modal(
+    document.getElementById("reservationModal")
+  );
+  const modalBody = document.getElementById("modalBody");
+
+  modalBody.innerHTML = `
+    <div class="loading-modal text-center">
+      <i class="fas fa-spinner fa-spin"></i> Loading details...
+    </div>
+  `;
+
+  modal.show();
+
+  try {
+    const reservation = await pb
+      .collection("reservation")
+      .getOne(reservationId, {
+        expand: "userID,facilityID,propertyID,eventID",
+      });
+
+    console.log("Reservation data:", reservation);
+    console.log("Property ID field:", reservation.propertyID);
+    console.log("Property Quantity field:", reservation.propertyQuantity);
+
+    modalBody.innerHTML = await generateDetailedView(reservation);
+  } catch (error) {
+    console.error("Error loading reservation details:", error);
+    modalBody.innerHTML = `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        Failed to load reservation details. Please try again.
+        <small class="d-block mt-2">Error: ${error.message}</small>
+      </div>
+    `;
+  }
+}
 // Function to display reservations
 async function displayReservations(reservations) {
   const tbody = document.getElementById("reservation-body");
