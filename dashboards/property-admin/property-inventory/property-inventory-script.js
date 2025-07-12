@@ -218,8 +218,8 @@ function initInventoryScript() {
           });
         }
         // Reload the list after saving
-        loadProperties();
         propertyModal.hide();
+        location.reload(); // refresh after saving
       } catch (error) {
         console.error("PocketBase create/update error:", error);
         alert("Failed to save property: " + error.message);
@@ -234,7 +234,7 @@ function initInventoryScript() {
         await pb.collection("property").delete(deletePropertyId);
         deletePropertyId = null;
         deleteModal.hide();
-        loadProperties();
+        location.reload(); // refresh after deletion
       } catch (error) {
         alert("Failed to delete property: " + error.message);
       }
