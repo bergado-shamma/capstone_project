@@ -18,8 +18,145 @@ let currentDate = new Date();
 let currentFacilityId = null;
 let facilityReservations = [];
 let lastOpenedByElement = null; // Declare this globally as well
+let currentUserId = null; // Store current user ID
 
-document.addEventListener("DOMContentLoaded", loadFacilities);
+document.addEventListener("DOMContentLoaded", async () => {
+  // Initialize current user
+  await initializeCurrentUser();
+  loadFacilities();
+});
+
+// Initialize current user
+async function initializeCurrentUser() {
+  try {
+    // Check if user is authenticated
+    if (pb.authStore.isValid) {
+      currentUserId = pb.authStore.model.id;
+      console.log("Current user ID:", currentUserId);
+    } else {
+      console.warn("User not authenticated");
+      // You might want to redirect to login page here
+      // window.location.href = "/login.html";
+    }
+  } catch (error) {
+    console.error("Error initializing user:", error);
+  }
+}
+
+// Check if user has already booked this facility this month
+async function checkUserMonthlyBooking(facilityId, userId) {
+  try {
+    if (!userId) {
+      console.warn("No user ID provided for booking check");
+      return { hasBooking: false, lastBookingDate: null };
+    }
+
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    // Get start and end of current month
+    const monthStart = new Date(currentYear, currentMonth, 1);
+    const monthEnd = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59);
+
+    // Format dates for PocketBase filter (ISO format)
+    const monthStartISO = monthStart.toISOString();
+    const monthEndISO = monthEnd.toISOString();
+
+    console.log("Checking bookings for:", {
+      facilityId,
+      userId,
+      monthStart: monthStartISO,
+      monthEnd: monthEndISO,
+    });
+
+    // Query for existing reservations this month
+    const existingReservations = await pb
+      .collection("reservation")
+      .getFullList({
+        filter: `facilityID = "${facilityId}" && userID = "${userId}" && startTime >= "${monthStartISO}" && startTime <= "${monthEndISO}"`,
+        sort: "-startTime",
+      });
+
+    console.log("Found existing reservations:", existingReservations.length);
+
+    if (existingReservations.length > 0) {
+      const lastBooking = existingReservations[0];
+      const lastBookingDate = new Date(lastBooking.startTime);
+
+      return {
+        hasBooking: true,
+        lastBookingDate: lastBookingDate,
+        reservationId: lastBooking.id,
+        reservationStatus: lastBooking.status,
+      };
+    }
+
+    return { hasBooking: false, lastBookingDate: null };
+  } catch (error) {
+    console.error("Error checking monthly booking:", error);
+    return { hasBooking: false, lastBookingDate: null };
+  }
+}
+
+// Show booking restriction notice
+function showBookingRestrictionNotice(facilityName, bookingInfo) {
+  const noticeHtml = `
+    <div class="alert alert-warning border-warning" role="alert">
+      <div class="d-flex align-items-center mb-2">
+        <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+        <h6 class="mb-0">Monthly Booking Limit Reached</h6>
+      </div>
+      <p class="mb-2">
+        <strong>You have already reserved "${facilityName}" this month.</strong>
+      </p>
+      <div class="booking-details">
+        <small class="text-muted">
+          <i class="fas fa-calendar me-1"></i>
+          <strong>Previous booking:</strong> ${bookingInfo.lastBookingDate.toLocaleDateString(
+            "en-PH",
+            {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }
+          )} at ${bookingInfo.lastBookingDate.toLocaleTimeString("en-PH", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })}
+        </small>
+        <br>
+        <small class="text-muted">
+          <i class="fas fa-info-circle me-1"></i>
+          <strong>Status:</strong> 
+          <span class="badge bg-${getStatusColor(
+            bookingInfo.reservationStatus
+          )} text-uppercase">
+            ${bookingInfo.reservationStatus || "pending"}
+          </span>
+        </small>
+        <br>
+        <small class="text-muted">
+          <i class="fas fa-hashtag me-1"></i>
+          <strong>Reservation ID:</strong> ${bookingInfo.reservationId}
+        </small>
+      </div>
+      <hr class="my-2">
+      <small class="text-muted">
+        <i class="fas fa-lightbulb me-1"></i>
+        <strong>Note:</strong> You can make a new reservation for this facility next month.
+      </small>
+    </div>
+  `;
+
+  // Insert the notice at the top of the modal body
+  const facilityInfo = document.getElementById("facilityInfo");
+  if (facilityInfo) {
+    facilityInfo.insertAdjacentHTML("afterbegin", noticeHtml);
+  }
+}
 
 async function loadFacilities() {
   try {
@@ -55,6 +192,12 @@ async function loadFacilities() {
         currentFacilityId = facility.id;
         modalTitle.textContent = facility.name;
 
+        // Check if user has already booked this facility this month
+        const bookingCheck = await checkUserMonthlyBooking(
+          facility.id,
+          currentUserId
+        );
+
         // Update facility info section
         document.getElementById("facilityInfo").innerHTML = `
             <img src="${imgUrl}" class="img-fluid mb-3" alt="${
@@ -66,6 +209,11 @@ async function loadFacilities() {
             <p><strong>Location:</strong> ${facility.location || "N/A"}</p>
             <p><strong>Max Capacity:</strong> ${facility.maxCapacity}</p>
           `;
+
+        // Show booking restriction notice if user already has a booking
+        if (bookingCheck.hasBooking) {
+          showBookingRestrictionNotice(facility.name, bookingCheck);
+        }
 
         // Load facility reservations and generate calendar
         await loadFacilityReservationsEnhanced(facility.id);
@@ -113,41 +261,54 @@ async function loadFacilities() {
                     .join("")}
                 </ul>
               `;
-
-            // Save facility + equipment data to sessionStorage
-            reserveBtn.disabled = false;
-            reserveBtn.onclick = () => {
-              sessionStorage.setItem("facilityID", facility.id);
-              sessionStorage.setItem("selectedFacility", facility.name);
-              sessionStorage.setItem("max_capacity", facility.maxCapacity);
-              sessionStorage.setItem("facilityImage", imgUrl);
-
-              // Store property name and quantity as array
-              const propertyData = properties.map((p, i) => ({
-                id: p.id,
-                name: p.name,
-                quantity: quantityArr[i] ?? "N/A",
-              }));
-              sessionStorage.setItem(
-                "facilityProperties",
-                JSON.stringify(propertyData)
-              );
-
-              window.location.href =
-                "../property-reservation/property-reservation.html";
-            };
           } else {
             propertyList.innerHTML = `
                 <strong>Equipment/Properties:</strong>
                 <p>No equipment assigned to this facility.</p>
               `;
+          }
+
+          // Configure reserve button based on booking status
+          if (bookingCheck.hasBooking) {
+            reserveBtn.disabled = true;
+            reserveBtn.innerHTML = `
+              <i class="fas fa-ban me-2"></i>
+              Already Reserved This Month
+            `;
+            reserveBtn.className = "btn btn-secondary";
+            reserveBtn.title =
+              "You have already reserved this facility this month";
+          } else {
             reserveBtn.disabled = false;
+            reserveBtn.innerHTML = `
+              <i class="fas fa-calendar-plus me-2"></i>
+              Reserve Facility
+            `;
+            reserveBtn.className = "btn btn-primary";
+            reserveBtn.title = "Reserve this facility";
+
+            // Set up reservation flow
             reserveBtn.onclick = () => {
               sessionStorage.setItem("facilityID", facility.id);
               sessionStorage.setItem("selectedFacility", facility.name);
               sessionStorage.setItem("max_capacity", facility.maxCapacity);
               sessionStorage.setItem("facilityImage", imgUrl);
-              sessionStorage.removeItem("facilityProperties");
+
+              if (properties.length > 0) {
+                // Store property name and quantity as array
+                const propertyData = properties.map((p, i) => ({
+                  id: p.id,
+                  name: p.name,
+                  quantity: quantityArr[i] ?? "N/A",
+                }));
+                sessionStorage.setItem(
+                  "facilityProperties",
+                  JSON.stringify(propertyData)
+                );
+              } else {
+                sessionStorage.removeItem("facilityProperties");
+              }
+
               window.location.href =
                 "../property-reservation/property-reservation.html";
             };
@@ -738,27 +899,479 @@ facilityModalElement.addEventListener("hidden.bs.modal", function () {
   // If the modal was opened by an element, return focus to it
   if (lastOpenedByElement) {
     lastOpenedByElement.focus();
-    lastOpenedByElement = null; // Clear the reference
-  } else {
-    // Fallback: If we don't know what opened it, try to focus on the body
-    // or another logical starting point for accessibility.
-    document.body.focus();
+    lastOpen; // Continuing from where the code stops...
+
+    edByElement = null;
   }
-  // Ensure aria-hidden is correctly set to false when the modal is fully hidden
-  this.setAttribute("aria-hidden", "false"); // Bootstrap usually does this, but explicit is safer
+});
+
+eventDetailsModalElement.addEventListener("shown.bs.modal", function () {
+  // When the event details modal is shown, explicitly set aria-hidden to false
+  this.setAttribute("aria-hidden", "false");
 });
 
 eventDetailsModalElement.addEventListener("hidden.bs.modal", function () {
-  // Check if facilityModal is still shown
-  const facilityModalInstance =
-    bootstrap.Modal.getInstance(facilityModalElement);
+  // When the event details modal is hidden, set aria-hidden to true
+  this.setAttribute("aria-hidden", "true");
+});
 
-  if (
-    facilityModalInstance &&
-    facilityModalElement.classList.contains("show")
-  ) {
-    facilityModalElement.setAttribute("aria-hidden", "false");
-    facilityModalElement.style.display = "block";
-    facilityModalElement.focus(); // Re-focus the facility modal when event details close
+// Additional validation function to double-check before navigation
+async function validateAndNavigateToReservation(facilityId, facilityName) {
+  try {
+    // Show loading state
+    reserveBtn.disabled = true;
+    reserveBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Checking availability...`;
+
+    // Double-check booking status before proceeding
+    const bookingCheck = await checkUserMonthlyBooking(
+      facilityId,
+      currentUserId
+    );
+
+    if (bookingCheck.hasBooking) {
+      // Show error message
+      showBookingErrorToast(facilityName, bookingCheck);
+
+      // Reset button to disabled state
+      reserveBtn.disabled = true;
+      reserveBtn.innerHTML = `<i class="fas fa-ban me-2"></i>Already Reserved This Month`;
+      reserveBtn.className = "btn btn-secondary";
+
+      return false; // Prevent navigation
+    }
+
+    // If no booking exists, proceed with reservation
+    return true;
+  } catch (error) {
+    console.error("Error validating booking:", error);
+
+    // Show generic error
+    showErrorToast("Unable to validate booking status. Please try again.");
+
+    // Reset button
+    reserveBtn.disabled = false;
+    reserveBtn.innerHTML = `<i class="fas fa-calendar-plus me-2"></i>Reserve Facility`;
+    reserveBtn.className = "btn btn-primary";
+
+    return false;
+  }
+}
+
+// Enhanced booking error notification
+function showBookingErrorToast(facilityName, bookingInfo) {
+  // Create toast container if it doesn't exist
+  let toastContainer = document.getElementById("toast-container");
+  if (!toastContainer) {
+    toastContainer = document.createElement("div");
+    toastContainer.id = "toast-container";
+    toastContainer.className = "toast-container position-fixed top-0 end-0 p-3";
+    toastContainer.style.zIndex = "9999";
+    document.body.appendChild(toastContainer);
+  }
+
+  // Create toast element
+  const toastId = "booking-error-toast-" + Date.now();
+  const toastElement = document.createElement("div");
+  toastElement.id = toastId;
+  toastElement.className = "toast";
+  toastElement.setAttribute("role", "alert");
+  toastElement.setAttribute("aria-live", "assertive");
+  toastElement.setAttribute("aria-atomic", "true");
+
+  const formattedDate = bookingInfo.lastBookingDate.toLocaleDateString(
+    "en-PH",
+    {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }
+  );
+
+  const formattedTime = bookingInfo.lastBookingDate.toLocaleTimeString(
+    "en-PH",
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }
+  );
+
+  toastElement.innerHTML = `
+    <div class="toast-header bg-warning text-dark">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      <strong class="me-auto">Booking Restriction</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      <strong>You have already reserved "${facilityName}" this month.</strong>
+      <br>
+      <small class="text-muted">
+        <i class="fas fa-calendar me-1"></i>
+        Previous booking: ${formattedDate} at ${formattedTime}
+        <br>
+        <i class="fas fa-info-circle me-1"></i>
+        Status: <span class="badge bg-${getStatusColor(
+          bookingInfo.reservationStatus
+        )}">${bookingInfo.reservationStatus || "pending"}</span>
+      </small>
+    </div>
+  `;
+
+  toastContainer.appendChild(toastElement);
+
+  // Initialize and show toast
+  const toast = new bootstrap.Toast(toastElement, {
+    autohide: true,
+    delay: 8000, // Show for 8 seconds
+  });
+
+  toast.show();
+
+  // Remove toast element after it's hidden
+  toastElement.addEventListener("hidden.bs.toast", function () {
+    toastElement.remove();
+  });
+}
+
+// Generic error toast function
+function showErrorToast(message) {
+  let toastContainer = document.getElementById("toast-container");
+  if (!toastContainer) {
+    toastContainer = document.createElement("div");
+    toastContainer.id = "toast-container";
+    toastContainer.className = "toast-container position-fixed top-0 end-0 p-3";
+    toastContainer.style.zIndex = "9999";
+    document.body.appendChild(toastContainer);
+  }
+
+  const toastId = "error-toast-" + Date.now();
+  const toastElement = document.createElement("div");
+  toastElement.id = toastId;
+  toastElement.className = "toast";
+  toastElement.setAttribute("role", "alert");
+  toastElement.setAttribute("aria-live", "assertive");
+  toastElement.setAttribute("aria-atomic", "true");
+
+  toastElement.innerHTML = `
+    <div class="toast-header bg-danger text-white">
+      <i class="fas fa-exclamation-circle me-2"></i>
+      <strong class="me-auto">Error</strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      ${message}
+    </div>
+  `;
+
+  toastContainer.appendChild(toastElement);
+
+  const toast = new bootstrap.Toast(toastElement, {
+    autohide: true,
+    delay: 5000,
+  });
+
+  toast.show();
+
+  toastElement.addEventListener("hidden.bs.toast", function () {
+    toastElement.remove();
+  });
+}
+
+// Enhanced reserve button click handler with validation
+function setupReserveButtonWithValidation(
+  facility,
+  imgUrl,
+  properties,
+  quantityArr
+) {
+  reserveBtn.onclick = async () => {
+    // Validate booking before proceeding
+    const canProceed = await validateAndNavigateToReservation(
+      facility.id,
+      facility.name
+    );
+
+    if (!canProceed) {
+      return; // Stop execution if validation fails
+    }
+
+    // If validation passes, proceed with reservation setup
+    try {
+      sessionStorage.setItem("facilityID", facility.id);
+      sessionStorage.setItem("selectedFacility", facility.name);
+      sessionStorage.setItem("max_capacity", facility.maxCapacity);
+      sessionStorage.setItem("facilityImage", imgUrl);
+
+      if (properties.length > 0) {
+        const propertyData = properties.map((p, i) => ({
+          id: p.id,
+          name: p.name,
+          quantity: quantityArr[i] ?? "N/A",
+        }));
+        sessionStorage.setItem(
+          "facilityProperties",
+          JSON.stringify(propertyData)
+        );
+      } else {
+        sessionStorage.removeItem("facilityProperties");
+      }
+
+      // Navigate to reservation page
+      window.location.href =
+        "../property-reservation/property-reservation.html";
+    } catch (error) {
+      console.error("Error setting up reservation:", error);
+      showErrorToast("Failed to set up reservation. Please try again.");
+
+      // Reset button state
+      reserveBtn.disabled = false;
+      reserveBtn.innerHTML = `<i class="fas fa-calendar-plus me-2"></i>Reserve Facility`;
+      reserveBtn.className = "btn btn-primary";
+    }
+  };
+}
+
+// Function to refresh facility modal data
+async function refreshFacilityModal(facilityId) {
+  try {
+    // Re-check booking status
+    const bookingCheck = await checkUserMonthlyBooking(
+      facilityId,
+      currentUserId
+    );
+
+    // Update the modal content based on current booking status
+    if (bookingCheck.hasBooking) {
+      // Show restriction notice
+      const facilityInfo = document.getElementById("facilityInfo");
+      const existingNotice = facilityInfo.querySelector(".alert-warning");
+
+      if (!existingNotice) {
+        const facility = await pb.collection("facility").getOne(facilityId);
+        showBookingRestrictionNotice(facility.name, bookingCheck);
+      }
+
+      // Disable reserve button
+      reserveBtn.disabled = true;
+      reserveBtn.innerHTML = `<i class="fas fa-ban me-2"></i>Already Reserved This Month`;
+      reserveBtn.className = "btn btn-secondary";
+      reserveBtn.title = "You have already reserved this facility this month";
+    } else {
+      // Remove restriction notice if it exists
+      const facilityInfo = document.getElementById("facilityInfo");
+      const existingNotice = facilityInfo.querySelector(".alert-warning");
+      if (existingNotice) {
+        existingNotice.remove();
+      }
+
+      // Enable reserve button
+      reserveBtn.disabled = false;
+      reserveBtn.innerHTML = `<i class="fas fa-calendar-plus me-2"></i>Reserve Facility`;
+      reserveBtn.className = "btn btn-primary";
+      reserveBtn.title = "Reserve this facility";
+    }
+  } catch (error) {
+    console.error("Error refreshing facility modal:", error);
+  }
+}
+
+// Function to check and update all facility cards on the page
+async function updateFacilityCardsRestrictions() {
+  try {
+    if (!currentUserId) {
+      console.warn("No user ID available for checking restrictions");
+      return;
+    }
+
+    const facilityCards = document.querySelectorAll(".facility");
+
+    for (const card of facilityCards) {
+      // You might want to add a data attribute to store facility ID
+      // For now, we'll skip this bulk update to avoid performance issues
+      // This function can be called when needed
+    }
+  } catch (error) {
+    console.error("Error updating facility card restrictions:", error);
+  }
+}
+
+// Add periodic refresh for current modal (optional)
+let modalRefreshInterval;
+
+facilityModalElement.addEventListener("shown.bs.modal", function () {
+  this.setAttribute("aria-hidden", "false");
+
+  // Set up periodic refresh for the modal (every 30 seconds)
+  if (currentFacilityId) {
+    modalRefreshInterval = setInterval(() => {
+      refreshFacilityModal(currentFacilityId);
+    }, 30000); // 30 seconds
   }
 });
+
+facilityModalElement.addEventListener("hidden.bs.modal", function () {
+  if (lastOpenedByElement) {
+    lastOpenedByElement.focus();
+    lastOpenedByElement = null;
+  }
+
+  // Clear refresh interval when modal is closed
+  if (modalRefreshInterval) {
+    clearInterval(modalRefreshInterval);
+    modalRefreshInterval = null;
+  }
+});
+
+// Function to manually refresh current facility data
+async function refreshCurrentFacility() {
+  if (currentFacilityId) {
+    await loadFacilityReservationsEnhanced(currentFacilityId);
+    generateCalendar();
+    await refreshFacilityModal(currentFacilityId);
+  }
+}
+
+// Add refresh button functionality (if you have a refresh button in your modal)
+document.addEventListener("DOMContentLoaded", function () {
+  const refreshButton = document.getElementById("refreshFacilityData");
+  if (refreshButton) {
+    refreshButton.addEventListener("click", async function () {
+      this.disabled = true;
+      this.innerHTML =
+        '<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...';
+
+      try {
+        await refreshCurrentFacility();
+        this.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Refresh';
+      } catch (error) {
+        console.error("Error refreshing:", error);
+        this.innerHTML =
+          '<i class="fas fa-exclamation-triangle me-2"></i>Error';
+      } finally {
+        this.disabled = false;
+        setTimeout(() => {
+          this.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Refresh';
+        }, 2000);
+      }
+    });
+  }
+});
+
+// Enhanced error handling for authentication
+async function handleAuthenticationError() {
+  try {
+    // Check if user is still authenticated
+    if (!pb.authStore.isValid) {
+      console.warn("User authentication lost");
+
+      // Show authentication error
+      showErrorToast("Your session has expired. Please log in again.");
+
+      // Redirect to login after a delay
+      setTimeout(() => {
+        window.location.href = "/login.html";
+      }, 3000);
+
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Authentication error:", error);
+    return false;
+  }
+}
+
+// Wrapper function for API calls with authentication check
+async function safeApiCall(apiFunction, ...args) {
+  try {
+    const isAuthenticated = await handleAuthenticationError();
+    if (!isAuthenticated) {
+      return null;
+    }
+
+    return await apiFunction(...args);
+  } catch (error) {
+    console.error("API call failed:", error);
+
+    // Check if it's an authentication error
+    if (error.status === 401 || error.status === 403) {
+      await handleAuthenticationError();
+    } else {
+      showErrorToast("An error occurred. Please try again.");
+    }
+
+    return null;
+  }
+}
+
+// Update the checkUserMonthlyBooking function to use safe API calls
+async function checkUserMonthlyBookingSafe(facilityId, userId) {
+  return await safeApiCall(checkUserMonthlyBooking, facilityId, userId);
+}
+
+// CSS for toast notifications (add to your CSS file)
+const toastStyles = `
+<style>
+.toast-container {
+  z-index: 9999;
+}
+
+.toast {
+  min-width: 300px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.toast-header {
+  font-weight: 600;
+}
+
+.toast-body {
+  font-size: 0.9rem;
+}
+
+.toast-body .badge {
+  font-size: 0.7rem;
+}
+
+.booking-restriction-notice {
+  border-left: 4px solid #ffc107;
+  background-color: #fff3cd;
+}
+
+.booking-restriction-notice .alert-warning {
+  border-color: #ffc107;
+}
+
+.facility-card-restricted {
+  opacity: 0.7;
+  position: relative;
+}
+
+.facility-card-restricted::after {
+  content: "Already Reserved";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ffc107;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+</style>
+`;
+
+// Inject toast styles
+if (!document.getElementById("toast-styles")) {
+  const styleElement = document.createElement("style");
+  styleElement.id = "toast-styles";
+  styleElement.textContent = toastStyles
+    .replace("<style>", "")
+    .replace("</style>", "");
+  document.head.appendChild(styleElement);
+}
+
+console.log("Facility booking validation system loaded successfully");

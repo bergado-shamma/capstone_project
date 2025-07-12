@@ -95,7 +95,345 @@ document.addEventListener("DOMContentLoaded", function () {
     if (el) el.value = value;
   }
 
-  // CONSOLIDATED Event type field toggling function
+  // Global variables for tracking unavailable dates
+  let unavailableDates = new Set();
+
+  /**
+   * Fetches reservations and builds unavailable dates list
+   */
+  async function fetchUnavailableDates(facilityId) {
+    if (!facilityId) {
+      return;
+    }
+
+    try {
+      // Filter for reservations with pending or approved status for the specific facility
+      const conflictFilter = `
+      facilityID="${facilityId}"
+      && (status="approved" || status="pending")
+    `;
+
+      const existingReservations = await pb
+        .collection("reservation")
+        .getFullList({ filter: conflictFilter });
+
+      // Clear previous unavailable dates
+      unavailableDates.clear();
+
+      // Process each reservation to mark dates as unavailable
+      existingReservations.forEach((reservation) => {
+        const startDate = new Date(
+          reservation.preperationTime || reservation.startTime
+        );
+        const endDate = new Date(reservation.endTime);
+
+        // Mark all dates from start to end as unavailable
+        const currentDate = new Date(startDate);
+        currentDate.setHours(0, 0, 0, 0);
+
+        const finalDate = new Date(endDate);
+        finalDate.setHours(0, 0, 0, 0);
+
+        while (currentDate <= finalDate) {
+          const dateString = formatDateForComparison(currentDate);
+          unavailableDates.add(dateString);
+          console.log(
+            `Added unavailable date: ${dateString} for reservation: ${
+              reservation.eventName || reservation.id
+            }`
+          );
+
+          // Move to next day
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      });
+
+      //  console.log("Total unavailable dates:", unavailableDates.size);
+
+      // Update all date inputs after fetching data
+      updateDateInputsAvailability();
+    } catch (error) {
+      console.error("Error fetching unavailable dates:", error);
+    }
+  }
+
+  /**
+   * Formats date for consistent comparison (YYYY-MM-DD format)
+   */
+  function formatDateForComparison(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Checks if a specific date is available
+   */
+  function isDateAvailable(dateString) {
+    const formattedDate = formatDateForComparison(new Date(dateString));
+    return !unavailableDates.has(formattedDate);
+  }
+
+  /**
+   * Creates a custom date picker with disabled dates
+   */
+  function createCustomDatePicker(inputElement) {
+    // Create wrapper div
+    const wrapper = document.createElement("div");
+    wrapper.className = "custom-date-picker-wrapper";
+    wrapper.style.position = "relative";
+    wrapper.style.display = "inline-block";
+    wrapper.style.width = "100%";
+
+    // Create display input (shows selected date)
+    const displayInput = document.createElement("input");
+    displayInput.type = "text";
+    displayInput.className = inputElement.className;
+    displayInput.placeholder = "Select a date...";
+    displayInput.readOnly = true;
+    displayInput.style.cursor = "pointer";
+    displayInput.style.backgroundColor = "#fff";
+
+    // Create hidden actual input for form submission
+    const hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.name = inputElement.name;
+    hiddenInput.id = inputElement.id;
+
+    // Create dropdown calendar
+    const calendar = document.createElement("div");
+    calendar.className = "custom-calendar";
+    calendar.style.cssText = `
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: none;
+    max-height: 300px;
+    overflow-y: auto;
+  `;
+
+    // Add elements to wrapper
+    wrapper.appendChild(displayInput);
+    wrapper.appendChild(hiddenInput);
+    wrapper.appendChild(calendar);
+
+    // Replace original input
+    inputElement.parentNode.replaceChild(wrapper, inputElement);
+
+    // Generate calendar content
+    function generateCalendar(year, month) {
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let html = `
+      <div style="padding: 10px; border-bottom: 1px solid #eee;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" class="prev-month" style="background: none; border: none; font-size: 16px; cursor: pointer;">&lt;</button>
+          <strong>${firstDay.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}</strong>
+          <button type="button" class="next-month" style="background: none; border: none; font-size: 16px; cursor: pointer;">&gt;</button>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; padding: 10px;">
+    `;
+
+      // Day headers
+      const dayHeaders = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      dayHeaders.forEach((day) => {
+        html += `<div style="text-align: center; font-weight: bold; padding: 5px; font-size: 12px;">${day}</div>`;
+      });
+
+      // Empty cells for days before month starts
+      const startDayOfWeek = firstDay.getDay();
+      for (let i = 0; i < startDayOfWeek; i++) {
+        html += "<div></div>";
+      }
+
+      // Days of the month
+      for (let day = 1; day <= lastDay.getDate(); day++) {
+        const currentDate = new Date(year, month, day);
+        const dateString = formatDateForComparison(currentDate);
+        const isUnavailable = unavailableDates.has(dateString);
+        const isPast = currentDate < today;
+        const isDisabled = isUnavailable || isPast;
+
+        let cellStyle =
+          "text-align: center; padding: 8px; cursor: pointer; border-radius: 3px;";
+        let cellClass = "calendar-day";
+
+        if (isDisabled) {
+          cellStyle +=
+            "background-color: #f5f5f5; color: #ccc; cursor: not-allowed;";
+          cellClass += " disabled";
+        } else {
+          cellStyle += "hover:background-color: #e3f2fd;";
+        }
+
+        if (isUnavailable) {
+          cellStyle += "background-color: #ffebee; color: #d32f2f;";
+        }
+
+        html += `
+        <div class="${cellClass}" 
+             style="${cellStyle}" 
+             data-date="${dateString}"
+             ${isDisabled ? 'data-disabled="true"' : ""}>
+          ${day}
+        </div>
+      `;
+      }
+
+      html += "</div>";
+      return html;
+    }
+
+    // Show calendar
+    function showCalendar() {
+      const now = new Date();
+      calendar.innerHTML = generateCalendar(now.getFullYear(), now.getMonth());
+      calendar.style.display = "block";
+
+      // Add event listeners
+      calendar.querySelector(".prev-month").addEventListener("click", () => {
+        const current = new Date(now.getFullYear(), now.getMonth() - 1);
+        calendar.innerHTML = generateCalendar(
+          current.getFullYear(),
+          current.getMonth()
+        );
+        attachCalendarEvents();
+      });
+
+      calendar.querySelector(".next-month").addEventListener("click", () => {
+        const current = new Date(now.getFullYear(), now.getMonth() + 1);
+        calendar.innerHTML = generateCalendar(
+          current.getFullYear(),
+          current.getMonth()
+        );
+        attachCalendarEvents();
+      });
+
+      attachCalendarEvents();
+    }
+
+    function attachCalendarEvents() {
+      // Reattach navigation events
+      const prevBtn = calendar.querySelector(".prev-month");
+      const nextBtn = calendar.querySelector(".next-month");
+
+      if (prevBtn) {
+        prevBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          // Handle previous month navigation
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          // Handle next month navigation
+        });
+      }
+
+      // Day selection events
+      calendar
+        .querySelectorAll(".calendar-day:not(.disabled)")
+        .forEach((dayElement) => {
+          dayElement.addEventListener("click", (e) => {
+            const selectedDate = e.target.getAttribute("data-date");
+            if (selectedDate && !e.target.hasAttribute("data-disabled")) {
+              const dateObj = new Date(selectedDate);
+              displayInput.value = dateObj.toLocaleDateString();
+              hiddenInput.value = selectedDate;
+              calendar.style.display = "none";
+
+              // Trigger change event for form validation
+              const changeEvent = new Event("change", { bubbles: true });
+              hiddenInput.dispatchEvent(changeEvent);
+
+              //   console.log("Date selected:", selectedDate);
+            }
+          });
+        });
+    }
+
+    // Hide calendar
+    function hideCalendar() {
+      calendar.style.display = "none";
+    }
+
+    // Event listeners
+    displayInput.addEventListener("click", showCalendar);
+
+    // Close calendar when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!wrapper.contains(e.target)) {
+        hideCalendar();
+      }
+    });
+
+    return { displayInput, hiddenInput, wrapper };
+  }
+
+  /**
+   * Updates all date inputs to disable unavailable dates
+   */
+  function updateDateInputsAvailability() {
+    // Find all date inputs that haven't been converted yet
+    const dateInputs = document.querySelectorAll(
+      'input[type="datetime-local"]:not([data-converted])'
+    );
+
+    dateInputs.forEach((input) => {
+      // Mark as converted to avoid double processing
+      input.setAttribute("data-converted", "true");
+
+      // Convert to custom date picker
+      createCustomDatePicker(input);
+    });
+
+    // Also update any existing custom date pickers
+    const existingPickers = document.querySelectorAll(
+      ".custom-date-picker-wrapper"
+    );
+    existingPickers.forEach((wrapper) => {
+      const displayInput = wrapper.querySelector('input[type="text"]');
+      if (displayInput) {
+        // You could refresh the calendar here if needed
+        //  console.log("Refreshing existing date picker");
+      }
+    });
+  }
+
+  /**
+   * Call this function when facility changes
+   */
+  async function onFacilityChange(newFacilityID) {
+    facilityID = newFacilityID;
+    // console.log("Facility changed to:", facilityID);
+
+    if (facilityID) {
+      await fetchUnavailableDates(facilityID);
+    } else {
+      unavailableDates.clear();
+      updateDateInputsAvailability();
+    }
+  }
+
+  //  console.log("Advance booking validation passed, checking conflicts...");
+
+  // Check for conflicts (existing logic)
+
   function toggleEventFields(eventType) {
     const acadFields = document.getElementById("acad_fields");
     const orgFields = document.getElementById("org_fields");
@@ -108,36 +446,34 @@ document.addEventListener("DOMContentLoaded", function () {
     if (universityFields) universityFields.style.display = "none";
     if (outsideFields) outsideFields.style.display = "none";
 
-    // Show appropriate fields based on event type
     switch (eventType.toLowerCase()) {
       case "academic":
         if (acadFields) {
           acadFields.style.display = "block";
-          console.log("Showing academic fields");
+          // console.log("Showing academic fields");
         }
         break;
       case "organization":
         if (orgFields) {
           orgFields.style.display = "block";
-          console.log("Showing organization fields");
+          //  console.log("Showing organization fields");
         }
         break;
       case "university":
         if (universityFields) {
           universityFields.style.display = "block";
-          console.log("Showing university fields");
+          //  console.log("Showing university fields");
         }
         break;
       case "outside":
         if (outsideFields) {
           outsideFields.style.display = "block";
-          console.log("Showing outside fields");
+          //  console.log("Showing outside fields");
         }
         break;
     }
   }
 
-  // Event type dropdown setup and handler
   if (eventTypeDropdown) {
     eventTypeDropdown.innerHTML = `
       <option value="">-- Select an Event Type --</option>
@@ -147,38 +483,31 @@ document.addEventListener("DOMContentLoaded", function () {
       <option value="Outside">Outside</option>
     `;
 
-    // Set up event listener for changes
     eventTypeDropdown.addEventListener("change", function () {
-      console.log("Event type changed to:", this.value);
+      //  console.log("Event type changed to:", this.value);
       toggleEventFields(this.value);
-      // Trigger validation for newly visible fields
-      debouncedValidatePrimaryFormFields();
     });
 
-    // Initialize fields based on saved data or current selection
     if (eventFormData.event_type) {
       eventTypeDropdown.value = eventFormData.event_type;
       toggleEventFields(eventFormData.event_type);
     } else {
-      // Initialize based on current selection
       const currentEventType = eventTypeDropdown.value;
       if (currentEventType) {
-        console.log("Initial event type:", currentEventType);
+        // console.log("Initial event type:", currentEventType);
         toggleEventFields(currentEventType);
       }
     }
   }
 
-  // Property Assets Table - Enhanced version with Facility Properties
-  let selectedAssets = []; // Declare globally accessible within this scope
-  let facilityProperties = []; // Declare globally accessible within this scope
+  let selectedAssets = [];
+  let facilityProperties = [];
 
   const tableBody = document.querySelector("#property-reservation-table tbody");
   const tableHeader = document.querySelector(
     "#property-reservation-table thead tr"
   );
 
-  // Add Type column header if it doesn't exist (only once)
   if (tableHeader && tableHeader.children.length === 3) {
     const typeHeader = document.createElement("th");
     typeHeader.textContent = "Type";
@@ -194,9 +523,9 @@ document.addEventListener("DOMContentLoaded", function () {
       facilityProperties = facilityPropertiesData
         ? JSON.parse(facilityPropertiesData)
         : [];
-      console.log("Loaded assets from session storage:", selectedAssets);
+      //   console.log("Loaded assets from session storage:", selectedAssets);
       console.log(
-        "Loaded facility properties from session storage:",
+        //   "Loaded facility properties from session storage:",
         facilityProperties
       );
     } catch (error) {
@@ -209,7 +538,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (tableBody) {
-      tableBody.innerHTML = ""; // Clear existing rows
+      tableBody.innerHTML = "";
 
       if (selectedAssets.length === 0 && facilityProperties.length === 0) {
         const noDataRow = document.createElement("tr");
@@ -221,7 +550,6 @@ document.addEventListener("DOMContentLoaded", function () {
         noDataRow.appendChild(noDataCell);
         tableBody.appendChild(noDataRow);
       } else {
-        // First, add facility properties (with disabled buttons)
         facilityProperties.forEach((property) => {
           const row = document.createElement("tr");
           row.style.backgroundColor = "#f8f9fa";
@@ -241,8 +569,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
           const quantityCell = document.createElement("td");
           const quantitySpan = document.createElement("span");
-          // For facility properties, display their inherent quantity or 1
-          quantitySpan.textContent = property.quantity || 1;
+          // Fixed: Use property.availableQty instead of addedAssets.availableQty
+          quantitySpan.textContent = property.availableQty || "N/A";
           quantitySpan.className = "badge bg-light text-dark";
           quantitySpan.style.fontSize = "14px";
           quantityCell.appendChild(quantitySpan);
@@ -252,8 +580,6 @@ document.addEventListener("DOMContentLoaded", function () {
           disabledBtn.textContent = "Included";
           disabledBtn.className = "btn btn-sm btn-outline-secondary";
           disabledBtn.disabled = true;
-          disabledBtn.title =
-            "This property is included with the facility and cannot be modified";
           modifyCell.appendChild(disabledBtn);
 
           row.appendChild(typeCell);
@@ -263,7 +589,6 @@ document.addEventListener("DOMContentLoaded", function () {
           tableBody.appendChild(row);
         });
 
-        // Then, add selected assets (with active buttons)
         selectedAssets.forEach((asset, index) => {
           const row = document.createElement("tr");
 
@@ -281,55 +606,49 @@ document.addEventListener("DOMContentLoaded", function () {
           const input = document.createElement("input");
           input.type = "number";
           input.min = "1";
-          // Use 'availability' or 'availableQty' for max
-          input.max = asset.availability || asset.availableQty || 999;
 
-          // *** CRITICAL CHANGE HERE: Set input value to availableQty initially ***
-          input.value = asset.availableQty || asset.availability || 1; // Use availableQty as the default value if it exists, else fallback to availability or 1.
+          // Get available quantity from asset
+          const availableQty = asset.availableQty || 999;
+          input.max = availableQty;
 
+          // Use the stored quantity from addedAssets, or default to availableQty
+          const storedQuantity = asset.quantity || availableQty;
+          input.value = storedQuantity;
           input.classList.add("form-control");
           input.setAttribute("data-index", index);
           input.style.width = "80px";
 
+          // Add placeholder to show available quantity
+          input.placeholder = `Max: ${availableQty}`;
+
+          // Real-time validation on input change
           input.addEventListener("input", function () {
-            let value = parseInt(this.value);
-            // Use 'availability' or 'availableQty' for max
-            const maxAvailable = parseInt(
-              asset.availability || asset.availableQty || 999
-            );
+            validateQuantityInput(this, asset);
+          });
 
-            if (isNaN(value) || value < 1) {
-              this.value = 1;
-              value = 1;
-              this.style.borderColor = "red";
-              this.title = "Quantity must be at least 1";
-              showNotification("Quantity must be at least 1.", "error");
-            } else if (value > maxAvailable) {
-              this.value = maxAvailable;
-              value = maxAvailable;
-              this.style.borderColor = "red";
-              this.title = `Maximum available: ${maxAvailable}`;
-              showNotification(
-                `Quantity for ${asset.name} cannot exceed ${maxAvailable}. It has been adjusted.`,
-                "warning"
-              );
-              clearError(this);
-            } else {
-              this.style.borderColor = "";
-              this.title = "";
-              clearError(this);
-            }
-
-            // Also ensure the selectedAssets array's quantity is updated immediately
-            // Now, we need a 'quantity' field on the asset to store the *user-requested* quantity.
-            // If it doesn't exist, initialize it.
-            const assetIndex = parseInt(this.dataset.index);
-            if (!isNaN(assetIndex) && selectedAssets[assetIndex]) {
-              selectedAssets[assetIndex].quantity = value; // Store the user's chosen quantity
-              sessionStorage.setItem(
-                "addedAssets",
-                JSON.stringify(selectedAssets)
-              );
+          // Auto-save functionality - save to sessionStorage when user types
+          input.addEventListener("blur", function () {
+            const newQuantity = parseInt(this.value);
+            if (
+              newQuantity &&
+              newQuantity !== storedQuantity &&
+              newQuantity >= 1 &&
+              newQuantity <= availableQty
+            ) {
+              // Update the quantity in selectedAssets array
+              selectedAssets[index].quantity = newQuantity;
+              try {
+                sessionStorage.setItem(
+                  "addedAssets",
+                  JSON.stringify(selectedAssets)
+                );
+                console
+                  .log
+                  //`Auto-saved quantity for ${asset.name}: ${newQuantity}`
+                  ();
+              } catch (error) {
+                console.error("Error auto-saving to session storage:", error);
+              }
             }
           });
 
@@ -339,8 +658,9 @@ document.addEventListener("DOMContentLoaded", function () {
           const updateBtn = document.createElement("button");
           updateBtn.textContent = "Update";
           updateBtn.className = "btn btn-sm btn-primary me-2";
-          updateBtn.addEventListener("click", function () {
-            updateAssetQuantity(index, input.value, asset);
+          updateBtn.addEventListener("click", async function () {
+            const currentQuantity = parseInt(input.value);
+            await updateAssetQuantity(index, currentQuantity, asset, input);
           });
 
           const removeBtn = document.createElement("button");
@@ -363,42 +683,176 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Call renderPropertyTable initially
-  renderPropertyTable();
+  // Helper function to validate quantity input
+  function validateQuantityInput(input, asset) {
+    let value = parseInt(input.value);
+    const maxAvailable = asset.availableQty || 999;
 
-  // Function to update asset quantity
-  function updateAssetQuantity(index, newQuantity, asset) {
-    const quantity = parseInt(newQuantity);
-    const maxAvailable = parseInt(
-      asset.availability || asset.availableQty || 999
-    );
-
-    if (isNaN(quantity) || quantity < 1) {
-      showNotification("Please enter a valid quantity (minimum 1).", "error");
-      return;
-    }
-
-    if (quantity > maxAvailable) {
-      showNotification(
-        `Quantity for ${asset.name} cannot exceed ${maxAvailable}.`,
-        "error"
-      );
-      return;
-    }
-
-    selectedAssets[index].quantity = quantity;
-
-    try {
-      sessionStorage.setItem("addedAssets", JSON.stringify(selectedAssets));
-      console.log("Updated assets in session storage:", selectedAssets);
-      showNotification("Quantity updated successfully!", "success");
-      renderPropertyTable(); // Re-render the table to reflect changes cleanly
-    } catch (error) {
-      console.error("Error saving to session storage:", error);
-      showNotification("Error updating quantity. Please try again.", "error");
+    if (isNaN(value) || value < 1) {
+      input.style.borderColor = "red";
+      input.title = "Quantity must be at least 1";
+      return false;
+    } else if (value > maxAvailable) {
+      input.style.borderColor = "red";
+      input.title = `Maximum available: ${maxAvailable}`;
+      return false;
+    } else {
+      input.style.borderColor = "";
+      input.title = "";
+      return true;
     }
   }
 
+  // Updated function to handle quantity updates - fetches current availableQty from PocketBase
+  async function updateAssetQuantity(index, newQuantity, asset, inputElement) {
+    const quantity = parseInt(newQuantity);
+
+    // Validate basic quantity input
+    if (isNaN(quantity) || quantity < 1) {
+      showNotification("Please enter a valid quantity (minimum 1).", "error");
+      inputElement.focus();
+      return;
+    }
+
+    try {
+      // Fetch current property data from PocketBase to get latest availableQty
+      const response = await fetch(
+        `http://127.0.0.1:8090/api/collections/property/records/${asset.id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch property data");
+      }
+
+      const propertyData = await response.json();
+      const currentAvailableQty = propertyData.availableQty || 0;
+
+      // Validate against current available quantity from database
+      if (quantity > currentAvailableQty) {
+        showNotification(
+          `Quantity for ${asset.name} cannot exceed ${currentAvailableQty}. Currently available: ${currentAvailableQty}`,
+          "error"
+        );
+        inputElement.focus();
+        return;
+      }
+
+      // Check if the quantity actually changed
+      const currentQuantity = selectedAssets[index]?.quantity || 1;
+      if (currentQuantity === quantity) {
+        showNotification("Quantity is already set to this value.", "info");
+        return;
+      }
+
+      // Update the quantity in the selectedAssets array
+      if (selectedAssets[index]) {
+        const oldQuantity = selectedAssets[index].quantity;
+        selectedAssets[index].quantity = quantity;
+
+        // Also update the availableQty in the stored asset for future reference
+        selectedAssets[index].availableQty = currentAvailableQty;
+
+        try {
+          // Save the updated selectedAssets to sessionStorage
+          sessionStorage.setItem("addedAssets", JSON.stringify(selectedAssets));
+          // console.log("Updated assets in session storage:", selectedAssets);
+          console
+            .log
+            //`Updated ${asset.name} quantity from ${oldQuantity} to ${quantity}`
+            ();
+          console
+            .log
+            //`Current available quantity for ${asset.name}: ${currentAvailableQty}`
+            ();
+
+          showNotification(
+            `Quantity for ${asset.name} updated from ${oldQuantity} to ${quantity} successfully!`,
+            "success"
+          );
+
+          // Clear any previous error styling
+          inputElement.style.borderColor = "";
+          inputElement.title = "";
+
+          // Update the max attribute and placeholder of the input field
+          inputElement.max = currentAvailableQty;
+          inputElement.placeholder = `Max: ${currentAvailableQty}`;
+        } catch (error) {
+          console.error("Error saving to session storage:", error);
+          showNotification(
+            "Error updating quantity. Please try again.",
+            "error"
+          );
+
+          // Revert the change if saving failed
+          selectedAssets[index].quantity = oldQuantity;
+          inputElement.value = oldQuantity;
+        }
+      } else {
+        showNotification("Error: Asset not found.", "error");
+      }
+    } catch (error) {
+      console.error("Error fetching property data:", error);
+      showNotification(
+        "Error checking available quantity. Please try again.",
+        "error"
+      );
+      inputElement.focus();
+    }
+  }
+
+  // NEW: Function to remove asset from selectedAssets and update sessionStorage
+  function removeAsset(index) {
+    if (selectedAssets[index]) {
+      const assetName = selectedAssets[index].name || "Unknown Property";
+
+      // Remove the asset from the array
+      selectedAssets.splice(index, 1);
+
+      try {
+        // Update sessionStorage with the modified array
+        sessionStorage.setItem("addedAssets", JSON.stringify(selectedAssets));
+        // console.log(`Removed ${assetName} from session storage`);
+        // console.log("Updated assets in session storage:", selectedAssets);
+
+        // Show success notification
+        showNotification(`${assetName} removed successfully!`, "success");
+
+        // Re-render the table to reflect the changes
+        renderPropertyTable();
+      } catch (error) {
+        console.error("Error removing asset from session storage:", error);
+        showNotification("Error removing asset. Please try again.", "error");
+      }
+    } else {
+      showNotification("Error: Asset not found.", "error");
+    }
+  }
+
+  // Helper function to show notifications (you may need to implement this based on your notification system)
+  function showNotification(message, type) {
+    // This is a placeholder - implement based on your notification system
+    // For example, if you're using Bootstrap toast, SweetAlert, or a custom notification system
+    //  console.log(`${type.toUpperCase()}: ${message}`);
+
+    // Simple alert fallback (replace with your notification system)
+    if (type === "error") {
+      alert("Error: " + message);
+    } else if (type === "success") {
+      alert("Success: " + message);
+    } else {
+      alert(message);
+    }
+  }
+
+  // Initialize the table
+  renderPropertyTable();
   let conflictCheckAbortController = null;
 
   // Function to check for reservation conflicts in real-time
@@ -409,738 +863,683 @@ document.addEventListener("DOMContentLoaded", function () {
     conflictDetails: [],
   };
 
-  // Fixed conflict detection function
-  async function checkReservationConflicts() {
-    // Cancel any previous ongoing conflict checks
-    if (conflictCheckAbortController) {
-      conflictCheckAbortController.abort("New conflict check initiated.");
-      console.log("Aborted previous conflict check.");
+  // Global variable to store all reservations for date restriction
+  let allFacilityReservations = [];
+
+  // Function to fetch all reservations for the current facility
+  async function fetchFacilityReservations() {
+    if (!facilityID) {
+      //    console.log("No facility ID available for fetching reservations");
+      return [];
     }
-    conflictCheckAbortController = new AbortController();
-    const signal = conflictCheckAbortController.signal;
-
-    // Clear any existing conflict warnings
-    clearConflictWarnings();
-
-    // Check if all required time fields are filled
-    if (
-      !timeStartInput?.value ||
-      !timeEndInput?.value ||
-      !timePrepInput?.value ||
-      !facilityID
-    ) {
-      conflictCheckAbortController = null;
-      return;
-    }
-
-    const startTime = new Date(timeStartInput.value).toISOString();
-    const endTime = new Date(timeEndInput.value).toISOString();
-    const prepTime = new Date(timePrepInput.value).toISOString();
-
-    // Validate time inputs
-    if (
-      isNaN(new Date(startTime).getTime()) ||
-      isNaN(new Date(endTime).getTime()) ||
-      isNaN(new Date(prepTime).getTime())
-    ) {
-      conflictCheckAbortController = null;
-      return;
-    }
-
-    // Debug logging
-    console.log("Checking conflicts for:", {
-      facilityID,
-      startTime,
-      endTime,
-      prepTime,
-    });
 
     try {
-      // Simplified and more reliable conflict filter
-      // Get all reservations for this facility with approved/pending status
-      const conflictFilter = `
-      facilityID="${facilityID}"
-      && (status="approved" || status="pending")
-    `;
-
-      const existingReservations = await pb
-        .collection("reservation")
-        .getFullList({ filter: conflictFilter, signal });
-
-      console.log("Found reservations:", existingReservations.length);
-
-      // Reset conflict state
-      currentConflictState = {
-        hasApprovedConflict: false,
-        hasPendingConflict: false,
-        conflictDetails: [],
-      };
-
-      conflictCheckAbortController = null;
-
-      existingReservations.forEach((res) => {
-        // Get the actual start and end times for the existing reservation
-        const resStart = new Date(res.preperationTime || res.startTime);
-        const resEnd = new Date(res.endTime);
-
-        // Get the requested times (use prep time as the actual start)
-        const reqStart = new Date(prepTime);
-        const reqEnd = new Date(endTime);
-
-        // Fixed overlap detection - includes boundary conditions
-        const hasTimeOverlap = reqStart <= resEnd && reqEnd >= resStart;
-
-        console.log("Checking overlap:", {
-          existing: {
-            id: res.id,
-            event: res.eventName,
-            start: resStart.toISOString(),
-            end: resEnd.toISOString(),
-            status: res.status,
-          },
-          requested: {
-            start: reqStart.toISOString(),
-            end: reqEnd.toISOString(),
-          },
-          hasOverlap: hasTimeOverlap,
-        });
-
-        if (hasTimeOverlap) {
-          currentConflictState.conflictDetails.push({
-            id: res.id,
-            status: res.status,
-            eventName: res.eventName || "Unknown Event",
-            startTime: new Date(res.startTime).toLocaleString(),
-            endTime: new Date(res.endTime).toLocaleString(),
-            prepTime: res.preperationTime
-              ? new Date(res.preperationTime).toLocaleString()
-              : null,
-          });
-
-          if (res.status === "approved") {
-            currentConflictState.hasApprovedConflict = true;
-          } else if (res.status === "pending") {
-            currentConflictState.hasPendingConflict = true;
-          }
-        }
+      const filter = `facilityID="${facilityID}" && (status="approved" || status="pending")`;
+      const reservations = await pb.collection("reservation").getFullList({
+        filter: filter,
+        sort: "startTime",
       });
 
-      console.log("Conflict detection results:", {
-        hasApprovedConflict: currentConflictState.hasApprovedConflict,
-        hasPendingConflict: currentConflictState.hasPendingConflict,
-        conflictCount: currentConflictState.conflictDetails.length,
-      });
-
-      // Display conflict warnings/errors - ALL CONFLICTS ARE NOW BLOCKING
-      if (
-        currentConflictState.hasApprovedConflict ||
-        currentConflictState.hasPendingConflict
-      ) {
-        const allConflicts = currentConflictState.conflictDetails;
-        const conflictType = currentConflictState.hasApprovedConflict
-          ? "approved"
-          : "pending";
-
-        showConflictError(
-          `❌ BOOKING BLOCKED: This time slot conflicts with ${allConflicts.length} existing reservation(s). You must select a different time to proceed.`,
-          allConflicts
-        );
-
-        // Make ALL time input fields invalid and disabled
-        markTimeFieldsAsInvalid();
-
-        // Disable form submission
-        disableFormSubmission();
-      } else {
-        // No conflicts - clear any styling and enable form
-        clearTimeFieldValidation();
-        enableFormSubmission();
-        showConflictSuccess(
-          "✅ No conflicts detected. You may proceed with this time slot."
-        );
-      }
+      console
+        .log
+        //  `Fetched ${reservations.length} reservations for facility ${facilityID}`
+        ();
+      return reservations;
     } catch (error) {
-      conflictCheckAbortController = null;
-      if (error.name === "AbortError") {
-        console.warn("Conflict check was aborted:", error.message);
-        return;
-      }
-      console.error("Error checking reservation conflicts:", error);
-      showNotification(
-        "Error checking for conflicts. Please try again.",
-        "error"
-      );
+      console.error("Error fetching facility reservations:", error);
+      return [];
     }
   }
 
-  // Function to check if there are currently any conflicts
-  function hasCurrentConflicts() {
-    return (
-      currentConflictState.hasApprovedConflict ||
-      currentConflictState.hasPendingConflict
-    );
-  }
+  // Function to get disabled dates for calendar
+  function getDisabledDates(reservations) {
+    const disabledDates = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  // Function to get current conflict details
-  function getCurrentConflictDetails() {
-    return currentConflictState.conflictDetails;
-  }
+    // Add past dates (before today)
+    const pastDate = new Date(today);
+    pastDate.setDate(pastDate.getDate() - 365); // Go back 1 year
 
-  // Helper functions to manage form state and validation
-
-  // Function to mark time fields as invalid
-  function markTimeFieldsAsInvalid() {
-    const timeFields = [timeStartInput, timeEndInput, timePrepInput];
-
-    timeFields.forEach((field) => {
-      if (field) {
-        field.style.borderColor = "red";
-        field.style.backgroundColor = "#ffe6e6";
-        field.style.boxShadow = "0 0 5px rgba(255, 0, 0, 0.3)";
-
-        // Add invalid attribute for form validation
-        field.setAttribute("data-conflict", "true");
-        field.setCustomValidity(
-          "Time conflict detected. Please select different times."
-        );
-      }
-    });
-  }
-
-  // Function to clear time field validation
-  function clearTimeFieldValidation() {
-    const timeFields = [timeStartInput, timeEndInput, timePrepInput];
-
-    timeFields.forEach((field) => {
-      if (field) {
-        field.style.borderColor = "";
-        field.style.backgroundColor = "";
-        field.style.boxShadow = "";
-
-        // Clear invalid attributes
-        field.removeAttribute("data-conflict");
-        field.setCustomValidity("");
-      }
-    });
-  }
-
-  // Function to disable form submission
-  function disableFormSubmission() {
-    // Find and disable submit buttons
-    const submitButtons = document.querySelectorAll(
-      'button[type="submit"], input[type="submit"], .submit-btn, .btn-primary[onclick*="submit"]'
-    );
-
-    submitButtons.forEach((button) => {
-      button.disabled = true;
-      button.setAttribute("data-conflict-disabled", "true");
-      button.title =
-        "Cannot submit due to time conflicts. Please resolve conflicts first.";
-
-      // Add visual indication
-      button.style.opacity = "0.5";
-      button.style.cursor = "not-allowed";
-    });
-
-    // Add form validation listener to prevent submission
-    const forms = document.querySelectorAll("form");
-    forms.forEach((form) => {
-      form.addEventListener("submit", preventConflictSubmission, true);
-    });
-  }
-
-  // Function to enable form submission
-  function enableFormSubmission() {
-    // Re-enable submit buttons
-    const submitButtons = document.querySelectorAll(
-      'button[data-conflict-disabled="true"], input[data-conflict-disabled="true"]'
-    );
-
-    submitButtons.forEach((button) => {
-      button.disabled = false;
-      button.removeAttribute("data-conflict-disabled");
-      button.title = "";
-
-      // Remove visual indication
-      button.style.opacity = "";
-      button.style.cursor = "";
-    });
-
-    // Remove form validation listeners
-    const forms = document.querySelectorAll("form");
-    forms.forEach((form) => {
-      form.removeEventListener("submit", preventConflictSubmission, true);
-    });
-  }
-
-  // Function to prevent form submission when conflicts exist
-  // Function to check if reservation is within allowed advance booking period (1 month)
-  function checkAdvanceBookingLimit(startTime, endTime) {
-    try {
-      console.log("=== ADVANCE BOOKING CHECK ===");
-      console.log("Input startTime:", startTime);
-
-      // Get current date
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Calculate date 1 month from today
-      const oneMonthFromToday = new Date(today);
-      oneMonthFromToday.setMonth(oneMonthFromToday.getMonth() + 1);
-
-      // Parse the date from DD/MM/YYYY format
-      let eventStartDate;
-      if (startTime.includes("/")) {
-        const datePart = startTime.split(" ")[0]; // Get "20/07/2025"
-        const [day, month, year] = datePart.split("/");
-        eventStartDate = new Date(year, month - 1, day); // month is 0-indexed
-      } else {
-        eventStartDate = new Date(startTime);
-      }
-
-      eventStartDate.setHours(0, 0, 0, 0);
-
-      console.log("Today:", today.toLocaleDateString());
-      console.log(
-        "One month from today:",
-        oneMonthFromToday.toLocaleDateString()
-      );
-      console.log("Event start date:", eventStartDate.toLocaleDateString());
-
-      // Check if event is more than 1 month in advance
-      if (eventStartDate > oneMonthFromToday) {
-        const daysDifference = Math.ceil(
-          (eventStartDate.getTime() - today.getTime()) / (1000 * 3600 * 24)
-        );
-        console.log("Days difference:", daysDifference);
-        console.log("VALIDATION FAILED: Too far in advance");
-
-        return {
-          allowed: false,
-          reason: `Cannot make reservations more than 1 month in advance. This event is ${daysDifference} days away. Please select a date within the next 30 days.`,
-        };
-      }
-
-      // Check if event is in the past
-      if (eventStartDate < today) {
-        console.log("VALIDATION FAILED: Past date");
-        return {
-          allowed: false,
-          reason:
-            "Cannot make reservations for past dates. Please select a future date.",
-        };
-      }
-
-      console.log("VALIDATION PASSED");
-      return { allowed: true, reason: "" };
-    } catch (error) {
-      console.error("Error checking advance booking limit:", error);
-      return {
-        allowed: false,
-        reason:
-          "Error validating reservation date. Please check your selected dates.",
-      };
+    while (pastDate < today) {
+      disabledDates.push(new Date(pastDate));
+      pastDate.setDate(pastDate.getDate() + 1);
     }
+
+    // Add dates that are more than 1 month in advance
+    const oneMonthFromToday = new Date(today);
+    oneMonthFromToday.setMonth(oneMonthFromToday.getMonth() + 1);
+
+    const futureDate = new Date(oneMonthFromToday);
+    futureDate.setDate(futureDate.getDate() + 1);
+    const maxFutureDate = new Date(today);
+    maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 1);
+
+    while (futureDate <= maxFutureDate) {
+      disabledDates.push(new Date(futureDate));
+      futureDate.setDate(futureDate.getDate() + 1);
+    }
+
+    // Add dates with existing reservations
+    reservations.forEach((reservation) => {
+      const startDate = new Date(
+        reservation.preperationTime || reservation.startTime
+      );
+      const endDate = new Date(reservation.endTime);
+
+      // Disable all dates from start to end (inclusive)
+      const currentDate = new Date(startDate);
+      currentDate.setHours(0, 0, 0, 0);
+
+      while (currentDate <= endDate) {
+        disabledDates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    });
+
+    return disabledDates;
   }
 
-  // Test the current form values immediately
-  function testCurrentFormValues() {
-    console.log("=== TESTING CURRENT FORM VALUES ===");
+  // Function to format date for HTML date input (YYYY-MM-DD)
+  function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
 
-    // Find all possible date inputs
-    const possibleInputs = [
+  // Function to setup calendar restrictions
+  async function setupCalendarRestrictions() {
+    //   console.log("Setting up calendar restrictions...");
+
+    // Fetch all reservations for the current facility
+    allFacilityReservations = await fetchFacilityReservations();
+
+    // Get disabled dates
+    const disabledDates = getDisabledDates(allFacilityReservations);
+
+    // Find all date/datetime inputs
+    const dateInputs = [
+      timeStartInput,
+      timeEndInput,
+      timePrepInput,
       document.querySelector('input[name="Time Start"]'),
-      document.querySelector('input[placeholder*="Time Start"]'),
-      document.getElementById("starttime"),
-      document.querySelector('input[name="starttime"]'),
-      document.querySelector('input[type="datetime-local"]'),
-      ...document.querySelectorAll('input[type="text"]'),
+      document.querySelector('input[name="Time End"]'),
+      document.querySelector('input[name="Preparation Time"]'),
+      ...document.querySelectorAll('input[type="date"]'),
+      ...document.querySelectorAll('input[type="datetime-local"]'),
+      ...document.querySelectorAll('input[placeholder*="dd/mm/yyyy"]'),
+      ...document.querySelectorAll('input[placeholder*="dd/mm/2025"]'),
     ].filter(Boolean);
 
-    console.log("Found possible inputs:", possibleInputs.length);
+    //    console.log(`Found ${dateInputs.length} date inputs to restrict`);
 
-    possibleInputs.forEach((input, index) => {
-      console.log(`Input ${index}:`, {
+    dateInputs.forEach((input, index) => {
+      console.log(`Setting up restrictions for input ${index}:`, {
         id: input.id,
         name: input.name,
         type: input.type,
-        value: input.value,
         placeholder: input.placeholder,
       });
 
-      // Test if this looks like a date input with the problematic date
-      if (input.value && input.value.includes("20/07/2025")) {
-        console.log("Found date input with July 2025 date!");
-        const result = checkAdvanceBookingLimit(input.value);
-        console.log("Validation result:", result);
+      // Set min and max dates
+      const today = new Date();
+      const oneMonthFromToday = new Date(today);
+      oneMonthFromToday.setMonth(oneMonthFromToday.getMonth() + 1);
 
-        if (!result.allowed) {
-          showAdvanceBookingWarning(input, result.reason);
+      if (input.type === "date") {
+        input.min = formatDateForInput(today);
+        input.max = formatDateForInput(oneMonthFromToday);
+      } else if (input.type === "datetime-local") {
+        input.min = today.toISOString().slice(0, 16);
+        oneMonthFromToday.setHours(23, 59);
+        input.max = oneMonthFromToday.toISOString().slice(0, 16);
+      }
+
+      // Add custom validation
+      input.addEventListener("input", function (e) {
+        validateDateInput(e.target, disabledDates);
+      });
+
+      input.addEventListener("change", function (e) {
+        validateDateInput(e.target, disabledDates);
+      });
+
+      // Add focus event to setup calendar restrictions when calendar opens
+      input.addEventListener("focus", function () {
+        setupCustomCalendarRestrictions(disabledDates);
+      });
+
+      // Add click event to setup calendar restrictions when calendar opens
+      input.addEventListener("click", function () {
+        setTimeout(() => {
+          setupCustomCalendarRestrictions(disabledDates);
+        }, 100);
+      });
+
+      // Add custom datepicker restrictions if using jQuery datepicker
+      if (
+        typeof window.$ !== "undefined" &&
+        typeof window.$.fn !== "undefined" &&
+        typeof window.$.fn.datepicker === "function"
+      ) {
+        try {
+          window.$(input).datepicker("option", {
+            minDate: today,
+            maxDate: oneMonthFromToday,
+            beforeShowDay: function (date) {
+              const dateStr = formatDateForInput(date);
+              const isDisabled = disabledDates.some(
+                (disabledDate) => formatDateForInput(disabledDate) === dateStr
+              );
+              return [
+                !isDisabled,
+                isDisabled ? "disabled-date" : "",
+                isDisabled ? "This date is not available" : "",
+              ];
+            },
+          });
+        } catch (error) {
+          console
+            .log
+            //"jQuery datepicker not available or not initialized for this input"
+            ();
+        }
+      }
+
+      // For Flatpickr (if using)
+      if (typeof window.flatpickr !== "undefined" && input._flatpickr) {
+        try {
+          input._flatpickr.set({
+            minDate: today,
+            maxDate: oneMonthFromToday,
+            disable: disabledDates.map((date) => formatDateForInput(date)),
+          });
+        } catch (error) {
+          console
+            .log
+            //"Flatpickr not available or not initialized for this input"
+            ();
         }
       }
     });
+
+    // Setup mutation observer to watch for calendar popups
+    setupCalendarObserver(disabledDates);
+
+    // Add CSS for disabled dates
+    addCalendarStyles();
   }
 
-  // Function to show advance booking warning
-  function showAdvanceBookingWarning(input, message) {
-    console.log("Showing advance booking warning");
+  // Function to validate date input
+  function validateDateInput(input, disabledDates) {
+    if (!input.value) return;
 
-    // Remove existing warning
-    const existingWarning = document.getElementById("advance-booking-warning");
-    if (existingWarning) {
-      existingWarning.remove();
+    const inputDate = new Date(input.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    inputDate.setHours(0, 0, 0, 0);
+
+    // Check if date is in the past
+    if (inputDate < today) {
+      showDateError(
+        input,
+        "Cannot select past dates. Please choose a future date."
+      );
+      return false;
     }
 
-    // Create warning element
-    const warningDiv = document.createElement("div");
-    warningDiv.id = "advance-booking-warning";
-    warningDiv.className = "alert alert-warning mt-2";
-    warningDiv.style.marginTop = "8px";
-    warningDiv.innerHTML = `
-    <i class="fas fa-exclamation-triangle me-2"></i>
-    <strong>Booking Restriction:</strong> ${message}
-  `;
+    // Check if date is more than 1 month in advance
+    const oneMonthFromToday = new Date(today);
+    oneMonthFromToday.setMonth(oneMonthFromToday.getMonth() + 1);
 
-    // Insert warning after the input's parent container
+    if (inputDate > oneMonthFromToday) {
+      showDateError(
+        input,
+        "Cannot select dates more than 1 month in advance. Please choose a date within the next 30 days."
+      );
+      return false;
+    }
+
+    // Check if date conflicts with existing reservations
+    const isConflicting = disabledDates.some((disabledDate) => {
+      const disabledDateFormatted = new Date(disabledDate);
+      disabledDateFormatted.setHours(0, 0, 0, 0);
+      return disabledDateFormatted.getTime() === inputDate.getTime();
+    });
+
+    if (isConflicting) {
+      // Find the conflicting reservation for more details
+      const conflictingReservation = allFacilityReservations.find((res) => {
+        const resStart = new Date(res.preperationTime || res.startTime);
+        const resEnd = new Date(res.endTime);
+        resStart.setHours(0, 0, 0, 0);
+        resEnd.setHours(23, 59, 59, 999);
+        return inputDate >= resStart && inputDate <= resEnd;
+      });
+
+      const conflictMessage = conflictingReservation
+        ? `This date conflicts with existing reservation: "${conflictingReservation.eventName}" (${conflictingReservation.status}). Please select a different date.`
+        : "This date is not available due to existing reservations. Please select a different date.";
+
+      showDateError(input, conflictMessage);
+      return false;
+    }
+
+    // Clear any existing errors
+    clearDateError(input);
+    return true;
+  }
+
+  // Function to show date error
+  function showDateError(input, message) {
+    // Clear existing error
+    clearDateError(input);
+
+    // Create error element
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "invalid-feedback d-block";
+    errorDiv.id = `${input.id || input.name || "date"}-error`;
+    errorDiv.style.marginTop = "5px";
+    errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i>${message}`;
+
+    // Style input as invalid
+    input.classList.add("is-invalid");
+    input.style.borderColor = "#dc3545";
+
+    // Insert error after input
     const container =
       input.closest(".form-group") ||
       input.closest(".mb-3") ||
       input.parentNode;
-    container.appendChild(warningDiv);
+    container.appendChild(errorDiv);
 
-    // Style the input as invalid
-    input.style.borderColor = "#ffc107";
-    input.style.boxShadow = "0 0 0 0.2rem rgba(255, 193, 7, 0.25)";
-
-    // Also show notification
-    if (typeof showNotification === "function") {
-      showNotification(`⚠️ ${message}`, "warning");
-    } else {
-      alert(`Warning: ${message}`);
-    }
+    // Clear the invalid value
+    input.value = "";
   }
 
-  // Enhanced setup function
-  function setupAdvanceBookingValidation() {
-    console.log("=== SETTING UP ADVANCE BOOKING VALIDATION ===");
+  // Function to clear date error
+  function clearDateError(input) {
+    const errorId = `${input.id || input.name || "date"}-error`;
+    const existingError = document.getElementById(errorId);
+    if (existingError) {
+      existingError.remove();
+    }
 
-    // Test current values first
-    testCurrentFormValues();
+    input.classList.remove("is-invalid");
+    input.style.borderColor = "";
+  }
 
-    // Set up event listeners for all date-related inputs
-    document.addEventListener("change", function (e) {
-      const input = e.target;
+  // Function to setup custom calendar restrictions for your datetime picker
+  function setupCustomCalendarRestrictions(disabledDates) {
+    //console.log("Setting up custom calendar restrictions...");
 
-      // Check if this is a date input
-      if (
-        input.type === "datetime-local" ||
-        input.type === "date" ||
-        (input.type === "text" && input.value.match(/\d{2}\/\d{2}\/\d{4}/))
-      ) {
-        console.log("Date input changed:", input.value);
-
-        if (input.value) {
-          const result = checkAdvanceBookingLimit(input.value);
-
-          if (!result.allowed) {
-            showAdvanceBookingWarning(input, result.reason);
-          } else {
-            // Remove warning if date is valid
-            const warningDiv = document.getElementById(
-              "advance-booking-warning"
-            );
-            if (warningDiv) {
-              warningDiv.remove();
-            }
-
-            // Reset input styling
-            input.style.borderColor = "";
-            input.style.boxShadow = "";
-          }
-        }
-      }
-    });
-
-    // Also check on form submission
-    document.addEventListener("submit", function (e) {
-      console.log("Form submission detected");
-
-      // Find date inputs and validate
-      const dateInputs = document.querySelectorAll(
-        'input[type="datetime-local"], input[type="date"], input[type="text"]'
+    // Wait for calendar to be visible
+    setTimeout(() => {
+      // Look for the calendar container (based on your screenshot)
+      const calendarContainer = document.querySelector(
+        ".calendar-container, .datetime-picker, .date-picker-dropdown"
       );
 
-      for (let input of dateInputs) {
-        if (input.value && input.value.match(/\d{2}\/\d{2}\/\d{4}/)) {
-          const result = checkAdvanceBookingLimit(input.value);
-
-          if (!result.allowed) {
-            e.preventDefault();
-            e.stopPropagation();
-            showAdvanceBookingWarning(input, result.reason);
-            return false;
+      if (!calendarContainer) {
+        // Try to find calendar by looking for month/year header
+        const monthYearHeader = document.querySelector(
+          '[class*="month"], [class*="year"]'
+        );
+        if (monthYearHeader) {
+          const possibleCalendar = monthYearHeader.closest(
+            'div[class*="calendar"], div[class*="picker"], div[class*="dropdown"]'
+          );
+          if (possibleCalendar) {
+            applyDateRestrictions(possibleCalendar, disabledDates);
           }
         }
+      } else {
+        applyDateRestrictions(calendarContainer, disabledDates);
       }
-    });
+
+      // Also look for date cells directly
+      const dateCells = document.querySelectorAll(
+        '[class*="date"], [class*="day"], td, .calendar-cell'
+      );
+      if (dateCells.length > 0) {
+        applyDateRestrictionsToGrid(dateCells, disabledDates);
+      }
+    }, 50);
   }
 
-  // Override the existing validation function
-  async function validatePrimaryFormFieldsWithConflicts() {
-    console.log("=== VALIDATE PRIMARY FORM FIELDS WITH CONFLICTS ===");
+  // Function to apply restrictions to calendar container
+  function applyDateRestrictions(calendarContainer, disabledDates) {
+    //    console.log("Applying date restrictions to calendar container");
 
-    // Test advance booking immediately
-    testCurrentFormValues();
-
-    // Check if we have the original validation function
-    let basicValidation = true;
-    if (typeof validatePrimaryFormFields === "function") {
-      basicValidation = await validatePrimaryFormFields();
-      if (!basicValidation) {
-        return false;
-      }
-    }
-
-    // Find and validate date inputs
-    const dateInputs = document.querySelectorAll(
-      'input[type="datetime-local"], input[type="date"], input[type="text"]'
+    // Find all clickable date elements
+    const dateElements = calendarContainer.querySelectorAll(
+      'td, .day, .date, [class*="date"], [class*="day"], button[class*="date"], button[class*="day"]'
     );
 
-    for (let input of dateInputs) {
-      if (input.value && input.value.match(/\d{2}\/\d{2}\/\d{4}/)) {
-        console.log("Validating date input:", input.value);
+    dateElements.forEach((element) => {
+      const dateText = element.textContent.trim();
+      const dateNumber = parseInt(dateText);
 
-        const result = checkAdvanceBookingLimit(input.value);
+      if (dateNumber && dateNumber >= 1 && dateNumber <= 31) {
+        // Try to determine the full date
+        const fullDate = getFullDateFromElement(element, calendarContainer);
 
-        if (!result.allowed) {
-          console.log("Advance booking validation failed");
-          showAdvanceBookingWarning(input, result.reason);
-          return false;
+        if (fullDate && isDateDisabled(fullDate, disabledDates)) {
+          disableDateElement(element);
         }
       }
-    }
-
-    // Continue with other validations...
-    console.log("Advance booking validation passed, checking conflicts...");
-
-    // Check for conflicts (existing logic)
-    if (typeof hasCurrentConflicts === "function" && hasCurrentConflicts()) {
-      if (typeof showNotification === "function") {
-        showNotification(
-          "❌ Cannot proceed: Time conflicts detected. Please resolve all conflicts before submitting.",
-          "error"
-        );
-      }
-      return false;
-    }
-
-    return true;
-  }
-
-  // Initialize immediately and on DOM ready
-  console.log("=== INITIALIZING ADVANCE BOOKING VALIDATION ===");
-  setupAdvanceBookingValidation();
-
-  document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM loaded - initializing advance booking validation");
-    setupAdvanceBookingValidation();
-  });
-
-  // Also test after a delay to catch dynamically loaded content
-  setTimeout(() => {
-    console.log("Delayed initialization - testing current form values");
-    testCurrentFormValues();
-  }, 2000);
-
-  // Manual trigger function for testing
-  window.testAdvanceBooking = function () {
-    console.log("Manual test triggered");
-    testCurrentFormValues();
-  };
-
-  // Alternative implementation using the helper function
-  function checkOverlapAlternative(existingReservations, reqStart, reqEnd) {
-    return existingReservations.some((res) => {
-      const resStart = new Date(res.preperationTime || res.startTime);
-      const resEnd = new Date(res.endTime);
-
-      return timePeriodsOverlap(reqStart, reqEnd, resStart, resEnd);
     });
   }
 
-  // Function to show conflict error (blocking)
-  function showConflictError(message, conflicts) {
-    const conflictContainer = getOrCreateConflictContainer();
+  // Function to apply restrictions to date grid
+  function applyDateRestrictionsToGrid(dateCells, disabledDates) {
+    // console.log("Applying date restrictions to date grid");
 
-    const errorDiv = document.createElement("div");
-    errorDiv.className = "alert alert-danger";
-    errorDiv.innerHTML = `
-    <strong>${message}</strong>
-    <div class="mt-2">
-      <small><strong>Conflicting reservations:</strong></small>
-      <ul class="mb-0 mt-1">
-        ${conflicts
-          .map(
-            (c) => `
-          <li><strong>${c.eventName}</strong> - ${c.startTime} to ${c.endTime}
-            ${c.prepTime ? `(Prep: ${c.prepTime})` : ""}
-          </li>
-        `
-          )
-          .join("")}
-      </ul>
-    </div>
-  `;
+    dateCells.forEach((cell) => {
+      const dateText = cell.textContent.trim();
+      const dateNumber = parseInt(dateText);
 
-    conflictContainer.appendChild(errorDiv);
-  }
+      if (dateNumber && dateNumber >= 1 && dateNumber <= 31) {
+        // Try to determine the full date
+        const fullDate = getFullDateFromCellContext(cell);
 
-  // Function to show conflict warning (non-blocking)
-  function showConflictWarning(message, conflicts) {
-    const conflictContainer = getOrCreateConflictContainer();
-
-    const warningDiv = document.createElement("div");
-    warningDiv.className = "alert alert-warning";
-    warningDiv.innerHTML = `
-    <strong>${message}</strong>
-    <div class="mt-2">
-      <small><strong>Overlapping reservations:</strong></small>
-      <ul class="mb-0 mt-1">
-        ${conflicts
-          .map(
-            (c) => `
-          <li><strong>${c.eventName}</strong> - ${c.startTime} to ${c.endTime}
-            ${c.prepTime ? `(Prep: ${c.prepTime})` : ""}
-          </li>
-        `
-          )
-          .join("")}
-      </ul>
-    </div>
-  `;
-
-    conflictContainer.appendChild(warningDiv);
-  }
-
-  // Primary Form Validation Logic - MOVED TO TOP
-
-  // Function to show success message (no conflicts)
-  function showConflictSuccess(message) {
-    const conflictContainer = getOrCreateConflictContainer();
-
-    const successDiv = document.createElement("div");
-    successDiv.className = "alert alert-success";
-    successDiv.innerHTML = `<strong>${message}</strong>`;
-
-    conflictContainer.appendChild(successDiv);
-
-    // Auto-hide success message after 3 seconds
-    setTimeout(() => {
-      if (successDiv.parentNode) {
-        successDiv.remove();
-      }
-    }, 3000);
-  }
-
-  // Function to get or create conflict container
-  function getOrCreateConflictContainer() {
-    let conflictContainer = document.getElementById("conflict-container");
-    if (!conflictContainer) {
-      conflictContainer = document.createElement("div");
-      conflictContainer.id = "conflict-container";
-      conflictContainer.style.marginTop = "10px";
-
-      // Insert after the time_prep input field
-      if (timePrepInput && timePrepInput.parentNode) {
-        timePrepInput.parentNode.insertBefore(
-          conflictContainer,
-          timePrepInput.nextSibling
-        );
-      } else {
-        // Fallback: insert after the form
-        const form = document.querySelector(".reservation-details");
-        if (form) {
-          form.appendChild(conflictContainer);
+        if (fullDate && isDateDisabled(fullDate, disabledDates)) {
+          disableDateElement(cell);
         }
       }
-    }
-    return conflictContainer;
+    });
   }
 
-  // Function to clear conflict warnings
-  function clearConflictWarnings() {
-    const conflictContainer = document.getElementById("conflict-container");
-    if (conflictContainer) {
-      conflictContainer.innerHTML = "";
-    }
+  // Function to get full date from element context
+  function getFullDateFromElement(element, container) {
+    try {
+      // Look for month/year information in the container
+      const monthYearText = container.querySelector(
+        '[class*="month"], [class*="year"], .month-year, .header'
+      )?.textContent;
 
-    // Reset input styling
-    if (timeStartInput) {
-      timeStartInput.style.borderColor = "";
-      timeStartInput.style.backgroundColor = "";
-    }
-  }
+      if (monthYearText) {
+        const dateNumber = parseInt(element.textContent.trim());
 
-  // Debounced conflict checking to avoid too many API calls
-  let conflictCheckTimeout;
-  const CONFLICT_CHECK_DELAY = 1000; // 1 second delay
+        // Try to parse month and year from the header
+        const currentDate = new Date();
+        let month = currentDate.getMonth();
+        let year = currentDate.getFullYear();
 
-  function debouncedConflictCheck() {
-    clearTimeout(conflictCheckTimeout);
-    conflictCheckTimeout = setTimeout(() => {
-      checkReservationConflicts();
-    }, CONFLICT_CHECK_DELAY);
-  }
+        // Look for month names
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
 
-  // Add event listeners for real-time conflict checking
-  if (timeStartInput) {
-    timeStartInput.addEventListener("change", debouncedConflictCheck);
-    timeStartInput.addEventListener("blur", debouncedConflictCheck);
-  }
+        monthNames.forEach((monthName, index) => {
+          if (monthYearText.includes(monthName)) {
+            month = index;
+          }
+        });
 
-  if (timeEndInput) {
-    timeEndInput.addEventListener("change", debouncedConflictCheck);
-    timeEndInput.addEventListener("blur", debouncedConflictCheck);
-  }
+        // Look for year
+        const yearMatch = monthYearText.match(/\d{4}/);
+        if (yearMatch) {
+          year = parseInt(yearMatch[0]);
+        }
 
-  if (timePrepInput) {
-    timePrepInput.addEventListener("change", debouncedConflictCheck);
-    timePrepInput.addEventListener("blur", debouncedConflictCheck);
-  }
-
-  // Enhanced validation function that also checks for conflicts
-  async function validatePrimaryFormFieldsWithConflicts() {
-    const basicValidation = await validatePrimaryFormFields();
-
-    // If basic validation fails, don't proceed with conflict check
-    if (!basicValidation) {
-      return false;
-    }
-
-    // Check for conflicts if all time fields are filled
-    if (
-      timeStartInput?.value &&
-      timeEndInput?.value &&
-      timePrepInput?.value &&
-      facilityID
-    ) {
-      // Check if there are any blocking conflicts (approved reservations)
-      const hasBlockingConflict = document.querySelector(
-        "#conflict-container .alert-danger"
-      );
-      if (hasBlockingConflict) {
-        showNotification(
-          "Cannot proceed: There are conflicting approved reservations. Please select a different time.",
-          "error"
-        );
-        return false;
+        return new Date(year, month, dateNumber);
       }
+    } catch (error) {
+      console.error("Error getting full date from element:", error);
     }
 
-    return true;
+    return null;
   }
 
-  // Function to remove asset
+  // Function to get full date from cell context
+  function getFullDateFromCellContext(cell) {
+    try {
+      const dateNumber = parseInt(cell.textContent.trim());
+
+      // Look for month/year in nearby elements or data attributes
+      const monthYearElement = document.querySelector(
+        '.month-year, [class*="month"], [class*="year"]'
+      );
+
+      if (monthYearElement) {
+        const monthYearText = monthYearElement.textContent;
+
+        // Current implementation for July 2025 (based on your screenshot)
+        // This should be made more dynamic based on actual calendar state
+        const currentDate = new Date();
+        let month = 6; // July (0-based)
+        let year = 2025;
+
+        // Try to extract actual month/year from the calendar
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+
+        monthNames.forEach((monthName, index) => {
+          if (monthYearText.includes(monthName)) {
+            month = index;
+          }
+        });
+
+        const yearMatch = monthYearText.match(/\d{4}/);
+        if (yearMatch) {
+          year = parseInt(yearMatch[0]);
+        }
+
+        return new Date(year, month, dateNumber);
+      }
+    } catch (error) {
+      console.error("Error getting full date from cell context:", error);
+    }
+
+    return null;
+  }
+
+  // Function to check if date should be disabled
+  function isDateDisabled(date, disabledDates) {
+    const dateStr = formatDateForInput(date);
+    return disabledDates.some(
+      (disabledDate) => formatDateForInput(disabledDate) === dateStr
+    );
+  }
+
+  // Function to disable a date element
+  function disableDateElement(element) {
+    //   console.log("Disabling date element:", element.textContent);
+
+    // Add disabled class
+    element.classList.add("disabled-date", "calendar-disabled");
+
+    // Remove click events
+    element.style.pointerEvents = "none";
+    element.style.cursor = "not-allowed";
+
+    // Add disabled attributes
+    element.setAttribute("disabled", "true");
+    element.setAttribute("aria-disabled", "true");
+
+    // Prevent click events
+    element.addEventListener(
+      "click",
+      function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      },
+      true
+    );
+
+    // Add title for accessibility
+    element.title = "This date is not available due to existing reservations";
+  }
+
+  // Function to setup calendar observer
+  function setupCalendarObserver(disabledDates) {
+    //  console.log("Setting up calendar observer...");
+
+    // Create a mutation observer to watch for calendar popups
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === "childList") {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              // Check if a calendar was added
+              const calendar = node.querySelector
+                ? node.querySelector(
+                    '.calendar, .datepicker, .date-picker, [class*="calendar"], [class*="picker"]'
+                  )
+                : null;
+
+              if (
+                calendar ||
+                (node.classList &&
+                  (node.classList.contains("calendar") ||
+                    node.classList.contains("datepicker") ||
+                    node.classList.contains("date-picker") ||
+                    [...node.classList].some(
+                      (cls) =>
+                        cls.includes("calendar") || cls.includes("picker")
+                    )))
+              ) {
+                //     console.log("Calendar detected, applying restrictions");
+                setTimeout(() => {
+                  setupCustomCalendarRestrictions(disabledDates);
+                }, 100);
+              }
+
+              // Also check for date cells being added
+              const dateCells = node.querySelectorAll
+                ? node.querySelectorAll(
+                    'td, .day, .date, [class*="date"], [class*="day"]'
+                  )
+                : [];
+
+              if (dateCells.length > 0) {
+                //  console.log("Date cells detected, applying restrictions");
+                setTimeout(() => {
+                  applyDateRestrictionsToGrid(dateCells, disabledDates);
+                }, 50);
+              }
+            }
+          });
+        }
+      });
+    });
+
+    // Start observing
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Store observer for cleanup
+    window.calendarObserver = observer;
+  }
+
+  // Function to add custom CSS for calendar styling
+  function addCalendarStyles() {
+    const styleId = "calendar-restriction-styles";
+    if (document.getElementById(styleId)) return;
+
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+    .disabled-date, .calendar-disabled {
+      background-color: #f8d7da !important;
+      color: #721c24 !important;
+      cursor: not-allowed !important;
+      opacity: 0.6 !important;
+      pointer-events: none !important;
+    }
+    
+    .disabled-date:hover, .calendar-disabled:hover {
+      background-color: #f5c6cb !important;
+      cursor: not-allowed !important;
+    }
+    
+    /* Custom datetime picker disabled dates */
+    td.disabled-date, .day.disabled-date, .date.disabled-date {
+      background-color: #f8d7da !important;
+      color: #721c24 !important;
+      cursor: not-allowed !important;
+      text-decoration: line-through !important;
+      position: relative !important;
+    }
+    
+    td.disabled-date::before, .day.disabled-date::before, .date.disabled-date::before {
+      content: "✕" !important;
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      font-size: 12px !important;
+      color: #721c24 !important;
+      font-weight: bold !important;
+    }
+    
+    /* Flatpickr disabled dates */
+    .flatpickr-day.flatpickr-disabled {
+      background-color: #f8d7da !important;
+      color: #721c24 !important;
+      cursor: not-allowed !important;
+    }
+    
+    /* jQuery UI disabled dates */
+    .ui-datepicker-calendar .ui-state-disabled {
+      background-color: #f8d7da !important;
+      color: #721c24 !important;
+      cursor: not-allowed !important;
+    }
+    
+    /* Generic calendar disabled dates */
+    .calendar .disabled-date,
+    .datepicker .disabled-date,
+    .date-picker .disabled-date {
+      background-color: #f8d7da !important;
+      color: #721c24 !important;
+      cursor: not-allowed !important;
+      opacity: 0.6 !important;
+    }
+    
+    .is-invalid {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+  `;
+    document.head.appendChild(style);
+  }
+
+  // Function to refresh calendar restrictions when facility changes
+  async function refreshCalendarRestrictions() {
+    //   console.log("Refreshing calendar restrictions for facility:", facilityID);
+    await setupCalendarRestrictions();
+  }
+
+  // Function to remove asset (keeping original functionality)
   function removeAsset(index) {
     if (
       confirm(
@@ -1148,18 +1547,104 @@ document.addEventListener("DOMContentLoaded", function () {
       )
     ) {
       selectedAssets.splice(index, 1);
-
       try {
         sessionStorage.setItem("addedAssets", JSON.stringify(selectedAssets));
-        console.log("Asset removed. Updated session storage:", selectedAssets);
+        //    console.log("Asset removed. Updated session storage:", selectedAssets);
         showNotification("Property removed successfully!", "info");
-        renderPropertyTable(); // Re-render the table after removal
+        renderPropertyTable();
       } catch (error) {
         console.error("Error saving to session storage:", error);
         showNotification("Error removing property. Please try again.", "error");
       }
     }
   }
+
+  function getOrCreateConflictContainer() {
+    let container = document.getElementById("conflict-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "conflict-container";
+      // Insert after the last time input
+      const lastInput = timePrepInput || timeEndInput || timeStartInput;
+      if (lastInput) {
+        const parent =
+          lastInput.closest(".form-group") ||
+          lastInput.closest(".mb-3") ||
+          lastInput.parentNode;
+        parent.appendChild(container);
+      }
+    }
+    return container;
+  }
+
+  // Function to remove asset (keeping original functionality)
+  function removeAsset(index) {
+    if (
+      confirm(
+        "Are you sure you want to remove this property from your reservation?"
+      )
+    ) {
+      selectedAssets.splice(index, 1);
+      try {
+        sessionStorage.setItem("addedAssets", JSON.stringify(selectedAssets));
+        //  console.log("Asset removed. Updated session storage:", selectedAssets);
+        showNotification("Property removed successfully!", "info");
+        renderPropertyTable();
+      } catch (error) {
+        console.error("Error saving to session storage:", error);
+        showNotification("Error removing property. Please try again.", "error");
+      }
+    }
+  }
+
+  // Initialize the calendar restriction system
+  async function initializeCalendarRestrictions() {
+    //  console.log("Initializing calendar restriction system...");
+
+    // Wait for DOM to be ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupCalendarRestrictions);
+    } else {
+      await setupCalendarRestrictions();
+    }
+
+    // Listen for facility changes
+    if (typeof facilityID !== "undefined") {
+      // Set up observer for facility changes
+      const facilityObserver = new MutationObserver(async (mutations) => {
+        const oldFacilityID = facilityID;
+        // Check if facility has changed
+        if (facilityID !== oldFacilityID) {
+          //   console.log("Facility changed, refreshing calendar restrictions");
+          await refreshCalendarRestrictions();
+        }
+      });
+
+      // Start observing if facility selector exists
+      const facilitySelector = document.querySelector(
+        '[name="facility"], [id*="facility"], [class*="facility"]'
+      );
+      if (facilitySelector) {
+        facilityObserver.observe(facilitySelector, {
+          attributes: true,
+          childList: true,
+          subtree: true,
+        });
+      }
+    }
+  }
+
+  // Initialize immediately
+  initializeCalendarRestrictions();
+
+  // Also initialize after a delay to catch dynamically loaded content
+  setTimeout(() => {
+    initializeCalendarRestrictions();
+  }, 2000);
+
+  // Export functions for external use
+  window.refreshCalendarRestrictions = refreshCalendarRestrictions;
+  window.setupCalendarRestrictions = setupCalendarRestrictions;
 
   // Function to show notifications
   function showNotification(message, type = "info") {
@@ -1238,24 +1723,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return isValid;
   }
 
-  // Function to get summary of all properties for reservation
-  function getReservationSummary() {
-    const summary = {
-      facilityProperties: facilityProperties.map((prop) => ({
-        name: prop.name,
-        quantity: prop.quantity || 1,
-        type: "included",
-      })),
-      selectedAssets: selectedAssets.map((asset) => ({
-        name: asset.name,
-        quantity: asset.quantity,
-        type: "selected",
-      })),
-      totalItems: facilityProperties.length + selectedAssets.length,
-    };
-    return summary;
-  }
-
   // Function to add required indicator
   function addRequiredIndicator(id) {
     const label = document.querySelector(`label[for="${id}"]`);
@@ -1286,24 +1753,6 @@ document.addEventListener("DOMContentLoaded", function () {
   addRequiredIndicator("subject_description");
 
   // Function to show error messages
-  function showError(input, message) {
-    let errorElement = input.nextElementSibling;
-
-    if (input.readOnly) {
-      return; // Do not show error for read-only fields
-    }
-
-    if (!errorElement || !errorElement.classList.contains("error-message")) {
-      errorElement = document.createElement("div");
-      errorElement.classList.add("error-message");
-      errorElement.style.color = "red";
-      errorElement.style.fontSize = "0.875rem";
-      errorElement.style.marginTop = "4px";
-      input.insertAdjacentElement("afterend", errorElement);
-    }
-    errorElement.textContent = message;
-    input.classList.add("is-invalid");
-  }
 
   // Function to clear error messages
   function clearError(input) {
@@ -1312,21 +1761,6 @@ document.addEventListener("DOMContentLoaded", function () {
       errorElement.remove();
     }
     input.classList.remove("is-invalid");
-  }
-
-  // Function to validate a single input
-  function validateInput(input) {
-    if (!input || input.readOnly) {
-      clearError(input);
-      return true;
-    }
-    if (input.value.trim() === "") {
-      showError(input, `This field cannot be empty.`);
-      return false;
-    } else {
-      clearError(input);
-      return true;
-    }
   }
 
   // Function to populate user-related fields from PocketBase
@@ -1392,526 +1826,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initial population of auto-generated fields
   populateUserFields();
 
-  // Add event listeners for time inputs
-  if (timeStartInput) {
-    timeStartInput.addEventListener("change", () =>
-      debouncedValidatePrimaryFormFields()
-    );
-    timeStartInput.addEventListener("input", () =>
-      debouncedValidatePrimaryFormFields()
-    );
-  }
-  if (timeEndInput) {
-    timeEndInput.addEventListener("change", () =>
-      debouncedValidatePrimaryFormFields()
-    );
-    timeEndInput.addEventListener("input", () =>
-      debouncedValidatePrimaryFormFields()
-    );
-  }
-  if (timePrepInput) {
-    timePrepInput.addEventListener("input", () =>
-      debouncedValidatePrimaryFormFields()
-    );
-  }
-
-  // Restriction Functions
-
-  // 1. Cannot Reserve One Month in Advance
-  function validateOneMonthAdvance(startDateStr) {
-    const startDate = new Date(startDateStr);
-    const now = new Date();
-    // Set time to 00:00:00 for accurate month comparison
-    now.setHours(0, 0, 0, 0);
-
-    const oneMonthFromNow = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      now.getDate()
-    );
-    // Set time to 23:59:59 to include the whole day
-    oneMonthFromNow.setHours(23, 59, 59, 999);
-
-    if (startDate > oneMonthFromNow) {
-      showError(
-        timeStartInput,
-        "Reservations cannot be made more than one month in advance."
-      );
-      return false;
-    }
-    return true;
-  }
-
-  function checkConflict(facility, startTime, endTime, prepTime) {
-    // Query existing reservations for the same facility
-    const conflicts = existingReservations.filter(
-      (reservation) =>
-        reservation.facility === facility &&
-        // Check if time ranges overlap (including prep time)
-        ((prepTime < reservation.endTime && endTime > reservation.prepTime) ||
-          (reservation.prepTime < endTime && reservation.endTime > prepTime))
-    );
-
-    if (conflicts.length > 0) {
-      showWarning(
-        "This facility is already reserved during the selected time period."
-      );
-      return false;
-    }
-    return true;
-  }
-
-  // 3. Warning for Less Than a Week Reservation
-  function checkLessThanWeekWarning(startDateStr) {
-    const startDate = new Date(startDateStr);
-    const now = new Date();
-    now.setHours(0, 0, 0, 0); // Normalize to start of day
-
-    const oneWeekFromNow = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + 7
-    );
-    oneWeekFromNow.setHours(0, 0, 0, 0); // Normalize to start of day
-
-    if (startDate < oneWeekFromNow) {
-      showNotification(
-        "Warning: Reservations less than one week before the event are not guaranteed approval.",
-        "warning"
-      );
-      return true; // This is a warning, so still return true for overall validation flow
-    }
-    return true;
-  }
-
-  // Declare a variable to hold the AbortController for monthly checks
-  let monthlyReservationAbortController = null;
-
-  // 4. Cannot Reserve Same Facility Same Month
-  async function validateMonthlyFacilityReservation(
-    userId,
-    facilityId,
-    newReservationStartTime
-  ) {
-    // Cancel any previous ongoing monthly reservation checks
-    if (monthlyReservationAbortController) {
-      monthlyReservationAbortController.abort(
-        "New monthly reservation check initiated."
-      );
-      console.log("Aborted previous monthly reservation check.");
-    }
-    monthlyReservationAbortController = new AbortController();
-    const signal = monthlyReservationAbortController.signal;
-
-    if (!userId || !facilityId || !newReservationStartTime) {
-      monthlyReservationAbortController = null; // Clear controller if not proceeding
-      return true;
-    }
-
-    const newReservationDate = new Date(newReservationStartTime);
-    const startOfMonth = new Date(
-      newReservationDate.getFullYear(),
-      newReservationDate.getMonth(),
-      1
-    );
-    const endOfMonth = new Date(
-      newReservationDate.getFullYear(),
-      newReservationDate.getMonth() + 1,
-      0,
-      23,
-      59,
-      59
-    );
-
-    const filter = `
-          userID="${userId}"
-          && facilityID="${facilityId}"
-          && (status="approved" || status="pending")
-          && (startTime >= "${startOfMonth.toISOString()}" && startTime <= "${endOfMonth.toISOString()}")
-      `;
-    try {
-      const existingReservations = await pb
-        .collection("reservation")
-        .getFullList({ filter, signal });
-      monthlyReservationAbortController = null; // Clear controller on successful completion
-
-      if (existingReservations.length > 0) {
-        showNotification(
-          "You have already reserved this facility this month. You cannot reserve it again within the same calendar month.",
-          "error"
-        );
-        return false;
-      }
-      return true;
-    } catch (error) {
-      monthlyReservationAbortController = null; // Clear controller on error
-      if (error.name === "AbortError") {
-        console.warn("Monthly reservation check was aborted:", error.message);
-        return true; // Treat as valid if the check was aborted by a newer request
-      }
-      console.error("Error checking monthly facility reservation:", error);
-      showNotification(
-        "Error checking previous reservations. Please try again.",
-        "error"
-      );
-      return false;
-    }
-  }
-
-  function validatePrepTime(prepTime, startTime) {
-    const maxPrepTime = new Date(startTime.getTime() - 3 * 60 * 60 * 1000); // 3 hours before
-
-    if (prepTime < maxPrepTime) {
-      showError(
-        "Preparation time cannot be more than 3 hours before the event start time."
-      );
-      return false;
-    }
-
-    if (prepTime >= startTime) {
-      showError("Preparation time must be before the event start time.");
-      return false;
-    }
-
-    return true;
-  }
-  // Add validation timeout variables for debouncing
-  let validationTimeout;
-  let primaryFormValidationTimeout;
-
-  // Enhanced validateOneMonthAdvance function that integrates with your existing system
-  function validateOneMonthAdvance(startTimeValue) {
-    try {
-      console.log("=== VALIDATE ONE MONTH ADVANCE ===");
-      console.log("Input startTime:", startTimeValue);
-
-      if (!startTimeValue) {
-        console.log("No start time provided");
-        return true; // Let other validation handle empty values
-      }
-
-      // Get current date
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Calculate date 1 month from today
-      const oneMonthFromToday = new Date(today);
-      oneMonthFromToday.setMonth(oneMonthFromToday.getMonth() + 1);
-
-      // Parse the event start date - handle DD/MM/YYYY format
-      let eventStartDate;
-      if (startTimeValue.includes("/")) {
-        const datePart = startTimeValue.split(" ")[0]; // Get "20/07/2025"
-        const [day, month, year] = datePart.split("/");
-        eventStartDate = new Date(year, month - 1, day); // month is 0-indexed
-      } else {
-        eventStartDate = new Date(startTimeValue);
-      }
-
-      // Validate that we got a valid date
-      if (isNaN(eventStartDate.getTime())) {
-        console.error("Invalid date format:", startTimeValue);
-        if (
-          typeof showError === "function" &&
-          typeof timeStartInput !== "undefined" &&
-          timeStartInput
-        ) {
-          showError(
-            timeStartInput,
-            "Invalid date format. Please check your selected date."
-          );
-        }
-        return false;
-      }
-
-      eventStartDate.setHours(0, 0, 0, 0);
-
-      console.log("Today:", today.toLocaleDateString());
-      console.log(
-        "One month from today:",
-        oneMonthFromToday.toLocaleDateString()
-      );
-      console.log("Event start date:", eventStartDate.toLocaleDateString());
-
-      // Check if event is more than 1 month in advance
-      if (eventStartDate > oneMonthFromToday) {
-        const daysDifference = Math.ceil(
-          (eventStartDate.getTime() - today.getTime()) / (1000 * 3600 * 24)
-        );
-        console.log("Days difference:", daysDifference);
-        console.log("VALIDATION FAILED: More than 1 month in advance");
-
-        const errorMessage = `Cannot make reservations more than 1 month in advance. This event is ${daysDifference} days away. Please select a date within the next 30 days.`;
-
-        // Use your existing showError function
-        if (
-          typeof showError === "function" &&
-          typeof timeStartInput !== "undefined" &&
-          timeStartInput
-        ) {
-          showError(timeStartInput, errorMessage);
-        }
-
-        // Also show notification if available
-        if (typeof showNotification === "function") {
-          showNotification(`❌ ${errorMessage}`, "error");
-        }
-
-        return false;
-      }
-
-      // Check if event is in the past
-      if (eventStartDate < today) {
-        console.log("VALIDATION FAILED: Past date");
-        const errorMessage =
-          "Cannot make reservations for past dates. Please select a future date.";
-
-        if (
-          typeof showError === "function" &&
-          typeof timeStartInput !== "undefined" &&
-          timeStartInput
-        ) {
-          showError(timeStartInput, errorMessage);
-        }
-
-        if (typeof showNotification === "function") {
-          showNotification(`❌ ${errorMessage}`, "error");
-        }
-
-        return false;
-      }
-
-      console.log("VALIDATION PASSED: Date is within allowed range");
-
-      // Clear any previous error for this validation
-      if (
-        typeof clearError === "function" &&
-        typeof timeStartInput !== "undefined" &&
-        timeStartInput
-      ) {
-        // Only clear if the error is related to advance booking
-        const errorElement = timeStartInput.nextElementSibling;
-        if (
-          errorElement &&
-          errorElement.textContent &&
-          (errorElement.textContent.includes("one month in advance") ||
-            errorElement.textContent.includes("past dates"))
-        ) {
-          clearError(timeStartInput);
-        }
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error in validateOneMonthAdvance:", error);
-
-      if (
-        typeof showError === "function" &&
-        typeof timeStartInput !== "undefined" &&
-        timeStartInput
-      ) {
-        showError(
-          timeStartInput,
-          "Error validating reservation date. Please check your selected date."
-        );
-      }
-
-      return false;
-    }
-  }
-
-  // Debounced validation function for primary form fields
-  function debouncedValidatePrimaryFormFields(delay = 300) {
-    // Clear existing timeout
-    if (primaryFormValidationTimeout) {
-      clearTimeout(primaryFormValidationTimeout);
-    }
-
-    // Set new timeout
-    primaryFormValidationTimeout = setTimeout(() => {
-      validatePrimaryFormFields();
-    }, delay);
-  }
-
-  // Primary form fields validation function
-  function validatePrimaryFormFields() {
-    console.log("=== VALIDATING PRIMARY FORM FIELDS ===");
-
-    let isValid = true;
-
-    // Check if required elements exist before validating
-    if (
-      typeof timeStartInput !== "undefined" &&
-      timeStartInput &&
-      timeStartInput.value
-    ) {
-      const currentEventType =
-        typeof eventTypeDropdown !== "undefined" && eventTypeDropdown
-          ? eventTypeDropdown.value
-          : null;
-
-      // Skip validation for University events
-      if (currentEventType !== "University") {
-        const isAdvanceValid = validateOneMonthAdvance(timeStartInput.value);
-        if (!isAdvanceValid) {
-          isValid = false;
-        }
-
-        // Non-blocking warning check
-        checkLessThanWeekWarning(timeStartInput.value);
-      }
-    }
-
-    // Add other primary form field validations here
-    // Example: event type validation
-    if (typeof eventTypeDropdown !== "undefined" && eventTypeDropdown) {
-      if (!eventTypeDropdown.value || eventTypeDropdown.value === "") {
-        console.log("Event type is required");
-        if (typeof showError === "function") {
-          showError(eventTypeDropdown, "Please select an event type.");
-        }
-        isValid = false;
-      } else {
-        if (typeof clearError === "function") {
-          clearError(eventTypeDropdown);
-        }
-      }
-    }
-
-    // Example: event name validation (if you have this field)
-    if (typeof eventNameInput !== "undefined" && eventNameInput) {
-      if (!eventNameInput.value || eventNameInput.value.trim() === "") {
-        console.log("Event name is required");
-        if (typeof showError === "function") {
-          showError(eventNameInput, "Please enter an event name.");
-        }
-        isValid = false;
-      } else {
-        if (typeof clearError === "function") {
-          clearError(eventNameInput);
-        }
-      }
-    }
-
-    console.log("Primary form validation result:", isValid);
-    return isValid;
-  }
-
-  // Debounced validation function
-  function debouncedValidateOneMonthAdvance(startTimeValue, delay = 500) {
-    // Clear existing timeout
-    if (validationTimeout) {
-      clearTimeout(validationTimeout);
-    }
-
-    // Set new timeout
-    validationTimeout = setTimeout(() => {
-      validateOneMonthAdvance(startTimeValue);
-    }, delay);
-  }
-
-  // Enhanced function to check less than a week warning (non-blocking)
-  function checkLessThanWeekWarning(startTimeValue) {
-    try {
-      console.log("=== CHECK LESS THAN WEEK WARNING ===");
-
-      if (!startTimeValue) {
-        return;
-      }
-
-      // Get current date
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Calculate date 1 week from today
-      const oneWeekFromToday = new Date(today);
-      oneWeekFromToday.setDate(oneWeekFromToday.getDate() + 7);
-
-      // Parse the event start date
-      let eventStartDate;
-      if (startTimeValue.includes("/")) {
-        const datePart = startTimeValue.split(" ")[0];
-        const [day, month, year] = datePart.split("/");
-        eventStartDate = new Date(year, month - 1, day);
-      } else {
-        eventStartDate = new Date(startTimeValue);
-      }
-
-      if (isNaN(eventStartDate.getTime())) {
-        return;
-      }
-
-      eventStartDate.setHours(0, 0, 0, 0);
-
-      // Check if event is less than a week away
-      if (eventStartDate <= oneWeekFromToday && eventStartDate >= today) {
-        const daysDifference = Math.ceil(
-          (eventStartDate.getTime() - today.getTime()) / (1000 * 3600 * 24)
-        );
-
-        console.log("WARNING: Event is less than a week away");
-
-        // Show warning (non-blocking)
-        let warningMessage;
-        if (daysDifference <= 1) {
-          warningMessage =
-            "⚠️ This event is tomorrow or today. Please ensure all preparations are ready.";
-        } else {
-          warningMessage = `⚠️ This event is only ${daysDifference} days away. Please ensure adequate preparation time.`;
-        }
-
-        // Show as notification or console warning
-        if (typeof showNotification === "function") {
-          showNotification(warningMessage, "warning");
-        } else {
-          console.warn(warningMessage);
-        }
-
-        // Optionally show a non-blocking visual warning near the input
-        showLessThanWeekWarning(warningMessage);
-      } else {
-        // Remove any existing warning
-        removeLessThanWeekWarning();
-      }
-    } catch (error) {
-      console.error("Error in checkLessThanWeekWarning:", error);
-    }
-  }
-
-  // Helper function to show less than week warning (non-blocking)
-  function showLessThanWeekWarning(message) {
-    // Remove existing warning
-    removeLessThanWeekWarning();
-
-    if (typeof timeStartInput !== "undefined" && timeStartInput) {
-      const warningDiv = document.createElement("div");
-      warningDiv.id = "less-than-week-warning";
-      warningDiv.className = "alert alert-warning mt-2";
-      warningDiv.style.marginTop = "8px";
-      warningDiv.innerHTML = `
-      <i class="fas fa-clock me-2"></i>
-      ${message}
-    `;
-
-      // Insert after the input's parent container
-      const container =
-        timeStartInput.closest(".form-group") ||
-        timeStartInput.closest(".mb-3") ||
-        timeStartInput.parentNode;
-      if (container) {
-        container.appendChild(warningDiv);
-      }
-    }
-  }
-
-  // Helper function to remove less than week warning
-  function removeLessThanWeekWarning() {
-    const existingWarning = document.getElementById("less-than-week-warning");
-    if (existingWarning) {
-      existingWarning.remove();
-    }
-  }
-
   // Enhanced function to handle University event privileges
   function handleUniversityEventPrivileges() {
     const currentEventType =
@@ -1920,10 +1834,11 @@ document.addEventListener("DOMContentLoaded", function () {
         : null;
 
     if (currentEventType === "University") {
-      console.log("=== UNIVERSITY EVENT DETECTED ===");
-      console.log(
-        "All restrictions lifted, conflicting events will be auto-cancelled"
-      );
+      //  console.log("=== UNIVERSITY EVENT DETECTED ===");
+      console
+        .log
+        //  "All restrictions lifted, conflicting events will be auto-cancelled"
+        ();
 
       // Clear any advance booking errors
       if (
@@ -1950,135 +1865,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     return false; // Not a University event, apply normal restrictions
   }
-
-  // Test function to check current form state
-  function testCurrentFormState() {
-    console.log("=== TESTING CURRENT FORM STATE ===");
-
-    const currentEventType =
-      typeof eventTypeDropdown !== "undefined" && eventTypeDropdown
-        ? eventTypeDropdown.value
-        : null;
-    console.log("Current event type:", currentEventType);
-
-    if (
-      typeof timeStartInput !== "undefined" &&
-      timeStartInput &&
-      timeStartInput.value
-    ) {
-      console.log("Current start time:", timeStartInput.value);
-
-      if (currentEventType === "University") {
-        console.log("University event - skipping restrictions");
-        handleUniversityEventPrivileges();
-      } else {
-        console.log("Non-University event - applying restrictions");
-        const isValidAdvance = validateOneMonthAdvance(timeStartInput.value);
-        console.log("Advance booking validation result:", isValidAdvance);
-
-        if (isValidAdvance) {
-          checkLessThanWeekWarning(timeStartInput.value);
-        }
-      }
-    } else {
-      console.log("No start time set or timeStartInput not found");
-    }
-  }
-
-  // Enhanced event listener for event type changes
-  function setupEventTypeListener() {
-    if (typeof eventTypeDropdown !== "undefined" && eventTypeDropdown) {
-      eventTypeDropdown.addEventListener("change", function () {
-        console.log("Event type changed to:", this.value);
-
-        if (this.value === "University") {
-          handleUniversityEventPrivileges();
-        } else {
-          // Trigger debounced validation for non-University events
-          debouncedValidatePrimaryFormFields();
-        }
-      });
-    }
-  }
-
-  // Enhanced event listener for time changes
-  function setupTimeStartListener() {
-    if (typeof timeStartInput !== "undefined" && timeStartInput) {
-      timeStartInput.addEventListener("change", function () {
-        console.log("Start time changed to:", this.value);
-
-        const currentEventType =
-          typeof eventTypeDropdown !== "undefined" && eventTypeDropdown
-            ? eventTypeDropdown.value
-            : null;
-
-        if (currentEventType === "University") {
-          console.log("University event - skipping time validation");
-          handleUniversityEventPrivileges();
-        } else {
-          // Trigger debounced validation
-          debouncedValidatePrimaryFormFields();
-        }
-      });
-
-      // Also add input event listener for real-time validation (debounced)
-      timeStartInput.addEventListener("input", function () {
-        const currentEventType =
-          typeof eventTypeDropdown !== "undefined" && eventTypeDropdown
-            ? eventTypeDropdown.value
-            : null;
-
-        if (currentEventType !== "University" && this.value) {
-          debouncedValidateOneMonthAdvance(this.value);
-        }
-      });
-    }
-  }
-
-  // Setup additional form field listeners
-  function setupAdditionalFormListeners() {
-    // Event name input listener (if exists)
-    if (typeof eventNameInput !== "undefined" && eventNameInput) {
-      eventNameInput.addEventListener("input", function () {
-        debouncedValidatePrimaryFormFields();
-      });
-    }
-
-    // Add other form field listeners here as needed
-    // Example: capacity input, description input, etc.
-  }
-
-  // Initialize on page load
-  document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM loaded - setting up validation system");
-
-    // Setup event listeners
-    setupEventTypeListener();
-    setupTimeStartListener();
-    setupAdditionalFormListeners();
-
-    // Test current form state after a delay to ensure elements are loaded
-    setTimeout(() => {
-      testCurrentFormState();
-    }, 1000);
-  });
-
-  // Manual test function
-  window.testAdvanceBookingIntegrated = function () {
-    console.log("Manual test triggered");
-    testCurrentFormState();
-  };
-
-  // Export for debugging
-  window.validateOneMonthAdvance = validateOneMonthAdvance;
-  window.debouncedValidateOneMonthAdvance = debouncedValidateOneMonthAdvance;
-  window.debouncedValidatePrimaryFormFields =
-    debouncedValidatePrimaryFormFields;
-  window.validatePrimaryFormFields = validatePrimaryFormFields;
-  window.checkLessThanWeekWarning = checkLessThanWeekWarning;
-  window.handleUniversityEventPrivileges = handleUniversityEventPrivileges;
-  window.testCurrentFormState = testCurrentFormState;
-
   // Confirm Modal and Policy Modal Logic
   const confirmBtn = document.getElementById("confirm-btn"); // The main "CONFIRMED" button
   const priorityModalEl = document.getElementById("priorityModal"); // The Policy Modal element
@@ -2110,7 +1896,6 @@ document.addEventListener("DOMContentLoaded", function () {
       e.preventDefault();
 
       // Clear any previous debounce timeout for validation
-      clearTimeout(validationTimeout);
 
       // Run all form validations FIRST
       if (!validateAllQuantities()) {
@@ -2120,14 +1905,6 @@ document.addEventListener("DOMContentLoaded", function () {
           "error"
         );
         return; // Stop if property quantities are invalid
-      }
-
-      if (!(await validatePrimaryFormFieldsWithConflicts())) {
-        showNotification(
-          "Please fill in all required fields and correct errors.",
-          "error"
-        );
-        return;
       }
 
       // After all form fields are valid, then check policy acknowledgement
@@ -2159,13 +1936,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // 3. Handler for the "Yes, Confirm Reservation" button inside the FINAL CONFIRMATION modal
     modalYesBtn.addEventListener("click", async () => {
       // Re-validate just before submission from modal (redundant but safe final check)
-      if (
-        !validateAllQuantities() ||
-        !(await validatePrimaryFormFieldsWithConflicts())
-      ) {
+      if (!validateAllQuantities()) {
         showNotification(
           "There were last-minute errors. Please review the form.",
           "error"
@@ -2223,12 +1996,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Generate next event ID if none exists or invalid
         let eventID = sessionStorage.getItem("eventID");
-        // Assuming 15 is typical PocketBase ID length. Adjust if your IDs are different.
         if (!eventID || eventID.length !== 15) {
-          // This is a placeholder for generating a unique ID.
-          // A robust implementation would involve a server-side function
-          // or careful atomic increments to ensure true uniqueness and prevent race conditions.
-          // For client-side demonstration, a timestamp-based ID can work for now.
           async function generateNextId(collectionName, prefix) {
             return `${prefix}${Date.now().toString(36).toUpperCase()}`;
           }
@@ -2242,13 +2010,11 @@ document.addEventListener("DOMContentLoaded", function () {
           eventID = eventRecord.id;
           sessionStorage.setItem("eventID", eventID);
         } else {
-          // If eventID exists, update the existing event record
           await pb.collection("event").update(eventID, {
             name: updatedEventData.event_name,
             description: updatedEventData.event_description,
           });
         }
-
         const formData = new FormData();
         const toISOStringSafe = (dateStr) => {
           const date = new Date(dateStr);
@@ -2312,7 +2078,8 @@ document.addEventListener("DOMContentLoaded", function () {
           finalPropertyQuantityMap[p.id] = p.quantity;
         });
 
-        finalPropertyIds.forEach((id) => formData.append("propertyID", id));
+        formData.append("propertyID", JSON.stringify(finalPropertyIds));
+
         formData.append(
           "propertyQuantity",
           JSON.stringify(finalPropertyQuantityMap)
@@ -2480,25 +2247,42 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
 
-        console.log("FormData contents:");
+        //   console.log("FormData contents:");
         for (let [key, value] of formData.entries()) {
-          console.log(key, value);
+          //   console.log(key, value);
         }
 
         const reservationRecord = await pb
           .collection("reservation")
           .create(formData);
-        console.log("Reservation created:", reservationRecord);
+        // console.log("Reservation created:", reservationRecord);
 
-        showNotification("Reservation submitted successfully!", "success");
+        // Clear all session storage data after successful reservation
         sessionStorage.clear();
-        window.location.href =
-          "/dashboards/student/reservation-module/reservation-details/reservation-details.html";
+
+        // Show success modal instead of simple notification
+        if (typeof showReservationSuccessModal === "function") {
+          showReservationSuccessModal();
+
+          // Optional: Add a small delay and then redirect to ensure modal is shown
+          setTimeout(() => {
+            window.location.href =
+              "/dashboards/student/reservation-history/reservation-history.html";
+          }, 2000); // 2 second delay to show the success modal
+        } else {
+          // Fallback if modal function is not available
+          showNotification("Reservation submitted successfully!", "success");
+
+          // Add a small delay before redirect to ensure notification is seen
+          setTimeout(() => {
+            window.location.href =
+              "/dashboards/student/reservation-history/reservation-history.html";
+          }, 1500); // 1.5 second delay
+        }
       } catch (error) {
         console.error("Detailed error:", error);
-        if (error.response && error.response.data) {
-          const errorDetails = JSON.stringify(error.response.data, null, 2);
-          showNotification(`Submission Error: ${errorDetails}`, "error");
+        if (error?.response?.data) {
+          console.error("PocketBase Error Details:", error.response.data);
         } else {
           showNotification(
             "There was an error submitting the reservation. Check console for details.",
@@ -2510,5 +2294,406 @@ document.addEventListener("DOMContentLoaded", function () {
         if (finalConfirmModal) finalConfirmModal.hide();
       }
     });
+  }
+  // Date Picker Unavailable Dates Handler
+  // This module handles disabling dates in the date picker based on existing reservations
+
+  let unavailableDatesCache = new Set();
+  let lastFacilityChecked = null;
+  let datePickerInstance = null;
+
+  // Function to fetch unavailable dates for a specific facility
+  async function fetchUnavailableDates(facilityId) {
+    if (!facilityId) {
+      // console.log("No facility ID provided");
+      return new Set();
+    }
+
+    try {
+      //  console.log(`Fetching unavailable dates for facility: ${facilityId}`);
+
+      // Filter for reservations with pending or approved status for the specific facility
+      const filter = `facilityID="${facilityId}" && (status="approved" || status="pending")`;
+
+      const existingReservations = await pb
+        .collection("reservation")
+        .getFullList({
+          filter,
+          fields: "startTime,endTime,preperationTime,status,eventName",
+        });
+
+      // console.log(`Found ${existingReservations.length} existing reservations`);
+
+      const unavailableDates = new Set();
+
+      existingReservations.forEach((reservation) => {
+        try {
+          // Get the preparation time (if exists) or start time
+          const startDateTime = new Date(
+            reservation.preperationTime || reservation.startTime
+          );
+          const endDateTime = new Date(reservation.endTime);
+
+          if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+            console.warn("Invalid date in reservation:", reservation);
+            return;
+          }
+
+          // Add all dates from preparation/start date to end date
+          const currentDate = new Date(startDateTime);
+          currentDate.setHours(0, 0, 0, 0); // Normalize to start of day
+
+          const endDate = new Date(endDateTime);
+          endDate.setHours(0, 0, 0, 0); // Normalize to start of day
+
+          while (currentDate <= endDate) {
+            const dateString = currentDate.toISOString().split("T")[0]; // YYYY-MM-DD format
+            unavailableDates.add(dateString);
+            console
+              .log
+              //`Added unavailable date: ${dateString} (${reservation.status})`
+              ();
+
+            // Move to next day
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+        } catch (error) {
+          console.error(
+            "Error processing reservation date:",
+            error,
+            reservation
+          );
+        }
+      });
+
+      return unavailableDates;
+    } catch (error) {
+      console.error("Error fetching unavailable dates:", error);
+      return new Set();
+    }
+  }
+
+  // Function to update the date picker with unavailable dates
+  async function updateDatePickerAvailability(facilityId) {
+    if (!facilityId) {
+      //    console.log("No facility selected, clearing unavailable dates");
+      unavailableDatesCache.clear();
+      lastFacilityChecked = null;
+      return;
+    }
+
+    // Only fetch if facility changed or cache is empty
+    if (
+      facilityId !== lastFacilityChecked ||
+      unavailableDatesCache.size === 0
+    ) {
+      console
+        .log
+        //    "Fetching unavailable dates for new facility or refreshing cache"
+        ();
+      unavailableDatesCache = await fetchUnavailableDates(facilityId);
+      lastFacilityChecked = facilityId;
+    }
+
+    // Update date picker if it exists
+    updateDatePickerDisabledDates();
+  }
+
+  // Function to check if a date should be disabled
+  function isDateUnavailable(dateString) {
+    // Convert date to YYYY-MM-DD format if needed
+    const normalizedDate = new Date(dateString).toISOString().split("T")[0];
+    return unavailableDatesCache.has(normalizedDate);
+  }
+
+  // Function to update date picker disabled dates (this depends on your date picker library)
+  function updateDatePickerDisabledDates() {
+    // This is a generic implementation - you'll need to adapt this based on your date picker library
+
+    if (typeof timeStartInput !== "undefined" && timeStartInput) {
+      // If using HTML5 date input, you can add a custom validation
+      timeStartInput.addEventListener("change", function () {
+        const selectedDate = this.value;
+        if (selectedDate && isDateUnavailable(selectedDate)) {
+          showError(
+            this,
+            "This date is unavailable due to existing reservations. Please select another date."
+          );
+          this.value = ""; // Clear the invalid selection
+          return false;
+        } else {
+          clearError(this);
+        }
+      });
+
+      // For HTML5 date input, we can also use the min/max attributes creatively
+      // but for individual date disabling, we need custom validation
+    }
+
+    // If you're using a specific date picker library like Flatpickr, Bootstrap Datepicker, etc.
+    // you would implement the library-specific method here. For example:
+
+    // For Flatpickr:
+    /*
+  if (datePickerInstance) {
+    datePickerInstance.set('disable', [
+      function(date) {
+        const dateString = date.toISOString().split('T')[0];
+        return isDateUnavailable(dateString);
+      }
+    ]);
+  }
+  */
+
+    // For Bootstrap Datepicker:
+    /*
+  if ($(timeStartInput).data('datepicker')) {
+    $(timeStartInput).datepicker('option', 'beforeShowDay', function(date) {
+      const dateString = date.toISOString().split('T')[0];
+      const isUnavailable = isDateUnavailable(dateString);
+      return [!isUnavailable, isUnavailable ? 'unavailable-date' : '', 
+              isUnavailable ? 'This date is unavailable' : ''];
+    });
+  }
+  */
+  }
+
+  // Enhanced validation function that includes unavailable date checking
+  async function validateDateAvailability(startTimeValue) {
+    if (!startTimeValue) {
+      return true;
+    }
+
+    try {
+      // Extract date part from the datetime value
+      let dateToCheck;
+      if (startTimeValue.includes("/")) {
+        // Handle DD/MM/YYYY format
+        const datePart = startTimeValue.split(" ")[0];
+        const [day, month, year] = datePart.split("/");
+        dateToCheck = new Date(year, month - 1, day);
+      } else {
+        dateToCheck = new Date(startTimeValue);
+      }
+
+      if (isNaN(dateToCheck.getTime())) {
+        return true; // Let other validation handle invalid dates
+      }
+
+      const dateString = dateToCheck.toISOString().split("T")[0];
+
+      if (isDateUnavailable(dateString)) {
+        if (
+          typeof showError === "function" &&
+          typeof timeStartInput !== "undefined" &&
+          timeStartInput
+        ) {
+          showError(
+            timeStartInput,
+            "This date is unavailable due to existing reservations. Please select another date."
+          );
+        }
+
+        if (typeof showNotification === "function") {
+          showNotification(
+            "❌ Selected date is unavailable due to existing reservations.",
+            "error"
+          );
+        }
+
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error validating date availability:", error);
+      return true; // Don't block on validation errors
+    }
+  }
+
+  // Function to refresh unavailable dates (call this when reservations might have changed)
+  async function refreshUnavailableDates(facilityId = null) {
+    const targetFacilityId = facilityId || lastFacilityChecked;
+    if (targetFacilityId) {
+      // console.log("Refreshing unavailable dates cache");
+      unavailableDatesCache.clear();
+      await updateDatePickerAvailability(targetFacilityId);
+    }
+  }
+
+  // Enhanced facility change handler
+  function handleFacilityChange(newFacilityId) {
+    // console.log(`Facility changed to: ${newFacilityId}`);
+
+    // Update the global facilityID variable if it exists
+    if (typeof window !== "undefined") {
+      window.facilityID = newFacilityId;
+    }
+
+    // Update date picker availability for new facility
+    updateDatePickerAvailability(newFacilityId);
+  }
+
+  // Integration with your existing validation system
+  function enhancedValidatePrimaryFormFields() {
+    //  console.log("=== ENHANCED VALIDATING PRIMARY FORM FIELDS ===");
+
+    let isValid = true;
+
+    // Check if required elements exist before validating
+    if (
+      typeof timeStartInput !== "undefined" &&
+      timeStartInput &&
+      timeStartInput.value
+    ) {
+      const currentEventType =
+        typeof eventTypeDropdown !== "undefined" && eventTypeDropdown
+          ? eventTypeDropdown.value
+          : null;
+
+      // Skip validation for University events
+      if (currentEventType !== "University") {
+        // Check date availability first
+        const isDateAvailable = validateDateAvailability(timeStartInput.value);
+        if (!isDateAvailable) {
+          isValid = false;
+        }
+
+        // Non-blocking warning check
+        checkLessThanWeekWarning(timeStartInput.value);
+      }
+    }
+
+    // Continue with other validations...
+    if (typeof eventTypeDropdown !== "undefined" && eventTypeDropdown) {
+      if (!eventTypeDropdown.value || eventTypeDropdown.value === "") {
+        //  console.log("Event type is required");
+        if (typeof showError === "function") {
+          showError(eventTypeDropdown, "Please select an event type.");
+        }
+        isValid = false;
+      } else {
+        if (typeof clearError === "function") {
+          clearError(eventTypeDropdown);
+        }
+      }
+    }
+
+    //  console.log("Enhanced form validation result:", isValid);
+    return isValid;
+  }
+
+  // Setup function to initialize the date availability system
+  function setupDateAvailabilitySystem() {
+    //  console.log("Setting up date availability system");
+
+    // Listen for facility changes
+    document.addEventListener("facilityChanged", function (event) {
+      handleFacilityChange(event.detail.facilityId);
+    });
+
+    // If there's a facility dropdown, listen to its changes
+    const facilityDropdown =
+      document.getElementById("facilityDropdown") ||
+      document.querySelector('[name="facility"]') ||
+      document.querySelector("#facility");
+
+    if (facilityDropdown) {
+      facilityDropdown.addEventListener("change", function () {
+        handleFacilityChange(this.value);
+      });
+    }
+
+    // Initialize with current facility if available
+    const currentFacilityId =
+      typeof facilityID !== "undefined"
+        ? facilityID
+        : facilityDropdown
+        ? facilityDropdown.value
+        : null;
+
+    if (currentFacilityId) {
+      updateDatePickerAvailability(currentFacilityId);
+    }
+  }
+
+  // Initialize on DOM load
+  document.addEventListener("DOMContentLoaded", function () {
+    //  console.log("DOM loaded - setting up date availability system");
+
+    // Setup the date availability system
+    setupDateAvailabilitySystem();
+
+    // Wait a bit for other systems to load
+    setTimeout(() => {
+      // Initialize with current values if available
+      const currentFacilityId =
+        typeof facilityID !== "undefined" ? facilityID : null;
+      if (currentFacilityId) {
+        updateDatePickerAvailability(currentFacilityId);
+      }
+    }, 1000);
+  });
+
+  // Export functions for global access and debugging
+  window.fetchUnavailableDates = fetchUnavailableDates;
+  window.updateDatePickerAvailability = updateDatePickerAvailability;
+  window.isDateUnavailable = isDateUnavailable;
+  window.validateDateAvailability = validateDateAvailability;
+  window.refreshUnavailableDates = refreshUnavailableDates;
+  window.handleFacilityChange = handleFacilityChange;
+  window.enhancedValidatePrimaryFormFields = enhancedValidatePrimaryFormFields;
+
+  // Manual test function
+  window.testDateAvailability = function (facilityId = null) {
+    //  console.log("=== TESTING DATE AVAILABILITY SYSTEM ===");
+    const testFacilityId = facilityId || facilityID || "test-facility-id";
+    //  console.log("Testing with facility ID:", testFacilityId);
+
+    updateDatePickerAvailability(testFacilityId).then(() => {
+      console
+        .log
+        //  "Unavailable dates cache:",
+        //  Array.from(unavailableDatesCache)
+        ();
+      //  console.log("Test a specific date:", isDateUnavailable("2025-07-15"));
+    });
+  };
+
+  // CSS for styling unavailable dates (add this to your CSS file)
+  const unavailableDateStyles = `
+<style>
+.unavailable-date {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+  text-decoration: line-through;
+  cursor: not-allowed !important;
+}
+
+.unavailable-date:hover {
+  background-color: #ffcdd2 !important;
+}
+
+.date-picker-legend {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #666;
+}
+
+.legend-unavailable {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background-color: #ffebee;
+  border: 1px solid #c62828;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+</style>
+`;
+
+  // Inject styles into the page
+  if (document.head) {
+    document.head.insertAdjacentHTML("beforeend", unavailableDateStyles);
   }
 });
